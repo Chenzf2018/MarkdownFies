@@ -19,7 +19,6 @@ Maven就是是专门为Java项目打造的<font color=red>管理和构建工具<
 
 ## Maven项目结构
 &emsp;&emsp;一个使用Maven管理的普通的Java项目，它的目录结构默认如下：
-[^_^]: # ![](MavenImages/Maven目录结构.png)
 <div align=left><img src = MavenImages/Maven目录结构.png width=30% height=40%></div>
 
 项目的根目录 *a-maven-project* 是<font color=red>项目名</font>，它有一个<font color=red>项目描述文件 *pom.xml* </font>，存放<font color=red>Java源码</font>的目录是src/main/java，存放<font color=red>资源文件</font>的目录是 *src/main/resources*，存放<font color=red>测试源码</font>的目录是 *src/test/java*，存放<font color=red>测试资源</font>的目录是 *src/test/resources*，最后，<font color=red>所有编译、打包生成的文件都放在 *target* 目录里</font>。这些就是一个Maven项目的标准目录结构。
@@ -235,11 +234,10 @@ Maven并不会每次都从中央仓库下载jar包。<font color=red>一个jar�
 注：只有以`SNAPSHOT-`开头的版本号会被Maven视为开发版本，开发版本每次都会重复下载，<font color=red>这种SNAPSHOT版本只能用于内部私有的Maven repo，公开发布的版本不允许出现SNAPSHOT</font>。
 
 ## Maven镜像
-&emsp;&emsp;除了可以从Maven的中央仓库下载外，还可以从Maven的镜像仓库下载。如果访问Maven的中央仓库非常慢，我们可以选择一个速度较快的Maven的镜像仓库，Maven镜像仓库定期从中央仓库同步。如何设置`mirrors`可参见[“settings.xml中设置mirrors”](#mirrors)。
-[^_^]: # 文内链接#mirrors不能含中文
+&emsp;&emsp;除了可以从Maven的中央仓库下载外，还可以从Maven的镜像仓库下载。如果访问Maven的中央仓库非常慢，我们可以选择一个速度较快的Maven的镜像仓库，Maven镜像仓库定期从中央仓库同步。如何设置`mirrors`可参见[“settings.xml中设置mirrors”](#mirrors)[^1]。
 
 ## 搜索第三方组件
 &emsp;&emsp;如果我们要引用一个第三方组件，比如`okhttp`，<u>如何确切地获得它的groupId、artifactId和version</u>？方法是通过[search.maven.org](https://search.maven.org/)搜索关键字，找到对应的组件后，直接复制：
 <div align=center><img src=MavenImages/引用第三方组件.png></div>
 
-# 构建流程
+[^1]:文内链接#mirrors不能含中文
