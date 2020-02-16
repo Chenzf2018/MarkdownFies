@@ -140,6 +140,64 @@ Maven规范化构建流程如下：
 * \<dependencies>：项目依赖构件配置，配置项目依赖构件的<font color=red>坐标</font>；
 * \<build>：项目构建配置，配置编译、运行插件等。
 
+#### `pom.xml`结构
+&emsp;&emsp;`pom.xml`文件主要描述了<font color=red>项目包的依赖和项目构建时的配置</font>，在默认的`pom.xml`包中分为四大块。
+第一部分为项目的描述信息：
+```xml
+<groupId>com.example</groupId>
+<artifactId>hello</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<name>hello</name>
+<description>Demo project for Spring Boot</description>
+```
+第二部分为项目的依赖配置信息：
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.2.4.RELEASE</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+        <exclusions>
+            <exclusion>
+                <groupId>org.junit.vintage</groupId>
+                <artifactId>junit-vintage-engine</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+</dependencies>
+```
+*	`parent`，标签内配置Spring Boot父级版本`spring-boot-starter-parent`，Maven支持项目的父子结构，引入父级后会默认继承父级的配置；
+*	`dependencies`，标签内配置项目所需要的依赖包，Spring Boot体系内的依赖组件不需要填写具体版本号，`spring-boot-starter-parent`维护了体系内所有依赖包的版本信息。
+* `<scope>test</scope>`表示依赖的组件仅仅参与测试相关的工作，包括测试代码的编译和执行，不会被打包包含进去；
+* `spring-boot-starter-test`是Spring Boot提供项目测试的工具包，内置了多种测试工具，方便我们在项目中做单元测试、集成测试。
+
+第三部分为构建时需要的公共变量：
+```xml
+<properties>
+    <java.version>13</java.version>
+</properties>
+```
+第四部分为构建配置：
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration><fork>true</fork></configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+使用Maven构建Spring Boot项目必须依赖于`spring-boot-maven-plugin`组件，`spring-boot-maven-plugin`能够以Maven的方式为应用提供Spring Boot的支持，即为Spring Boot应用提供了执行Maven操作的可能。`spring-boot-maven-plugin`能够将Spring Boot应用打包为可执行的`jar`或`war`文件，然后以简单的方式运行Spring Boot应用。
+
 #### 坐标定义
 &emsp;&emsp;在`pom.xml`中定义坐标，内容包括：`groupId, artifactId, version, packaging`，详细内容如下：
 ```xml
@@ -153,11 +211,14 @@ Maven规范化构建流程如下：
 ```
 
 ## 安装Maven
-&emsp;&emsp;要安装Maven，可以从Maven官网下载最新的Maven 3.6.x，然后在本地解压，安装Maven的前提是完成Java环境安装，Maven依赖于Java环境。Maven为绿色软件解压后即可使用。解压后需要设置环境变量：
+&emsp;&emsp;要安装Maven，可以从Maven官网下载最新的Maven 3.6.x(建议使用3.3.9)，然后在本地解压，安装Maven的前提是完成Java环境安装，Maven依赖于Java环境。Maven为绿色软件解压后即可使用。解压后需要设置环境变量：
 <div align=center><img src = MavenImages/设置环境变量.png width = 70%></div>
 
 然后，打开命令行窗口，输入mvn -version，应该看到Maven的版本信息：
-<div align=center><img src=MavenImages/验证Maven是否正确安装.png width=80%></div>
+<div align=center><img src=MavenImages/验证Maven是否正确安装.png></div>
+
+建议在安装Java1.8的基础上安装Maven3.3.9：
+<div align=center><img src=MavenImages/验证Maven是否安装正确.png></div>
 
 ### settings.xml 设置
 &emsp;&emsp;Maven解压后目录下会有一个`settings.xml`文件，位置`/conf/settings.xml`，用来<font color=red>配置Maven的仓库和本地Jar包存储地址</font>。Maven仓库地址代表从哪里去下载项目中的依赖包Jar包；Maven会将所有的Jar包统一存储到一个地址下，方便各个项目复用。默认本地仓库位置在`C:\Users\Chenzf\.m2\repository`。
