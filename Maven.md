@@ -173,7 +173,7 @@ Maven规范化构建流程如下：
     </dependency>
 </dependencies>
 ```
-*	`parent`，标签内配置Spring Boot父级版本`spring-boot-starter-parent`，Maven支持项目的父子结构，引入父级后会默认继承父级的配置；
+*	`parent`，标签内配置Spring Boot父级版本`spring-boot-starter-parent`，Maven支持项目的父子结构，引入父级后会默认继承父级的配置。这个特殊的`starter`可以用来提供相关的Maven默认依赖，使用它之后，常用的包依赖可以省去version标签；
 *	`dependencies`，标签内配置项目所需要的依赖包，Spring Boot体系内的依赖组件不需要填写具体版本号，`spring-boot-starter-parent`维护了体系内所有依赖包的版本信息。
 * `<scope>test</scope>`表示依赖的组件仅仅参与测试相关的工作，包括测试代码的编译和执行，不会被打包包含进去；
 * `spring-boot-starter-test`是Spring Boot提供项目测试的工具包，内置了多种测试工具，方便我们在项目中做单元测试、集成测试。
