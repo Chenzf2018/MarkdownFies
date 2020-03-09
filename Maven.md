@@ -138,7 +138,7 @@ Maven规范化构建流程如下：
 * \<name>：项目的显示名，常用于 Maven生成的文档；
 * \<description>：项目描述，常用于 Maven生成的文档；
 * \<dependencies>：项目依赖构件配置，配置项目依赖构件的<font color=red>坐标</font>；
-* \<build>：项目构建配置，配置编译、运行插件等。
+* \<build>：项目构建配置，配置编译、运行插件等（打包插件）。
 
 #### `pom.xml`结构
 &emsp;&emsp;`pom.xml`文件主要描述了<font color=red>项目包的依赖和项目构建时的配置</font>，在默认的`pom.xml`包中分为四大块。
@@ -196,7 +196,7 @@ Maven规范化构建流程如下：
     </plugins>
 </build>
 ```
-使用Maven构建Spring Boot项目必须依赖于`spring-boot-maven-plugin`组件，`spring-boot-maven-plugin`能够以Maven的方式为应用提供Spring Boot的支持，即为Spring Boot应用提供了执行Maven操作的可能。`spring-boot-maven-plugin`能够将Spring Boot应用打包为可执行的`jar`或`war`文件，然后以简单的方式运行Spring Boot应用。
+使用Maven构建Spring Boot项目必须依赖于`spring-boot-maven-plugin`组件，`spring-boot-maven-plugin`能够以Maven的方式为应用提供Spring Boot的支持，即为Spring Boot应用提供了执行Maven操作的可能。`spring-boot-maven-plugin`能够将Spring Boot应用打包为可执行的`jar`或`war`文件，然后以简单的方式运行Spring Boot应用。默认使用了`spring-boot-maven-plugin`，配合`spring-boot-starter-parent`就可以把Spring Boot应用打包成`JAR`来直接运行。
 
 #### 坐标定义
 &emsp;&emsp;在`pom.xml`中定义坐标，内容包括：`groupId, artifactId, version, packaging`，详细内容如下：

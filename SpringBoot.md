@@ -1,11 +1,21 @@
+# 路线
+javaSE：OOP；MySQL：持久层；HTML+CSS+JS+JQuery+框架：视图层(框架不熟练，CSS进阶难)；JavaWeb：独立开发MVC三层框架的网站(原始)；SSM：框架(简化开发流程，但配置复杂)，打War包，Tomcat运行；Spring再简化：Spring Boot(打Jar包(内嵌Tomcat)，微服务架构)。
+<div align=center><img src=SpringBootImages/学习路线.png width=80%></div>
+
 # SpringBoot发展
 &emsp;&emsp;在“遥远”的EJB(Enterprise Java Bean)年代，开发一个EJB需要大量的接口和配置文件，直至EJB2.0的年代，开发一个EJB还需要配置两个文件，其结果就是<font color=red>配置的工作量比开发的工作量还要大</font>。其次<font color=red>EJB是运行在EJB容器中的</font>，而Sun公司定义的JSP和Serviet却是运行在Web容器中的，因此需要<font color=red>使用Web容器去调用EJB容器的服务</font>。
 
 这就意味着存在以下的弊端：需要增加调用的配置文件才能让Web容器调用EJB容器；与此同时需要开发两个容器，非常多的配置内容和烦琐的规范导致开发效率十分低下；对于Web容器调用EJB容器的服务这种模式，注定了需要通过网络传递，造成性能不佳；对于测试人员还需要了解许多EJB烦琐的细节，才能进行配置和测试，这样测试也难以进行。
 
-&emsp;&emsp;Spring以强大的<font color=red>控制反转(loC)来管理各类Java资源</font>，从而<u>降低了各种资源的藕合</u>；Spring的<font color=red>面向切面的编程(AOP)通过动态代理技术，允许我们按照约定进行配置编程</font>，进而增强了Bean的功能，它<u>擦除了大量重复的代码</u>。
+&emsp;&emsp;Spring是为了解决企业级应用开发的复杂性而创建，它以强大的<font color=red>控制反转(loC)来管理各类Java资源</font>，从而<u>降低了各种资源的藕合</u>；Spring的<font color=red>面向切面的编程(AOP)通过动态代理技术，允许我们按照约定进行配置编程</font>，进而增强了Bean的功能，它<u>擦除了大量重复的代码</u>。
 
 配置方法的不成文共识：<font color=red>对于业务类使用注解</font>，例如，对于MVC开发，``控制器``使用`＠Controller`，``业务层``使用`＠Service`，``持久层``使用`＠Repository`；而<font color=red>对于一些公用的Bean</font>，例如，对于数据库(如Redis)、第三方资源等则<font color=red>使用XML进行配置</font>。
+
+为了降低Java开发的复杂性，Spring采用了以下4种关键策略来简化开发：
+* 基于POJO的轻量级和最小侵入性编程；
+* <font color=red>通过IOC，依赖注入(DI)和面向接口实现松耦合</font>；
+* <font color=red>基于切面(AOP)和惯例进行声明式编程</font>；
+* 通过切面和模版减少样式代码；
 
 &emsp;&emsp;Spring Boot使用“<font color=red>约定优于配置</font>”(项目中存在大量的配置，此外还内置一个习惯性的配置，无须手动进行配置)的理念让项目快速运行起来。使用Spring Boot很容易创建一个独立运行(运行jar，内嵌Servlet容器)、准生产级别的基于Spring框架的项目，使用Spring Boot可以不用或者只需要很少的Spring配置。
 
@@ -16,7 +26,7 @@ Spring Boot的核心功能有：
 * <font color=red>自动配置</font>Spring：Spring Boot会根据在类路径中的`jar包、类`，<font color=red>为jar包里的类自动配置Bean</font>，这样会极大地减少要使用的配置；若在实际开发中需要自动配置Bean，而Spring Boot没有提供支持，则可以自定义自动配置；<font color=red>针对很多Spring应用程序常见的应用功能，Spring Boot能自动提供相关配置。自动配置消除了传统Spring应用程序里的很多样板配置</font>。
 * <font color=red>起步依赖</font>：告诉Spring Boot需要什么功能，它就能引入需要的库。Spring Boot起步依赖让你能<font color=red>通过库所提供的功能而非名称与版本号来指定构建依赖。</font>
 * 准生产的应用监控：Spring Boot提供基于`http, ssh, telnet`对运行时的项目进行监控。
-* 无代码生成和xml配置：Spring Boot不是借助于代码生成来实现的，而是通过条件注解来实现的。不需要任何`xml`配置即可实现Spring的所有配置。
+* <font color=red>无冗余代码生成和xml配置</font>：Spring Boot不是借助于代码生成来实现的，而是通过条件注解来实现的。不需要任何`xml`配置即可实现Spring的所有配置。
 
 # 搭建开发环境
 &emsp;&emsp;使用Spring Boot开发项目需要有<font color=red>两个基础环境和一个开发工具</font>，这两个环境是指<font color=red>Java编译环境和构建工具环境</font>，一个开发工具是指IDE开发工具。Spring Boot 2.0要求Java 8作为最低版本，需要在本机安装JDK1.8并进行环境变量配置，同时需要安装构建工具编译Spring Boot项目，最后准备一个顺手的IDE开发工具即可。
@@ -104,6 +114,87 @@ Spring Boot官方支持Maven和Gradle作为项目构建工具。Gradle虽然有�
 
 &emsp;&emsp;Spring Boot的参数配置除了使用`properties`文件之外，还可以使用`yml`文件等。实际上，`yml文件`的配置与`proerties文件`只是简写和缩进区别，差异并不大。
 
+## 运行程序
+&emsp;&emsp;在`HelloWorldApplication.java`同级下创建`controller`目录：
+<div align=center><img src=SpringBootImages/controller.png width=50%></div>
+
+添加`HelloWorldController`：
+```java
+package com.example.hello_world.controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloWorldController
+{
+    //接口：http://localhost:8080/HelloWorld
+    @RequestMapping("/HelloWorld")
+    // 调用业务，接受前端的参数！
+    public String helloWorld(){ return "Hello World!"; }
+}
+```
+<div align=center><img src=SpringBootImages/HelloWorld.png width=50%></div>
+
+`pom.xml`中添加的`web`依赖：
+```
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+集成了`Tomcat, DispatcherServlet, xml`等，毋需再去配置！`spring-boot-starter-web`用于实现`Http`接口（该依赖中包含了`Spring MVC`）；使用`Tomcat`作为默认嵌入式容器。
+
+所有的`SpringBoot`依赖都是使用`spring-boost-starter`作为开头的：`spring-boot-starter-web, spring-boot-starter-test(单元测试)`。
+
+# 全注解下的Spring Ioc
+&emsp;&emsp;Spring最成功的是其提出的理念，而不是技术本身。它所依赖的<font color=red>两个核心理念，一个是控制反转(Inversion of Control, IoC)，另一个是面向切面编程(Aspect Oriented Programming, AOP)</font>。
+
+IoC容器是Spring的核心，可以说<font color=red>Spring是一种基于IoC容器编程的框架</font>。因为Spring Boot是基于注解的开发Spring IoC，所以使用全注解的方式讲述Spring IoC技术。<font color=red>IoC是一种通过描述来生成或者获取对象的技术</font>，而这个技术不是Spring甚至不是Java独有的。对于Java初学者更多的时候所熟悉的是使用new关键字来创建对象，而在Spring中则不是，它是<font color=red>通过描述来创建对象</font>。只是<font color=red>Spring Boot并不建议使用XML，而是通过注解的描述生成对象</font>。
+
+一个系统可以生成各种对象，并且这些对象都需要进行管理。还值得一提的是，对象之间并不是孤立的，它们之间还可能<font color=red>存在依赖的关系</font>。例如，一个班级是由多个老师和同学组成的，那么班级就依赖于多个老师和同学了。为此Spring还提供了<font color=red>依赖注入的功能</font>，使得我们能够<font color=red>通过描述来管理各个对象之间的关系。为了描述上述的班级、同学和老师这3个对象关系，我们需要一个容器</font>。
+
+&emsp;&emsp;总结一下就是：Spring使用简单的POJO(Plain Old Java Object, 即无任何限制的普通Java对象)来进行企业级开发。<font color=red>每一个被Spring管理的Java对象都称之为Bean；而Spring提供了一个IoC容器用来初始化对象，解决对象间的依赖管理和对象的使用。控制反转是通过依赖注入实现的。所谓依赖注入指的是容器负责创建对象和维护对象间的依赖关系，而不是通过对象本身负责自己的创建和解决自己的依赖。</font>
+
+## IoC容器介绍
+&emsp;&emsp;<font color=red>在Spring中把每一个需要管理的对象称为Spring Bean(简称Bean)，而Spring管理这些Bean的容器，被我们称为Spring IoC容器(或者简称IoC容器)</font>。IoC容器需要具备两个基本的功能：
+* 通过描述管理Bean，包括发布和获取Bean；
+* 通过描述完成Bean之间的依赖关系。
+
+Spring IoC容器(ApplicationContext)负责创建Bean，并通过容器将功能类Bean注入到需要的Bean中。Spring提供使用xml、注解、Java配置、groovy配置实现Bean的创建和注入。
+
+&emsp;&emsp;Spring IoC容器是一个管理Bean的容器，在Spring的定义中，它要求所有的IoC 容器都需要实现接口`BeanFactory`，它是一个顶级容器接口。在Spring IoC容器中，允许我们通过`getBean`按``类型``或者``名称``获取Bean。并且，默认的情况下，Bean都是<font color=red>以单例存在的</font>，也就是<font color=red>使用`getBean`方法返回的都是同一个对象</font>。
+
+由于`BeanFactory`的功能还不够强大，因此Spring在`BeanFactory`的基础上，还设计了一个更为高级的接口`ApplicationContext`。它是`BeanFactory`的子接口之一，在Spring的体系中BeanFactory和ApplicationContext是最为重要的接口设计，在现实中我们使用的大部分Spring IoC容器是`ApplicationContext`接口的实现类，它们的关系如下图所示：
+<div align=center><img src=SpringBootImages/SpringIoC容器的接口设计.png></div>
+
+&emsp;&emsp;在Spring Boot中，主要是<font color=red>通过注解来装配Bean到Spring IoC容器中</font>，AnnotationConfigApplicationContext是一个基于注解的IoC容器。<font color=red>Spring Boot装配和获取Bean</font>的方法与它如出一辙。
+
+## 依赖注入
+&emsp;&emsp;<font color=red>Spring IoC通过依赖注入(Dependency Injection, DI)来获取Bean，然后再将Bean装配到IoC容器中。控制反转是通过依赖注入实现的。所谓依赖注入指的是容器负责创建对象和维护对象间的依赖关系，而不是通过对象本身负责自己的创建和解决自己的依赖。</font>
+
+&emsp;&emsp;依赖注入的主要目的是为了解耦，体现了一种“组合”的理念。如果希望类具备某项功能的时候，是继承自一个具有此功能的父类好呢？还是组合另外一个具有这个功能的类好呢？答案是不言而喻的，继承一个父类，子类将与父类耦合，组合另外一个类则使耦合度大大降低。
+
+可以通过人类依赖于动物的例子来理解“依赖注入”：人类(Person)可以利用一些动物(Animal)去完成一些事情，比方说狗(Dog)是用来看门的，猫(Cat)是用来抓老鼠的……于是做一些事情就依赖于那些动物。
+
+# AOP
+&emsp;&emsp;Spring的AOP的存在目的是为了<font color=red>解耦</font>。AOP可以让一组类共享相同的行为。在OOP中只能通过继承类和实现接口，来使代码的耦合度增强，且类继承只能为单继承，阻碍更多行为添加到一组类上，AOP弥补了OOP的不足。
+
+&emsp;&emsp;对于约定编程， 首先需要记住的是约定的流程是什么，然后就可以完成对应的任务，却不需要知道底层设计者是怎么将约定的内容织入对应的流程中的。只要按照一定的规则，就可以将代码织入事先约定的流程中。实际上Spring AOP也是一种约定流程的编程，在Spring中可以使用多种方式配置AOP，但Spring Boot采用了注解的方式。
+
+AOP可以<font color=red>减少大量重复的工作</font>。获取数据库事务连接、事务操控和关闭数据库连接的过程，都需要使用大量的try...catch...finally...语句去操作，这显然存在大量重复的工作。因为这里存在着一个默认的流程，所以利用AOP可以替换这些没有必要重复的工作。
+
+&emsp;&emsp;使用Spring AOP可以处理一些无法使用OOP实现的业务逻辑。其次，通过约定，可以将一些业务逻辑织入流程中，并且可以将一些通用的逻辑抽取出来，然后给予默认实现，这样你只需要完成部分的功能就可以了，这样做可以使得开发者的代码更加简短，同时可维护性也得到提高。
+
+# Spring MVC
+&emsp;&emsp;<font color=red>MVC：Model + View + Controller (数据模型＋视图＋控制器)。三层架构：Presentation tier + Application tier + Data tier (展现层＋应用层＋数据访问层)。</font>
+
+那`MVC`和`三层架构`有什么关系呢？
+
+<font color=red>MVC只存在三层架构的展现层(`SSM`：展现层：Spring MVC；应用层：Spring；数据访问层：Mybatis)</font>，`MVC`中`M`是数据模型，是包含数据的对象。在Spring MVC里，有一个专门的类叫`Model`, 用来和`V`之间的数据交互、传值；`V`指的是视图页面，包含`JSP, freeMarker, Velocity, Thymeleaf, Tile`等；`C`是控制器(Spring MVC的注解`@Controller`的类)。
+
+三层架构是整个应用的架构，是由Spring框架负责管理的。一般项目结构中都有Service层、DAO层，这两个反馈在应用层和数据访问层。
+
 # 开发一个简单的Spring Boot项目
 &emsp;&emsp;`Spring MVC`的<font color=red>视图解析器(ViewResolver)</font>的作用主要是<font color=red>定位视图</font>，也就是当控制器只是返回一个逻辑名称的时候，是没有办法直接对应找到视图的，这就需要视图解析器进行解析了。在实际的开发中最常用的视图之一就是JSP，例如，现在控制器中返回一个字符串“index”，那么我们希望它对应的是开发项目的/WEB-INF/jsp/index.jsp文件。
 
@@ -179,58 +270,186 @@ public class HelloSpringbootApplication
     {SpringApplication.run(HelloSpringbootApplication.class, args);}
 }
 ```
-这里的注解`@SpringBootApplication`标志着这是一个<font color=red>Spring Boot入门文件</font>，主要目的是开启自动配置。而`main方法`主要作用是作为项目启动的入口。高亮的代码(第10行)则是<font color=red>以`HelloSpringbootApplication`类作为配置类来运行Spring Boot项目</font>。于是Spring Boot就会根据你在Maven加载的依赖来完成运行了。接下来我们以Java Application的形式运行类`HelloSpringbootApplication`，就可以看到`Tomcat`的运行日志。由于已经把端口修改为了8090，因此打开浏览器后输入[http://localhost:8090/index](http://localhost:8090/index)，就可以看到运行的结果：
+这里的注解`@SpringBootApplication`标志着这是一个<font color=red>Spring Boot入门文件</font>，主要目的是开启自动配置。而`main方法`主要作用是作为项目启动的入口。高亮的代码(第10行)则是<font color=red>以`HelloSpringbootApplication`类作为配置类来运行Spring Boot项目</font>。于是Spring Boot就会根据你在Maven加载的依赖来完成运行了。接下来我们以Java Application的形式运行类`HelloSpringbootApplication`，就可以看到`Tomcat`的运行日志。由于已经把端口修改为了8090，因此打开浏览器后输入[http://localhost:8090](http://localhost:8090)，就可以看到运行的结果：
 <div align=center><img src=SpringBootImages/简单项目运行结果.png width=40%></div>
 
 &emsp;&emsp;至此，Spring Boot的开发环境就搭建完成了！
 
-# 全注解下的Spring Ioc
-&emsp;&emsp;Spring最成功的是其提出的理念，而不是技术本身。它所依赖的<font color=red>两个核心理念，一个是控制反转(Inversion of Control, IoC)，另一个是面向切面编程(Aspect Oriented Programming, AOP)</font>。
+## 运行原理探究
+&emsp;&emsp;上述项目到底是怎么运行的呢，我们来看`pom.xml`文件，其中，它主要依赖一个父项目：
+```xml
+<parent>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-parent</artifactId>
+  <version>2.2.4.RELEASE</version>
+  <relativePath/> <!-- lookup parent from repository -->
+</parent>
+```
+进入父项目：`D:\WinSoftware\Maven\repository\org\springframework\boot\spring-boot-starter-parent\2.2.4.RELEASE\spring-boot-starter-parent-2.2.4.RELEASE.pom`
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-dependencies</artifactId>
+    <version>2.2.4.RELEASE</version>
+    <relativePath>../../spring-boot-dependencies</relativePath>
+</parent>
+```  
+这里才是真正管理SpringBoot应用里面所有依赖版本的地方，SpringBoot的版本控制中心；以后我们导入依赖默认是不需要写版本；但是如果导入的包没有在依赖中管理着就需要手动配置版本了。
 
-IoC容器是Spring的核心，可以说<font color=red>Spring是一种基于IoC容器编程的框架</font>。因为Spring Boot是基于注解的开发Spring IoC，所以使用全注解的方式讲述Spring IoC技术。<font color=red>IoC是一种通过描述来生成或者获取对象的技术</font>，而这个技术不是Spring甚至不是Java独有的。对于Java初学者更多的时候所熟悉的是使用new关键字来创建对象，而在Spring中则不是，它是<font color=red>通过描述来创建对象</font>。只是<font color=red>Spring Boot并不建议使用XML，而是通过注解的描述生成对象</font>。
+### 启动器
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+`springboot-boot-starter`是`SpringBoot`的场景启动器；`spring-boot-starter-web `帮我们导入了web模块正常运行所依赖的组件；
 
-一个系统可以生成各种对象，并且这些对象都需要进行管理。还值得一提的是，对象之间并不是孤立的，它们之间还可能<font color=red>存在依赖的关系</font>。例如，一个班级是由多个老师和同学组成的，那么班级就依赖于多个老师和同学了。为此Spring还提供了<font color=red>依赖注入的功能</font>，使得我们能够<font color=red>通过描述来管理各个对象之间的关系。为了描述上述的班级、同学和老师这3个对象关系，我们需要一个容器</font>。
+<font color=red>SpringBoot将所有的功能场景都抽取出来，做成一个个的starter(启动器)，只需要在项目中引入这些starter即可，所有相关的依赖都会导入进来，我们要用什么功能就找到对应的场景启动器即可。</font>
 
-&emsp;&emsp;总结一下就是：Spring使用简单的POJO(Plain Old Java Object, 即无任何限制的普通Java对象)来进行企业级开发。<font color=red>每一个被Spring管理的Java对象都称之为Bean；而Spring提供了一个IoC容器用来初始化对象，解决对象间的依赖管理和对象的使用。控制反转是通过依赖注入实现的。所谓依赖注入指的是容器负责创建对象和维护对象间的依赖关系，而不是通过对象本身负责自己的创建和解决自己的依赖。</font>
+### 主程序
+```java
+package com.example.hellospringboot;
 
-## IoC容器介绍
-&emsp;&emsp;<font color=red>在Spring中把每一个需要管理的对象称为Spring Bean(简称Bean)，而Spring管理这些Bean的容器，被我们称为Spring IoC容器(或者简称IoC容器)</font>。IoC容器需要具备两个基本的功能：
-* 通过描述管理Bean，包括发布和获取Bean；
-* 通过描述完成Bean之间的依赖关系。
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-Spring IoC容器(ApplicationContext)负责创建Bean，并通过容器将功能类Bean注入到需要的Bean中。Spring提供使用xml、注解、Java配置、groovy配置实现Bean的创建和注入。
+@SpringBootApplication // 标注一个主程序类 ， 说明这是一个Spring Boot应用
+public class HelloSpringbootApplication
+{
+    public static void main(String[] args)
+    {
+        //将SpringBoot应用启动起来
+        SpringApplication.run(HelloSpringbootApplication.class, args);
+    }
+}
+```
 
-&emsp;&emsp;Spring IoC容器是一个管理Bean的容器，在Spring的定义中，它要求所有的IoC 容器都需要实现接口`BeanFactory`，它是一个顶级容器接口。在Spring IoC容器中，允许我们通过`getBean`按``类型``或者``名称``获取Bean。并且，默认的情况下，Bean都是<font color=red>以单例存在的</font>，也就是<font color=red>使用`getBean`方法返回的都是同一个对象</font>。
+### 自动装配原理
+#### `@SpringBootApplication`
+&emsp;&emsp;SpringBoot应用标注在某个类上说明这个类是SpringBoot的主配置类， SpringBoot就应该运行这个类的`main`方法来启动SpringBoot应用；
 
-由于`BeanFactory`的功能还不够强大，因此Spring在`BeanFactory`的基础上，还设计了一个更为高级的接口`ApplicationContext`。它是`BeanFactory`的子接口之一，在Spring的体系中BeanFactory和ApplicationContext是最为重要的接口设计，在现实中我们使用的大部分Spring IoC容器是`ApplicationContext`接口的实现类，它们的关系如下图所示：
-<div align=center><img src=SpringBootImages/SpringIoC容器的接口设计.png></div>
+进入这个注解：可以看到上面还有很多其他注解：
+```java
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = {
+  @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+	@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+public @interface SpringBootApplication {}
+```
+##### `@ComponentScan`
+&emsp;&emsp;这个注解在Spring中很重要，它对应XML配置中的元素。<font color=red>`@ComponentScan`的功能就是自动扫描并加载符合条件的组件或者bean，将这个bean定义加载到IOC容器中。</font>
 
-&emsp;&emsp;在Spring Boot中，主要是<font color=red>通过注解来装配Bean到Spring IoC容器中</font>，AnnotationConfigApplicationContext是一个基于注解的IoC容器。<font color=red>Spring Boot装配和获取Bean</font>的方法与它如出一辙。
+##### `@SpringBootConfiguration`
+&emsp;&emsp;这是SpringBoot的配置类，标注在某个类上，表示这是一个SpringBoot的配置类：
+```java
+// 进入@SpringBootConfiguration这个注释
+@Configuration
+public @interface SpringBootConfiguration {}
 
-## 依赖注入
-&emsp;&emsp;<font color=red>Spring IoC通过依赖注入(Dependency Injection, DI)来获取Bean，然后再将Bean装配到IoC容器中。控制反转是通过依赖注入实现的。所谓依赖注入指的是容器负责创建对象和维护对象间的依赖关系，而不是通过对象本身负责自己的创建和解决自己的依赖。</font>
+// 进入@Configuration这个注释
+@Component
+public @interface Configuration {}
+```
+`@Configuration`：配置类上来标注这个注解，说明这是一个配置类，配置类即配置文件；我们继续点进去，发现配置类也是容器中的一个组件。`@Component`，这就说明，启动类本身也是Spring中的一个组件而已，负责启动应用！
 
-&emsp;&emsp;依赖注入的主要目的是为了解耦，体现了一种“组合”的理念。如果希望类具备某项功能的时候，是继承自一个具有此功能的父类好呢？还是组合另外一个具有这个功能的类好呢？答案是不言而喻的，继承一个父类，子类将与父类耦合，组合另外一个类则使耦合度大大降低。
+##### `@EnableAutoConfiguration`
+&emsp;&emsp;`@EnableAutoConfiguration`用来<font color=red>开启自动配置功能</font>。以前我们需要自己配置的东西，而现在SpringBoot可以自动帮我们配置；`@EnableAutoConfiguration`告诉SpringBoot开启自动配置功能，这样自动配置才能生效。
+```java
+// 进入@EnableAutoConfiguration注释
+@AutoConfigurationPackage  // 自动配置包
+@Import(AutoConfigurationImportSelector.class)  // 导入哪些组件的选择器
+public @interface EnableAutoConfiguration {}
 
-可以通过人类依赖于动物的例子来理解“依赖注入”：人类(Person)可以利用一些动物(Animal)去完成一些事情，比方说狗(Dog)是用来看门的，猫(Cat)是用来抓老鼠的……于是做一些事情就依赖于那些动物。
+// 进入@AutoConfigurationPackage这个注释
+@Import(AutoConfigurationPackages.Registrar.class)
+public @interface AutoConfigurationPackage {}
+```
+Spring底层注解`@import`，给容器中导入一个组件。`Registrar.class`将主配置类(即@SpringBootApplication标注的类)的所在包及包下面所有子包里面的所有组件扫描到Spring容器。
 
-# AOP
-&emsp;&emsp;Spring的AOP的存在目的是为了<font color=red>解耦</font>。AOP可以让一组类共享相同的行为。在OOP中只能通过继承类和实现接口，来使代码的耦合度增强，且类继承只能为单继承，阻碍更多行为添加到一组类上，AOP弥补了OOP的不足。
+`@Import({AutoConfigurationImportSelector.class})`给容器导入组件；`AutoConfigurationImportSelector`：自动配置导入选择器，那么它会导入哪些组件的选择器呢？点击这个类看源码(`Ctrl + B`)：
+```java
+// 获得候选的配置
+protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes)
+{
+    //这里的getSpringFactoriesLoaderFactoryClass()方法返回的就是我们最开始看的启动自动导入配置文件的注解类；EnableAutoConfiguration
+    List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
+    Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you are using a custom packaging, make sure that file is correct.");
+    return configurations;
+}
+```
+这个方法又调用了`SpringFactoriesLoader`类的静态方法！进入`SpringFactoriesLoader`类`loadFactoryNames()`方法：
+```java
+public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable ClassLoader classLoader)
+{
+    String factoryTypeName = factoryType.getName();
+    //这里它又调用了 loadSpringFactories 方法
+    return loadSpringFactories(classLoader).getOrDefault(factoryTypeName, Collections.emptyList());
+}
+```  
+继续点击查看`loadSpringFactories`方法：
+```java
+private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader)
+{
+    //获得classLoader，我们返回可以看到这里得到的就是EnableAutoConfiguration标注的类本身
+    MultiValueMap<String, String> result = cache.get(classLoader);
+    if (result != null) {return result;}
+    try
+    {
+      //去获取一个资源 "META-INF/spring.factories"
+      Enumeration<URL> urls = (classLoader != null ?
+        classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
+        ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
+      result = new LinkedMultiValueMap<>();
 
-&emsp;&emsp;对于约定编程， 首先需要记住的是约定的流程是什么，然后就可以完成对应的任务，却不需要知道底层设计者是怎么将约定的内容织入对应的流程中的。只要按照一定的规则，就可以将代码织入事先约定的流程中。实际上Spring AOP也是一种约定流程的编程，在Spring中可以使用多种方式配置AOP，但Spring Boot采用了注解的方式。
+      //将读取到的资源遍历，封装成为一个Properties
+      while (urls.hasMoreElements())
+      {
+        URL url = urls.nextElement();
+        UrlResource resource = new UrlResource(url);
+        Properties properties = PropertiesLoaderUtils.loadProperties(resource);
 
-AOP可以<font color=red>减少大量重复的工作</font>。获取数据库事务连接、事务操控和关闭数据库连接的过程，都需要使用大量的try...catch...finally...语句去操作，这显然存在大量重复的工作。因为这里存在着一个默认的流程，所以利用AOP可以替换这些没有必要重复的工作。
+        for (Map.Entry<?, ?> entry : properties.entrySet())
+        {
+          String factoryTypeName = ((String) entry.getKey()).trim();
+          for (String factoryImplementationName : StringUtils.commaDelimitedListToStringArray((String) entry.getValue()))
+          {result.add(factoryTypeName, factoryImplementationName.trim());}
+        }
+      }
+      cache.put(classLoader, result);
+      return result;
+    }
+    catch (IOException ex)
+    {
+      throw new IllegalArgumentException("Unable to load factories from location [" + FACTORIES_RESOURCE_LOCATION + "]", ex);
+    }
+}
+```
+根据源头打开`spring.factories`的配置文件，看到了很多自动配置的文件；这就是自动配置根源所在`D:\WinSoftware\Maven\repository\org\springframework\boot\spring-boot-autoconfigure\2.2.4.RELEASE\spring-boot-autoconfigure-2.2.4.RELEASE.jar\spring.factories`。
 
-&emsp;&emsp;使用Spring AOP可以处理一些无法使用OOP实现的业务逻辑。其次，通过约定，可以将一些业务逻辑织入流程中，并且可以将一些通用的逻辑抽取出来，然后给予默认实现，这样你只需要完成部分的功能就可以了，这样做可以使得开发者的代码更加简短，同时可维护性也得到提高。
+所以，自动配置真正实现是从`classpath`中搜寻所有的`META-INF/spring.factories`配置文件 ，并将其中对应的`org.springframework.boot.autoconfigure`包下的配置项，通过反射实例化为对应标注了`@Configuration`的`JavaConfig`形式的IOC容器配置类，然后将这些都汇总成为一个实例并加载到IOC容器中。
 
-# Spring MVC
-&emsp;&emsp;<font color=red>MVC：Model + View + Controller (数据模型＋视图＋控制器)。三层架构：Presentation tier + Application tier + Data tier (展现层＋应用层＋数据访问层)。</font>
+`SpringBoot`所有自动配置都在启动的时候扫描并加载。`spring.factories`所有的自动配置类都在这里，但不一定生效。只要导入了对应的`starter`，就有对应的启动器，就会自动装配。
 
-那`MVC`和`三层架构`有什么关系呢？
+#### 小结
+* SpringBoot在启动的时候从类路径下的`META-INF/spring.factories`中获取`EnableAutoConfiguration`指定的值，将这些值作为自动配置类导入容器，自动配置类就生效，帮我们进行自动配置工作。以前我们需要自己配置的东西，自动配置类都帮我们解决了。
+* 整个J2EE的整体解决方案和自动配置都在`springboot-autoconfigure`的jar包中。它将所有需要导入的组件以全类名的方式返回，这些组件就会被添加到容器中；
+* 它会给容器中导入非常多的自动配置类(`xxxAutoConfiguration`), 就是给容器中导入这个场景需要的所有组件，并配置好这些组件；
+* 有了自动配置类，免去了我们手动编写配置注入功能组件等的工作。
 
-<font color=red>MVC只存在三层架构的展现层(`SSM`：展现层：Spring MVC；应用层：Spring；数据访问层：Mybatis)</font>，`MVC`中`M`是数据模型，是包含数据的对象。在Spring MVC里，有一个专门的类叫`Model`, 用来和`V`之间的数据交互、传值；`V`指的是视图页面，包含`JSP, freeMarker, Velocity, Thymeleaf, Tile`等；`C`是控制器(Spring MVC的注解`@Controller`的类)。
 
-三层架构是整个应用的架构，是由Spring框架负责管理的。一般项目结构中都有Service层、DAO层，这两个反馈在应用层和数据访问层。
+### `SpringApplication.run`
+&emsp;&emsp;分析该方法主要分两部分，一部分是`SpringApplication`的实例化，二是`run方法`的执行。
+
+&emsp;&emsp;`SpringApplication`这个类主要做了以下四件事情：
+1. 推断应用的类型是普通的项目还是`Web`项目；
+2. 查找并加载所有可用初始化器，设置到`initializers`属性中；
+3. 找出所有的应用程序监听器，设置到`listeners`属性中；
+4. 推断并设置`main`方法的定义类，找到运行的主类。
+
+#### `run方法`流程分析
+<div align=center><img src=SpringBootImages/run方法.png></div>
 
 # ReadList项目
 &emsp;&emsp;先初始化一个项目。从技术角度来看，要用`Spring MVC`来处理Web请求，用`Thymeleaf`来定义Web视图，用`Spring Data JPA`来把阅读列表持久化到嵌入式的`H2`数据库里。用IDEA构建项目时，可以用`Initializr`勾选`Web, Thymeleaf, JPA, H2`这几个复选框。
@@ -301,8 +520,7 @@ public class ReadingListApplication extends WebMvcConfigurerAdapter
 `<dependencies>...</dependencies>`插入<font color=red>起步依赖</font>；`<build><plugins>...</plugins></build>`插入运用的Spring Boot<font color=red>插件</font>。
 
 构建插件的主要功能是把项目打包成一个可执行的超级`JAR(uber-JAR)`，包括把应用程序的
-所有依赖打入JAR文件内，并为JAR添加一个描述文件，其中的内容能让你用`java -jar`来运行
-应用程序。
+所有依赖打入JAR文件内，并为JAR添加一个描述文件，其中的内容能让你用`java -jar`来运行应用程序。
 
 除了构建插件，Maven构建说明中还将`spring-boot-starter-parent`作为上一级，这样就能<font color=red>利用Maven的依赖管理功能，继承很多常用库的依赖版本，在声明依赖时就不用再去指定版本号了。</font>`pom.xml`里的`<dependency>`都没有指定版本。
 
@@ -448,6 +666,11 @@ public class ReadingListController
 ### 运行应用程序
 &emsp;&emsp;运行应用程序，此时启动一个监听`8080`端口的`Tomcat`服务器。可以用浏览器访问[http://localhost:8080](http://localhost:8080)，结果如下图所示：
 <div align=center><img src=SpringBootImages/readinglist项目运行结果.png width=70%></div>
+
+### 将项目打成jar包
+&emsp;&emsp;将项目打成jar包后，就可以在任何地方运行了：
+<div align=center><img src=SpringBootImages/将项目打成jar包.png></div>
+
 
 ## 小结
 &emsp;&emsp;通过Spring Boot的起步依赖和自动配置，你可以更加快速、便捷地开发Spring应用程序。起步依赖帮助你专注于应用程序需要的功能类型，而非提供该功能的具体库和版本。与此同时，自动配置把你从样板式的配置中解放了出来。这些配置在没有Spring Boot的Spring应用程序里非常常见。
