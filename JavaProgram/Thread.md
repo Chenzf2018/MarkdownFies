@@ -32,7 +32,7 @@ public class CreateThread extends Thread
     public static void main(String[] args)
     {
         CreateThread thread = new CreateThread();
-        thread.start();
+        thread.start();  // 等价于new CreateThread().start();
         // thread.run();
 
         for (int i = 0; i < 200; i++)
@@ -450,6 +450,80 @@ class WebDownloader2
 }
  ```
  `Callable`可以定义返回值；抛出异常。
+
+ ## 三种实现方式总结
+```java
+package Thread;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+
+public class CreateThread4
+{
+    public static void main(String[] args)
+    {
+        // 1.继承Thread类
+        new MyThread1().start();
+
+        // 2.实现Runnable接口
+        new Thread(new MyTread2()).start();
+
+        // 3.实现Callable接口  //参考线程池
+        FutureTask<Integer> futureTask = new FutureTask<>(new MyThread3());
+        new Thread(futureTask).start();
+        try
+        {
+            Integer integer = futureTask.get();
+            System.out.println(integer);
+        }catch (InterruptedException ie)
+        {
+            ie.printStackTrace();
+        }catch (ExecutionException ee)
+        {
+            ee.printStackTrace();
+        }
+    }
+}
+
+// 1.继承Thread类
+class MyThread1 extends Thread
+{
+    @Override
+    public void run()
+    {
+        System.out.println("1.继承Thread类");
+    }
+}
+
+// 2.实现Runnable接口
+class MyTread2 implements Runnable
+{
+    @Override
+    public void run()
+    {
+        System.out.println("2.实现Runnable接口");
+    }
+}
+
+// 3.实现Callable接口
+class MyThread3 implements Callable<Integer>
+{
+    @Override
+    public Integer call() throws Exception
+    {
+        System.out.println("3.实现Callable接口");
+        return 100;
+    }
+}
+/*
+1.继承Thread类
+2.实现Runnable接口
+3.实现Callable接口
+100
+ */
+ ```
 
 # 知识点补充
 
@@ -1297,5 +1371,995 @@ God blesses you !  // 随后守护线程也结束了
  ```
 
 # 线程的同步(重点)
+&emsp;&emsp;多个线程操作同一个资源——<font color=red>并发</font>。处理多线程问题时，多个线程访问同一个对象，并且某些线程还想修改这个对象，这时需要线程同步。<font color=red>线程同步其实就是一个等待机制，多个需要同时访问此对象的线程进入这个对象的等待池形成队列(排队)</font>，等待前面线程使用完毕，下一个线程再使用。
+&emsp;&emsp;队列与锁：排队去厕所，第一个人进入隔间锁上门独享资源。每个对象都有一把锁来保证线程安全。
+
+&emsp;&emsp;由于同一进程的多个线程共享同一块存储空间，在带来方便的同时，也存在访问冲突问题。为了保证数据在方法中被访问时的正确性，在访问时加入<font color=red>锁机制(synchronized)</font>，当一个线程获得对象的<font color=red>排它锁</font>，独占资源时，其他线程必须等待，使用后释放锁。
+
+性能与安全的平衡：
+* 一个线程持有锁会导致其他所有需要此锁的线程挂起；
+* 在多线程竞争下，加锁、释放锁会导致比较多的上下文切换和调度延时，引起性能问题；
+* 如果一个优先级高的线程等待一个优先级低的线程释放锁，会导致<font color=red>优先级倒置</font>，引起性能问题。
+
+## 线程不安全案例
+&emsp;&emsp;每个线程都在自己的工作内存交互，内存控制不当会造成数据不一致。
+### 不安全地买票
+`chen 买到了第 -1 票！`：当票还剩一张时，由于没有排队，每个人都买了，于是变成-1了。
+```java
+package Thread;
+
+public class UnsafeBuyTickets
+{
+    public static void main(String[] args)
+    {
+        BuyTickets buyTickets = new BuyTickets();
+        new Thread(buyTickets, "chen").start();
+        new Thread(buyTickets, "zu").start();
+        new Thread(buyTickets, "feng").start();
+    }
+}
+
+class BuyTickets implements Runnable
+{
+    private int ticketsNumber = 10;
+    boolean flag = true;  // 外部停止方式
+
+    @Override
+    public void run()
+    {
+        // 买票
+        while (flag)
+        {
+            try
+            {
+                buy();
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // 买票方法
+    private void buy() throws InterruptedException
+    {
+        // 判断是否邮票
+        if (ticketsNumber <= 0)
+        {
+            flag = false;
+            return;
+        }
+
+        // 模拟延时
+        Thread.sleep(1000);
+
+        System.out.println(Thread.currentThread().getName() + " 买到了第 " + ticketsNumber-- + " 票！");
+    }
+}
+/*
+Output:
+feng 买到了第 9 票！
+zu 买到了第 10 票！
+chen 买到了第 10 票！
+chen 买到了第 8 票！
+zu 买到了第 6 票！
+feng 买到了第 7 票！
+zu 买到了第 3 票！
+chen 买到了第 4 票！
+feng 买到了第 5 票！
+feng 买到了第 2 票！
+chen 买到了第 2 票！
+zu 买到了第 2 票！
+feng 买到了第 1 票！
+chen 买到了第 -1 票！ // 线程不安全
+zu 买到了第 0 票！
+ */
+```
+
+### 不安全地取钱
+```java
+package Thread;
+
+/*
+* 不安全地取钱
+* 两个人去银行取钱，账户
+ */
+
+public class UnsafeBank
+{
+    public static void main(String[] args)
+    {
+        // 创建一个账户
+        Account account = new Account(1000000, "购房基金");
+
+        Drawing customer1 = new Drawing(account, 10000, "customer1");
+        Drawing customer2 = new Drawing(account, 2000000, "customer2");
+
+        customer1.start();
+        customer2.start();
+    }
+}
+
+// 账户
+class Account
+{
+    int money;  // 余额
+    String name;  // 卡名
+
+    public Account(int money, String name)
+    {
+        this.money = money;
+        this.name = name;
+    }
+}
+
+// 银行：模拟取款
+class Drawing extends Thread
+{
+    Account account;
+    int drawingMoney;  // 取了多少钱
+    int leftMoney;  // 剩余钱
+
+    public Drawing(Account account, int drawingMoney, String customerName)
+    {
+        super(customerName);
+        this.account = account;
+        this.drawingMoney = drawingMoney;
+    }
+
+    // 取钱
+    @Override
+    public void run()
+    {
+        if (account.money - drawingMoney < 0)
+            System.out.println("金额不足，" + Thread.currentThread().getName() + " 无法取钱！");
+
+        try
+        {
+            Thread.sleep(1000);
+        }catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        // 卡内余额
+        account.money -= drawingMoney;
+        // 手中余额
+        leftMoney += drawingMoney;
+
+        System.out.println("客户：" + Thread.currentThread().getName() + " 取了 " + drawingMoney + " 元！" +
+                "账户：" + account.name + " 还剩余金额：" + account.money);
+        // this.getName() = Thread.currentThread().getName()
+        // 因为类Drawing继承了Thread
+        System.out.println("客户：" + this.getName() + " 手中尚余金额：" + leftMoney);
+    }
+}
+/*
+Output:
+金额不足，customer2 无法取钱！
+客户：customer1 取了 10000 元！账户：购房基金 还剩余金额：990000
+客户：customer1 手中尚余金额：10000
+客户：customer2 取了 2000000 元！账户：购房基金 还剩余金额：-1010000
+客户：customer2 手中尚余金额：2000000
+ */
+```
+
+### 线程不安全的集合
+```java
+package Thread;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class UnsafeList
+{
+    public static void main(String[] args)
+    {
+        List<String> list = new ArrayList<String>();
+        for (int i = 0; i < 10000; i++)
+        {
+            new Thread(() -> {
+                list.add(Thread.currentThread().getName());  // 期望加入10000个线程
+            }).start();
+        }
+
+        /*
+        try
+        {
+            Thread.sleep(100);
+        }catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }*/
+
+        System.out.println(list.size());
+    }
+}
+/*
+Output:9997
+ */
+ ```
+
+ ## 同步的方法
+ &emsp;&emsp;可以通过`private`关键字来保证数据对象只能被方法访问；类似的，只要针对方法提供一套机制，利用`synchronized`关键字：`synchronized`方法和`synchronized`块。
+
+ `public sychronized void methodName(int args){}`
+ * `synchronized`方法控制`对象`的访问，每个对象对应一把锁。每个`synchronized`方法都必须获得调用该方法对象的锁才能执行，否则线程会阻塞。方法一旦执行，就独占该锁，直到该方法返回才释放锁，后面被阻塞的线程才能获得这个锁，继续执行。
+ * 若将一个大的方法声明为`synchronized`将会影响效率。
+ 例如，A代码：只读；B代码：修改，方法里需要修改的内容才需要锁，锁得太多，浪费资源。
+* 同步块`sychronized(Obj){}`中，`Obj`被称为`同步监视器`，它可以是任何对象，但推荐使用共享资源作为同步监视器；同步方法中无需指定监视器，因为同步方法中监视器就是`this`，即该对象本身。或者是`class`(反射中讲解)。
+* 同步监视器得执行过程：1.第一个线程访问，锁定同步监视器，执行其中代码；2.第二个线程访问，发现同步监视器被锁定，无法访问；3.第一个线程访问完毕，解锁同步监视器；4.第二个线程访问，发现同步监视器没有锁，然后锁定并访问。
+
+对`unSafeBuyTickets.java`进行修改，变成线程安全的：
+* `private int ticketsNumber = 1000;`
+* `private synchronized void buy() throws InterruptedException`
+
+```java {.line-numbers highlight=36}
+package Thread;
+
+public class SafeBuyTickets
+{
+    public static void main(String[] args)
+    {
+        BuyTickets buyTickets = new BuyTickets();
+        new Thread(buyTickets, "chen").start();
+        new Thread(buyTickets, "zu").start();
+        new Thread(buyTickets, "feng").start();
+    }
+}
+
+class BuyTickets implements Runnable
+{
+    private int ticketsNumber = 1000;
+    boolean flag = true;  // 外部停止方式
+
+    @Override
+    public void run()
+    {
+        // 买票
+        while (flag)
+        {
+            try
+            {
+                buy();
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // 买票方法
+    private synchronized void buy() throws InterruptedException
+    {
+        // 判断是否邮票
+        if (ticketsNumber <= 0)
+        {
+            flag = false;
+            return;
+        }
+
+        // 模拟延时
+        Thread.sleep(10);
+
+        System.out.println(Thread.currentThread().getName() + " 买到了第 " + ticketsNumber-- + " 票！");
+    }
+}
+/*
+Output:
+...
+chen 买到了第 996 票！
+chen 买到了第 995 票！
+feng 买到了第 994 票！
+feng 买到了第 993 票！
+feng 买到了第 992 票！
+...
+feng 买到了第 334 票！
+feng 买到了第 333 票！
+zu 买到了第 332 票！
+zu 买到了第 331 票！
+...
+zu 买到了第 167 票！
+zu 买到了第 166 票！
+feng 买到了第 165 票！
+feng 买到了第 164 票！
+...
+feng 买到了第 2 票！
+feng 买到了第 1 票！
+ */
+```
+
+对`UnsafeBank.java`修改，变成线程安全的：
+
+```java {.line-numbers highlight=53}
+package Thread;
+
+/*
+* 两个人去银行取钱，账户
+ */
+
+public class SafeBank
+{
+    public static void main(String[] args)
+    {
+        // 创建一个账户
+        Account account = new Account(1000000, "购房基金");
+
+        Drawing customer1 = new Drawing(account, 10000, "customer1");
+        Drawing customer2 = new Drawing(account, 2000000, "customer2");
+
+        customer1.start();
+        customer2.start();
+    }
+}
+
+// 账户
+class Account
+{
+    int money;  // 余额
+    String name;  // 卡名
+
+    public Account(int money, String name)
+    {
+        this.money = money;
+        this.name = name;
+    }
+}
+
+// 银行：模拟取款
+class Drawing extends Thread
+{
+    Account account;
+    int drawingMoney;  // 取了多少钱
+    int leftMoney;  // 剩余钱
+
+    public Drawing(Account account, int drawingMoney, String customerName)
+    {
+        super(customerName);
+        this.account = account;
+        this.drawingMoney = drawingMoney;
+    }
+
+    // 取钱
+    @Override
+    public void run()
+    {
+        // 锁的对象是变化的量：需要增删改
+        synchronized (account)
+        {
+            if (account.money - drawingMoney < 0)
+            {
+                System.out.println("金额不足，" + Thread.currentThread().getName() + " 无法取钱！");
+                return;
+            }
+
+            try
+            {
+                Thread.sleep(1000);
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+
+            // 卡内余额
+            account.money -= drawingMoney;
+            // 手中余额
+            leftMoney += drawingMoney;
+
+            System.out.println("客户：" + Thread.currentThread().getName() + " 取了 " + drawingMoney + " 元！" +
+                    "账户：" + account.name + " 还剩余金额：" + account.money);
+            // this.getName() = Thread.currentThread().getName()
+            // 因为类Drawing继承了Thread
+            System.out.println("客户：" + this.getName() + " 手中尚余金额：" + leftMoney);
+        }
+    }
+}
+/*
+Output:
+客户：customer1 取了 10000 元！账户：购房基金 还剩余金额：990000
+客户：customer1 手中尚余金额：10000
+金额不足，customer2 无法取钱！
+ */
+```
+
+### JUC安全类型的集合
+```java
+package Thread;
+
+import java.util.concurrent.CopyOnWriteArrayList;
+
+public class TestJUC
+{
+    public static void main(String[] args)
+    {
+        CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+        for (int i = 0; i < 200000; i++)
+        {
+            new Thread(() -> {
+                list.add(Thread.currentThread().getName());
+            }).start();
+
+            /*
+            try
+            {
+                Thread.sleep(1000);
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }*/
+        }
+
+        try
+        {
+            Thread.sleep(1000);
+        }catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        System.out.println(list.size());
+    }
+}
+/*
+Output:200000
+ */
+```
+
+## 死锁
+&emsp;&emsp;多个线程各自占用一些共享资源，并且互相等待其他线程占有的资源才能运行，而导致两个或多个线程都在等对方释放资源，都停止执行的情形。某一个同步块同时拥有“两个以上对象的锁”时，就可能会发生“死锁”的问题。
+
+多个线程互相抱着对方需要的资源，然后形成僵持。
+
+```java
+package Thread;
+
+public class DeadLock
+{
+    public static void main(String[] args)
+    {
+        Makeup girl1 = new Makeup(0, "Girl1");
+        Makeup girl2 = new Makeup(1, "Girl2");
+        girl1.start();
+        girl2.start();
+    }
+
+}
+
+class Lipstick
+{
+
+}
+
+class Mirror
+{
+
+}
+
+class Makeup extends Thread
+{
+    // 需要的资源只有一份，可由static保证
+    static Lipstick lipstick = new Lipstick();
+    static Mirror mirror = new Mirror();
+
+    int choice;  // 选择
+    String girlName;  // 使用化妆品的人
+
+    Makeup(int choice, String girlName)
+    {
+        this.choice = choice;
+        this.girlName = girlName;
+    }
+
+    // 化妆
+    @Override
+    public void run()
+    {
+        try
+        {
+            makeup();
+        }catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    // 化妆：互相持有对方的锁，就是需要拿到对方的资源
+    private void makeup() throws InterruptedException
+    {
+        if (choice == 0)
+        {
+            synchronized (lipstick)
+            {
+                System.out.println(this.girlName + " 拥有口红的使用权！想得到镜子的使用权！");
+                Thread.sleep(1000);
+
+                synchronized (mirror)
+                {
+                    System.out.println(this.girlName + " 获得了镜子的使用权！");
+                }
+            }
+        }
+        else
+        {
+            synchronized (mirror)
+            {
+                System.out.println(this.girlName + " 拥有镜子的使用权！想得到口红的使用权！");
+                Thread.sleep(4000);
+
+                synchronized (lipstick)
+                {
+                    System.out.println(this.girlName + " 获得了口红的使用权！");
+                }
+            }
+        }
+    }
+}
+/*
+Output:
+Girl2 拥有镜子的使用权！想得到口红的使用权！
+Girl1 拥有口红的使用权！想得到镜子的使用权！
+
+Process finished with exit code -1
+ */
+```
+
+ 避免死锁：
+ ```java
+ private void makeup() throws InterruptedException
+    {
+        if (choice == 0)
+        {
+            synchronized (lipstick)
+            {
+                System.out.println(this.girlName + " 拥有口红的使用权！想得到镜子的使用权！");
+                Thread.sleep(1000);
+
+                /* 死锁
+                synchronized (mirror)
+                {
+                    System.out.println(this.girlName + " 获得了镜子的使用权！");
+                }*/
+            }
+
+            synchronized (mirror)
+            {
+                System.out.println(this.girlName + " 获得了镜子的使用权！");
+            }
+        }
+        else
+        {
+            synchronized (mirror)
+            {
+                System.out.println(this.girlName + " 拥有镜子的使用权！想得到口红的使用权！");
+                Thread.sleep(4000);
+
+                /* 死锁
+                synchronized (lipstick)
+                {
+                    System.out.println(this.girlName + " 获得了口红的使用权！");
+                }*/
+            }
+
+            synchronized (lipstick)
+            {
+                System.out.println(this.girlName + " 获得了口红的使用权！");
+            }
+        }
+    }
+```
+
+### 死锁避免方法
+产生死锁的四个必要条件：
+* 一个资源每次只能被一个进程使用；
+* 一个进程因请求资源而阻塞时，对已获得的资源保持不放；
+* 进程已获得的资源，在未使用完之前，不能强行剥夺；
+* 若干进程之间形成一种头尾相接的循环等待资源关系。
+
+## `Lock`锁
+* 从`JDK5.0`开始，`Java`提供了更强大的线程同步机制——通过显示定义同步锁对象来实现同步。同步锁使用`Lock`对象充当。
+* `java.util.concurrent.locks.Lock`接口是控制多个线程对共享资源进行访问的工具。锁提供了对共享资源的独占访问，每次只能有一个线程对`Lock`对象加锁，线程开始访问共享资源之前，应先获得`Lock`对象。
+* `ReentrantLock`类（可重入锁）实现了`Lock`，它拥有与`synchronized`相同的并发性和内存语义，在实现线程安全的控制中，比较常用的是`ReentrantLock`，可以显示加锁、释放锁。
+```java
+package Thread;
+
+import java.util.concurrent.locks.ReentrantLock;
+
+public class TestLock
+{
+    public static void main(String[] args)
+    {
+        TestLock2 testLock = new TestLock2();
+        new Thread(testLock, "chen").start();
+        new Thread(testLock, "zu").start();
+        new Thread(testLock, "feng").start();
+    }
+}
+
+class TestLock2 implements Runnable
+{
+    int ticketsNum = 10000;
+
+    // 定义lock锁
+    private final ReentrantLock reentrantLock = new ReentrantLock();
+
+    @Override
+    public void run()
+    {
+        while (true)
+        {
+            try
+            {
+                reentrantLock.lock();  // 加锁
+
+                if (ticketsNum >= 1)
+                {
+                    try
+                    {
+                        Thread.sleep(10);
+                    }catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println(Thread.currentThread().getName() + " 获得了第 " + ticketsNum-- + " 张票！");
+                }
+                else
+                    break;
+            }
+
+            finally
+            {
+                reentrantLock.unlock();  // 解锁
+            }
+
+        }
+    }
+}
+/*
+Output:
+...
+feng 获得了第 2461 张票！
+feng 获得了第 2460 张票！
+chen 获得了第 2459 张票！
+chen 获得了第 2458 张票！
+...
+chen 获得了第 2366 张票！
+chen 获得了第 2365 张票！
+zu 获得了第 2364 张票！
+zu 获得了第 2363 张票！
+
+ */
+ ```
+
+ ### `synchronized`与`Lock`的对比
+ * `Lock`是显示锁（手动开启和关闭锁）；`sychronized`是隐式锁，出了作用域自动释放；
+ * `Lock`只有代码块锁，`sychronized`有代码块锁和方法锁；
+ * 使用`Lock`锁，`JVM`将花费较少的时间来调度线程，性能更好。并且具有更好的扩展性（提供更多的子类）。
+ * 优先使用顺序：`Lock` > 同步代码块 > 同步方法
 
 # 线程通信
+
+## 生产者消费者问题
+* 假设仓库中只能存放一件产品，生产者将生产出来的产品放入仓库，消费者将仓库中产品取走消费。
+* 如果仓库中没有产品，则生产者将产品放入仓库，否则停止生产并等待，直到仓库中的产品被消费者取走。
+* 如果仓库中放有产品，则消费者可以将产品取走消费，否则停止消费并等待，直到仓库中再次放入产品。
+
+&emsp;&emsp;这是一个线程同步问题，生产者和消费者共享同一个资源，并且生产者和消费者之间相互依赖。
+* 对于生产者，没有生产产品之前，要通知消费者等待；而生产了产品之后，又需要马上通知消费者消费。
+* 对于消费者，在消费之后，要通知生产者已经结束消费，需要生产新的产品以供消费。
+* 在生产者消费者问题中，仅有`synchronized`是不够的。`synchronized`可以组织并发更新同一个共享资源，实现同步；但不能用来实现不同线程之间的消息传递（通信）。
+
+&emsp;&emsp;`Java`提供了几个方法来解决线程之间的通信问题：
+<div align=center><img src=Thread/线程通信方法.png width=80%></div>
+
+注：均是`Object`类的方法，都只能在同步方法或同步代码块中使用，否则会抛出异常`IllegalMonitorStateException`。
+
+### 管程法
+&emsp;&emsp;解决方式一：并发协作模型“生产者/消费者模式”->管程法。
+* 生产者：负责生产数据的模块（方法、对象、线程、进程）；
+* 消费者：负责处理数据的模块（方法、对象、线程、进程）；
+* 缓冲区：消费者不能直接使用生产者的数据，它们之间有个“缓冲区”，<font color=red>生产者将生产好的数据放入缓冲区，消费者从缓冲区拿出数据</font>。`Producer->数据缓存区->Consumer`
+
+```java
+package Thread;
+
+/*
+* 利用管程法（缓存区）解决
+ */
+
+public class PCCookie
+{
+    public static void main(String[] args)
+    {
+        SynContainer container = new SynContainer();
+        new Producer(container).start();
+        new Consumer(container).start();
+    }
+}
+
+class Producer extends Thread
+{
+    SynContainer container;
+
+    public Producer(SynContainer container)
+    {
+        this.container = container;
+    }
+
+    // 进行生产
+    @Override
+    public void run()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            container.push(new Product(i));
+            System.out.println("生产第 " + i + " 件产品！");
+        }
+    }
+}
+
+class Consumer extends Thread
+{
+    SynContainer container;
+
+    public Consumer(SynContainer container)
+    {
+        this.container = container;
+    }
+
+    // 消费者消费
+    @Override
+    public void run()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            System.out.println("消费第 " + container.pop().id + " 件产品！");
+        }
+    }
+}
+
+class Product
+{
+    int id;
+
+    public Product(int id)
+    {
+        this.id = id;
+    }
+}
+
+// 缓冲区
+class SynContainer
+{
+    // 一个容器
+    Product[] products = new Product[10];
+    // 容器计数器
+    int count = 0;
+
+    // 生产者放入产品
+     public synchronized void push(Product product)
+     {
+         // 如果容器满了，需要等待消费者去消费
+         if (count == products.length)
+         {
+             // 通知消费者消费，生产者等待
+             try
+             {
+                 this.wait();
+             }catch (InterruptedException e)
+             {
+                 e.printStackTrace();
+             }
+         }
+
+         // 如果没有满，需要丢入产品
+         products[count] = product;
+         count++;
+
+         // 通知消费消费
+         this.notifyAll();
+     }
+
+     // 消费者消费产品
+    public synchronized Product pop()
+    {
+        // 判断能否消费
+        if (count == 0)
+        {
+            // 等待生产者生产，消费者等待
+            try
+            {
+                this.wait();
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        // 如果可以消费
+        count--;
+        Product popProduct = products[count];
+
+        // 消费完后通知生产者生产
+        this.notifyAll();
+
+        return popProduct;
+    }
+}
+```
+
+### 信号灯法
+&emsp;&emsp;解决方式二：并发协作模型“生产者/消费者模式”->信号灯法（创建一个标志位）。
+
+```java
+package Thread;
+
+public class PCFlag
+{
+    public static void main(String[] args)
+    {
+        TV tv = new TV();
+        new Actor(tv).start();
+        new Audience(tv).start();
+    }
+}
+
+// 生产者：演员
+class Actor extends Thread
+{
+    TV tv;
+    public Actor(TV tv)
+    {
+        this.tv = tv;
+    }
+
+    @Override
+    public void run()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (i % 2 == 0)
+                this.tv.play("快乐大本营");
+            else
+                this.tv.play("天天向上");
+        }
+    }
+}
+
+// 消费者：观众
+class Audience extends Thread
+{
+    TV tv;
+    public Audience(TV tv)
+    {
+        this.tv = tv;
+    }
+
+    @Override
+    public void run()
+    {
+        for (int i = 0; i < 10; i++)
+            this.tv.watch();
+    }
+}
+
+// 产品：节目
+class TV
+{
+    String program;  // 节目
+
+    // 演员录节目时，观众等待 true
+    // 观众观看时，演员等待反馈 false
+    boolean flag = true;
+
+    // 表演
+    public synchronized void play(String program)
+    {
+        if (!flag)  // 观众观看时，演员等待反馈 false
+        {
+            try
+            {
+                this.wait();
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("演员表演了节目：" + program);
+
+        // 表演完后通知观众观看
+        this.notifyAll();  // 通知唤醒
+
+        this.program = program;
+        this.flag = !this.flag;  // 取反
+    }
+
+    // 观看
+    public synchronized void watch()
+    {
+        if (flag)  //演员录节目时，观众等待 true
+        {
+            try
+            {
+                this.wait();
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("观众观看了节目：" + program);
+
+        // 观众观看反馈后，通知演员表演
+        this.notifyAll();
+        this.flag = !this.flag;
+    }
+}
+/*
+Output:
+演员表演了节目：快乐大本营
+观众观看了节目：快乐大本营
+演员表演了节目：天天向上
+观众观看了节目：天天向上
+演员表演了节目：快乐大本营
+观众观看了节目：快乐大本营
+ */
+ ```
+
+## 线程池
+&emsp;&emsp;经常创建和销毁、使用量特别大的资源，比如并发情况下的线程，对性能影响很大。因此，可以提前创建好多个线程，放入线程池中，使用时直接获取，使用完放回池中。可以避免频繁创建、销毁，实现重复利用。<font color=red>类似每次需要骑车时，去站点使用共享单车，而不是每次都去买一辆</font>。 
+
+这么做可以：
+* 提高响应速度（减少了创建新线程的时间）；
+* 降低资源消耗（重复利用线程池中线程，不需要每次都创建）；
+* 便于线程管理：
+    `corePoolSize`：管理核心池的大小；
+    `maximumPoolSize`：管理最大线程数；
+    `keepAliveTime`：管理线程没有任务时最多保持多长时间后会终止。
+
+### 使用线程池
+* `JDK5.0`起提供了线程池相关`API`：`ExecutorService`和`Executors`；
+* `ExecutorService`：真正的线程池接口。常见子类`ThreadPoolExecutor`：
+    1.`void execute(Runnable command)`：执行任务/命令，没有返回值，一般用来执行`Runnable`；
+    2.`<T>Future<T> submit(Callable<T> task)`：执行任务，有返回值，一般用来执行`Callable`；
+    3.`void shutdown()`：关闭连接池。
+* `Executors`：工具类、线程池的工厂类，用于创建并返回不同类型的线程池。
+
+```java
+package Thread;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class TestPool
+{
+    public static void main(String[] args)
+    {
+        // 1. 创建服务，创建线程池
+        ExecutorService service = Executors.newFixedThreadPool(10);  // 线程池的大小为10
+
+        service.execute(new MyThread());
+        service.execute(new MyThread());
+        service.execute(new MyThread());
+        service.execute(new MyThread());
+
+        // 2.关闭连接
+        service.shutdown();
+    }
+}
+
+class MyThread implements Runnable
+{
+    @Override
+    public void run()
+    {
+        System.out.println(Thread.currentThread().getName());
+    }
+}
+/*
+pool-1-thread-1
+pool-1-thread-3
+pool-1-thread-4
+pool-1-thread-2
+ */
+ ```
