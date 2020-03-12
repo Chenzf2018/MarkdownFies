@@ -12,6 +12,11 @@
 * 将一个类声明为`Thread`的子类；
 * 重写`run`方法；
 * 创建实例，调用`start`方法启动线程。
+
+<div align=center><img src=Thread/Thread类.png width=90%></div>
+
+不推荐使用这种方法，因为它将任务和运行任务的机制混在了一起。将任务从线程中分离出来是比较好的设计。
+
 ```java
 package Thread;
 
@@ -154,6 +159,64 @@ Output:
  * 定义`MyRunnable`类实现`Runnable`接口；
  * 实现`run()`方法，编写线程执行体；
  * 创建线程对象（执行线程需要丢入`Runnable`接口实现类的对象），调用`start()`方法启动线程。
+
+```java
+package Thread;
+
+// Client class
+public class TaskThreadDemo
+{
+    public static void main(String[] args)
+    {
+        // 1.创建任务
+        Runnable printA = new PrintChar('a', 10);
+        Runnable printB = new PrintChar('b', 10);
+
+        // 2.创建线程
+        // 任务必须在线程中执行
+        Thread thread1 = new Thread(printA);
+        Thread thread2 = new Thread(printB);
+
+        //3.启动线程
+        // 调用start()方法告诉Java虚拟机该线程准备运行
+        // 运行这个程序，则两个线程将共享CPU
+        thread1.start();
+        thread2.start();
+    }
+}
+
+// Custom task class
+// 通过实现Runnable 接口定义一个任务类
+class PrintChar implements Runnable
+{
+    private char charToPrint;
+    private int times;
+
+    public PrintChar(char charToPrint, int times)
+    {
+        this.charToPrint = charToPrint;
+        this.times = times;
+    }
+
+    // 告诉系统线程将如何运行
+    @Override
+    public void run()
+    {
+        for (int i = 0; i < times; i++)
+            System.out.println(Thread.currentThread().getName() + " " + charToPrint);
+    }
+}
+/*
+Thread-1 b
+Thread-0 a
+Thread-1 b
+Thread-0 a
+......
+ */
+ ```
+任务中的`run()`方法指明如何完成这个任务。Java虚拟机会自动调用该方法，无需特意调用它。直接调用`run()`只是在同一个线程中执行该方法，而没有新线程被启动。
+
+
 ```java
 package Thread;
 
@@ -1105,6 +1168,9 @@ class MyYield implements Runnable
 ## 线程强制执行
 * `join`合并线程，待此线程执行完成后，再执行其他线程，其他线程阻塞；
 * 可以理解为插队。
+
+<div align=center><img src=Thread/join.png width=90%></div>
+
 ```java
 package Thread;
 
@@ -1119,9 +1185,11 @@ public class Join implements Runnable
 
     public static void main(String[] args) throws InterruptedException
     {
-        // 启动线程
+        // 创建任务
         Join testJoin = new Join();
+        // 创建线程
         Thread thread = new Thread(testJoin);
+        // 启动线程
         thread.start();
 
         // 主线程
@@ -1370,6 +1438,82 @@ God blesses you !  // 随后守护线程也结束了
  */
  ```
 
+# 线程池
+&emsp;&emsp;经常创建和销毁、使用量特别大的资源，比如并发情况下的线程，对性能影响很大。因此，可以提前创建好多个线程，放入线程池中，使用时直接获取，使用完放回池中。可以避免频繁创建、销毁，实现重复利用。<font color=red>类似每次需要骑车时，去站点使用共享单车，而不是每次都去买一辆</font>。 
+
+这么做可以：
+* 提高响应速度（减少了创建新线程的时间）；
+* 降低资源消耗（重复利用线程池中线程，不需要每次都创建）；
+* 便于线程管理：
+    `corePoolSize`：管理核心池的大小；
+    `maximumPoolSize`：管理最大线程数；
+    `keepAliveTime`：管理线程没有任务时最多保持多长时间后会终止。
+
+## 使用线程池
+
+&emsp;&emsp;实现`java.lang.Runnable`来定义一个任务类，以及如何创建一个线程来运行一个任务`Runnable task= new TaskClass(task); new Thread(task). start();`该方法对单一任务的执行是很方便的，但是由于必须为每个任务创建一个线程，因此对大量的任务而言是不够高效的。为每个任务开始一个新线程可能会限制吞吐最并且造成性能降低。线程池是管理并发执行任务个数的理想方法。Java提供`Executor`接口来执行线程池中的任务，提供`ExecutorService`接口来管理和控制任务。`ExecutorService`是`Executor`的子接口。
+
+
+* `JDK5.0`起提供了线程池相关`API`：`ExecutorService`和`Executors`；
+* `ExecutorService`：真正的线程池接口。常见子类`ThreadPoolExecutor`：
+    1.`void execute(Runnable command)`：执行任务/命令，没有返回值，一般用来执行`Runnable`；
+    2.`<T>Future<T> submit(Callable<T> task)`：执行任务，有返回值，一般用来执行`Callable`；
+    3.`void shutdown()`：关闭连接池。
+* `Executors`：工具类、线程池的工厂类，用于创建并返回不同类型的线程池。
+
+`Executor`接口（`Execute方法`）执行线程，而子接口`ExecutorService`管理线程：
+<div align=center><img src=Thread/Executor.png width=90%></div>
+
+`Executors`类提供创建`Executor`对象的静态方法：
+<div align=center><img src=Thread/Executors.png width=90%></div>
+
+
+```java
+package Thread;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class TestPool
+{
+    public static void main(String[] args)
+    {
+        // 1. 创建服务，创建线程池
+        // Create a fixed thread pool with maximum ten threads
+        ExecutorService service = Executors.newFixedThreadPool(10);  // 线程池的大小为10
+
+        service.execute(new MyThread());
+        service.execute(new MyThread());
+        service.execute(new MyThread());
+        service.execute(new MyThread());
+
+        // 2.关闭连接
+        service.shutdown();
+    }
+}
+
+class MyThread implements Runnable
+{
+    @Override
+    public void run()
+    {
+        System.out.println(Thread.currentThread().getName());
+    }
+}
+/*
+pool-1-thread-1
+pool-1-thread-3
+pool-1-thread-4
+pool-1-thread-2
+ */
+ ```
+
+&emsp;&emsp;如果仅需要为一个任务创建一个线程，就使用`Thread`类。如果需要为多个任务创建线程，最好使用线程池。
+* `ExecutorService executor = Executors.newFixedThreadPool(1);`：这四个可运行的任务将顺次执行，因为在线程池中只有一个线程。
+* `ExecutorService executor = Executors.newCachedThreadPool();`：将为每个等待的任务创建一个新线程，所以，所有的任务都并发地执行。
+* 方法`shutdown()`通知执行器关闭。不能接受新的任务，但是现有的任务将继续执行直至完成。
+
+
 # 线程的同步(重点)
 &emsp;&emsp;多个线程操作同一个资源——<font color=red>并发</font>。处理多线程问题时，多个线程访问同一个对象，并且某些线程还想修改这个对象，这时需要线程同步。<font color=red>线程同步其实就是一个等待机制，多个需要同时访问此对象的线程进入这个对象的等待池形成队列(排队)</font>，等待前面线程使用完毕，下一个线程再使用。
 &emsp;&emsp;队列与锁：排队去厕所，第一个人进入隔间锁上门独享资源。每个对象都有一把锁来保证线程安全。
@@ -1580,13 +1724,109 @@ Output:9997
  */
  ```
 
- ## 同步的方法
- &emsp;&emsp;可以通过`private`关键字来保证数据对象只能被方法访问；类似的，只要针对方法提供一套机制，利用`synchronized`关键字：`synchronized`方法和`synchronized`块。
+ ### 线程不安全案例四
+ &emsp;&emsp;假设创建并启动100个线程，每个线程都往同一个账户中添加一个便士。定义一个名为`Account`的类模拟账户，一个名为`AddAPennyTask`的类用来向账户里添加一便士，以及一个用于创建和启动线程的主类。
+<div align=center><img src=Thread/线程不安全案例4.png width=90%></div>
 
- `public sychronized void methodName(int args){}`
+```java
+package Thread;
+
+import java.util.concurrent.*;
+
+public class AccountWithoutSync
+{
+    private static Account account = new Account();
+
+    public static void main(String[] args)
+    {
+        // 创建线程池
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        // 创建线程，创建任务
+        for (int i = 0; i < 100; i++)
+        {
+            executorService.execute(new AddAPennyTask());  // submit task
+            System.out.println(Thread.currentThread().getName() + " 正在存钱中！");
+        }
+
+        executorService.shutdown();
+
+        // Wait until all tasks are finished
+        while (!executorService.isTerminated()){}
+        System.out.println("What's balance? " + account.balance);
+    }
+
+    // A thread for adding a penny to the account
+    private static class AddAPennyTask implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            account.deposit(1);
+        }
+    }
+
+    // An inner class for account
+    private static class Account
+    {
+        private int balance = 0;
+
+        public int getBalance(){ return balance; }
+
+        public void deposit(int amount)
+        {
+            int newBalance = balance + amount;
+
+            // This delay is deliberately added to magnify the
+            // data-corruption problem and make it easy to see.
+            try
+            {
+                Thread.sleep(1);
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+
+            balance = newBalance;
+            
+            // 47-60的代码可由balance += amount;代替，但此时无法清楚地看出问题！
+        }
+    }
+}
+/*
+......
+main 正在存钱中！
+What's balance? 7
+ */
+ ```
+
+当所有的线程都完成时，余额应该是100, 但是输出结果`What's balance? 7`并不是可预测的。出现问题的原因：
+<div align=center><img src=Thread/案例四线程不安全原因.png width=80%></div>
+
+step | balance | newBalance | Task1                     | Task2 |
+:-:  | :-:     | :-:        | :-:                       | :-:   |
+1    | 0       | 1          | newBalance = balance + 1; |       | 
+2    | 0       | 1          |                           | newBalance = balance + 1;|
+3    | 1       | 1          | balance = newBalance;     |       |
+4    | 1       | 1          |                           | balance = newBalance;     |
+
+问题是任务1和任务2以一种会引起冲突的方式访问一个公共资源。这是多线程程序中的一个普遍问题，称为竞争状态(`race condition`) 。如果一个类的对象在多线程程序中没有导致竞争状态，则称这样的类为线程安全的(`thread-safe`) 。
+
+
+ ## 同步的方法
+&emsp;&emsp;为避免竞争状态，应该防止多个线程同时进入程序的某一特定部分，程序中的这部分称为临界区(`critical region`) 。可以使用关键字`synchronized`来同步方法，以便<font color=red>一次只有一个线程可以访问这个方法</font>。
+`public synchronized void deposit(int amount)`
+
+&emsp;&emsp;一个同步方法在执行之前需要加锁。锁是一种实现资源排他使用的机制。<font color=red>对于实例方法，要给调用该方法的对象加锁。对于静态方法，要给这个类加锁</font>。如果一个线程调用一个对象上的同步实例方法（静态方法），首先给该对象（类）加锁，然后执行该方法，最后解锁。在解锁之前，另一个调用那个对象（类）中方法的线程将被阻塞，直到解锁。
+<div align=center><img src=Thread/同步.png width=60%></div>
+
  * `synchronized`方法控制`对象`的访问，每个对象对应一把锁。每个`synchronized`方法都必须获得调用该方法对象的锁才能执行，否则线程会阻塞。方法一旦执行，就独占该锁，直到该方法返回才释放锁，后面被阻塞的线程才能获得这个锁，继续执行。
  * 若将一个大的方法声明为`synchronized`将会影响效率。
  例如，A代码：只读；B代码：修改，方法里需要修改的内容才需要锁，锁得太多，浪费资源。
+
+&emsp;&emsp;调用一个对象上的同步实例方法，需要给该对象加锁。而调用一个类上的同步静态方法，需要给该类加锁。当执行方法中某一个代码块时，同步语句不仅可用于对`this对象`加锁，而且可用于对任何对象加锁。这个代码块称为`同步块(synchronized block)`。
+
 * 同步块`sychronized(Obj){}`中，`Obj`被称为`同步监视器`，它可以是任何对象，但推荐使用共享资源作为同步监视器；同步方法中无需指定监视器，因为同步方法中监视器就是`this`，即该对象本身。或者是`class`(反射中讲解)。
 * 同步监视器得执行过程：1.第一个线程访问，锁定同步监视器，执行其中代码；2.第二个线程访问，发现同步监视器被锁定，无法访问；3.第一个线程访问完毕，解锁同步监视器；4.第二个线程访问，发现同步监视器没有锁，然后锁定并访问。
 
@@ -1805,7 +2045,7 @@ Output:200000
  */
 ```
 
-## 死锁
+### 死锁
 &emsp;&emsp;多个线程各自占用一些共享资源，并且互相等待其他线程占有的资源才能运行，而导致两个或多个线程都在等对方释放资源，都停止执行的情形。某一个同步块同时拥有“两个以上对象的锁”时，就可能会发生“死锁”的问题。
 
 多个线程互相抱着对方需要的资源，然后形成僵持。
@@ -1946,19 +2186,109 @@ Process finished with exit code -1
             }
         }
     }
-```
+ ```
 
-### 死锁避免方法
+#### 死锁避免方法
 产生死锁的四个必要条件：
 * 一个资源每次只能被一个进程使用；
 * 一个进程因请求资源而阻塞时，对已获得的资源保持不放；
 * 进程已获得的资源，在未使用完之前，不能强行剥夺；
 * 若干进程之间形成一种头尾相接的循环等待资源关系。
 
-## `Lock`锁
+### `Lock`锁
+&emsp;&emsp;Java可以显式地加锁，这给协调线程带来了更多的控制功能。一个锁是一个`Lock`接口的实例，它定义了加锁和释放锁的方法。
+
 * 从`JDK5.0`开始，`Java`提供了更强大的线程同步机制——通过显示定义同步锁对象来实现同步。同步锁使用`Lock`对象充当。
 * `java.util.concurrent.locks.Lock`接口是控制多个线程对共享资源进行访问的工具。锁提供了对共享资源的独占访问，每次只能有一个线程对`Lock`对象加锁，线程开始访问共享资源之前，应先获得`Lock`对象。
 * `ReentrantLock`类（可重入锁）实现了`Lock`，它拥有与`synchronized`相同的并发性和内存语义，在实现线程安全的控制中，比较常用的是`ReentrantLock`，可以显示加锁、释放锁。
+    `ReentrantLock`是`Lock`的一个具体实现，用于创建相互排斥的锁。可以创建具有特定的公平策略的锁。<font color=red>公平策略值为真，则确保等待时间最长的线程首先获得锁。取值为假的公平策略将锁给任意一个在等待的线程</font>。被多个线程访问的使用公正锁的程序，其整体性能可能比那些使用默认设置的程序差，但是在获取锁且避免资源缺乏时可以有更小的时间变化。
+
+<div align=center><img src=Thread/ReentrantLock.png width=90%></div>
+
+#### 加锁线程安全1
+```java
+package Thread;
+
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
+
+public class AccountWithSyncUsingLock
+{
+    private static Account account = new Account();
+
+    public static void main(String[] args)
+    {
+        // 创建线程池
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        // Create and launch 100 threads
+        for (int i = 0; i < 100; i++)
+        {
+            executorService.execute(new AddAPennyTask());
+            System.out.println(Thread.currentThread().getName() + " " + i + " 正在存钱中！");
+        }
+
+        executorService.shutdown();
+
+        // Wait until all tasks are finished
+        // 程序暂停
+        while (!executorService.isTerminated()){}
+
+        System.out.println("What's balance? " + account.getBalance());
+    }
+
+    // A thread for adding a penny to the account
+    public static class AddAPennyTask implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            account.deposit(1);
+        }
+    }
+
+    // An inner class for Account
+    public static class Account
+    {
+        // Create a lock
+        private static Lock lock = new ReentrantLock();
+
+        private int balance = 0;
+
+        public int getBalance(){ return balance; }
+
+        public void deposit(int amount)
+        {
+            lock.lock();  // Acquire the lock
+
+            try
+            {
+                int newBalance = balance + amount;
+                // This delay is deliberately added to magnify the
+                // data-corruption problem and make it easy to see.
+                Thread.sleep(5);
+                balance = newBalance;
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+            finally
+            {
+                lock.unlock();  // Release the lock
+            }
+        }
+    }
+}
+/*
+main 98 正在存钱中！
+main 99 正在存钱中！
+What's balance? 100
+ */
+```
+
+
+#### 加锁线程安全2
 ```java
 package Thread;
 
@@ -2031,15 +2361,155 @@ zu 获得了第 2363 张票！
  */
  ```
 
- ### `synchronized`与`Lock`的对比
+#### `synchronized`与`Lock`的对比
  * `Lock`是显示锁（手动开启和关闭锁）；`sychronized`是隐式锁，出了作用域自动释放；
  * `Lock`只有代码块锁，`sychronized`有代码块锁和方法锁；
  * 使用`Lock`锁，`JVM`将花费较少的时间来调度线程，性能更好。并且具有更好的扩展性（提供更多的子类）。
  * 优先使用顺序：`Lock` > 同步代码块 > 同步方法
 
+
+
 # 线程通信
 
-## 生产者消费者问题
+## 锁和条件
+&emsp;&emsp;通过保证在临界区上多个线程的相互排斥，线程同步完全可以避免竞争条件的发生， 但是有时候，还需要线程之间的相互协作。可以使用条件实现线程间通信。一个线程可以指定在某种条件下该做什么。条件是通过调用`Lock`对象的`newCondition()`方法而创建的对象。一旦创建了条件，就可以使用`await(), signal()`和`signalAll()`方法来实现线程之间的相互通信。`await()`方法可以让当前线程进人等待，直到条件发生。`signal()`方法唤醒一个等待的线程，而`signalAll()`唤醒所有等待的线程。
+<div align=center><img src=Thread/Condition接口定义完成同步的方法.png width=90%></div>
+
+&emsp;&emsp;假设创建并启动两个任务，一个用来向账户中存款，另一个从同一账户中提款。
+* 当提款的数额大于账户的当前余额时，提款线程必须等待。
+* 不管什么时候，只要向账户新存入一笔资金，存储线程必须通知提款线程重新尝试。如果余额仍未达到提款的数额，提款线程必须继续等待新的存款。
+* 为了同步这些操作，使用一个具有条件的锁`newDeposit`(即增加到账户的新存款)。如果余额小于取款数额，提款任务将等待`newDeposit`条件。当存款任务给账户增加资金时，存款任务唤醒等待中的提款任务再次尝试。
+
+<div align=center><img src=Thread/两个任务之间的交互.png width=90%></div>
+
+从`Lock`对象中创建条件。为了使用条件，必须首先获取锁。`await()`方法让线程等待并且自动释放条件上的锁。一旦条件正确，线程重新获取锁并且继续执行。
+```java
+package Thread;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class ThreadCooperation
+{
+    private static Account account = new Account();
+
+    public static void main(String[] args)
+    {
+        // Create a thread pool with two threads
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+        executorService.execute(new DepositTask());
+        executorService.execute(new WithdrawTask());
+
+        executorService.shutdown();
+
+        System.out.println("Thread 1: DepositTask\t\t\t\t\tThread 2: WithdrawTask\t\t\t\t\t\t\t\t\tBalance");
+    }
+
+    public static class DepositTask implements Runnable
+    {
+        // Keep adding an amount to the account
+        @Override
+        public void run()
+        {
+            // Purposely delay it to let the withdraw method proceed
+            try
+            {
+                while (true)
+                {
+                    account.deposit((int) (Math.random() * 10) + 1);
+                    Thread.sleep(1000);
+                }
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static class WithdrawTask implements Runnable
+    {
+        // Keep subtracting an amount from the account
+        @Override
+        public void run()
+        {
+            while (true)
+                account.withdraw((int) (Math.random() * 10) + 1);
+        }
+    }
+
+    private static class Account
+    {
+        // Create a new lock
+        private static Lock lock = new ReentrantLock();
+
+        // Create a condition, 使用一个具有条件的锁
+        private static Condition newDeposit = lock.newCondition();
+
+        private int balance = 0;
+
+        public int getBalance(){return balance;}
+
+        public void withdraw(int withdrawAmount)
+        {
+            // Acquire the lock
+            lock.lock();
+            try
+            {
+                while (balance < withdrawAmount)
+                {
+                    System.out.println("\t\t\t\t\t\t\t\t\t\t\t\t\tWant to deposit " + withdrawAmount + "! Wait for a deposit...");
+                    newDeposit.await();  // Wait on the condition
+                }
+
+                balance -= withdrawAmount;
+                System.out.println("\t\t\t\t\t\t\t\t\t\t\t\t\t" + Thread.currentThread().getName() + " withdraws " + withdrawAmount +
+                        ". \t\t\t\t\t\t\tNow, the balance is " + balance);
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+            finally
+            {
+                lock.unlock();  // Release the lock
+            }
+        }
+
+        public void deposit(int amount)
+        {
+            lock.lock();
+            try
+            {
+                balance += amount;
+                System.out.println(Thread.currentThread().getName() + " deposits " + amount +
+                        ". \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tNow, the balance is " + getBalance());
+
+                // Signal thread waiting on the condition
+                newDeposit.signalAll();
+            }
+            finally
+            {
+                lock.unlock();
+            }
+        }
+    }
+}
+ ```
+<div align=center><img src=Thread/两个任务交互的结果.png width=90%></div>
+
+
+## 监视器
+&emsp;&emsp;`锁和条件`是`Java 5`中的新内容。在`Java 5`之前，线程通信是使用对象的`内置监视器`编程实现的。锁和条件比内置监视器更加强大且灵活，因此无须使用监视器。然而，如果使用遗留的Java代码，就可能会碰到Java的内置监视器。
+
+&emsp;&emsp;监视器(monitor)是一个相互排斥且具备同步能力的对象。监视器中的一个时间点上，只能有一个线程执行一个方法。线程通过获取监视器上的锁进入监视器，并且通过释放锁退出监视摇。任意对象都可能是一个监视器。一旦一个线程锁住对象，该对象就成为监视器。加锁是通过在方法或块上使用`synchronized`关键字来实现的。在执行同步方法或块之前，线程必须获取锁。如果条件不适合线程继续在监视器内执行，线程可能在监视器中等待。可以对监视器对象调用`wait()`方法来释放锁，这样其他的一些监视器中的线程就可以获取它，也就有可能改变监视器的状态。当条件合适时，另一线程可以调用`notify()`或`notifyAll()`方法来通知一个或所有的等待线程重新获取锁并且恢复执行。
+
+
+### 初识生产者消费者问题
 * 假设仓库中只能存放一件产品，生产者将生产出来的产品放入仓库，消费者将仓库中产品取走消费。
 * 如果仓库中没有产品，则生产者将产品放入仓库，否则停止生产并等待，直到仓库中的产品被消费者取走。
 * 如果仓库中放有产品，则消费者可以将产品取走消费，否则停止消费并等待，直到仓库中再次放入产品。
@@ -2049,10 +2519,7 @@ zu 获得了第 2363 张票！
 * 对于消费者，在消费之后，要通知生产者已经结束消费，需要生产新的产品以供消费。
 * 在生产者消费者问题中，仅有`synchronized`是不够的。`synchronized`可以组织并发更新同一个共享资源，实现同步；但不能用来实现不同线程之间的消息传递（通信）。
 
-&emsp;&emsp;`Java`提供了几个方法来解决线程之间的通信问题：
-<div align=center><img src=Thread/线程通信方法.png width=80%></div>
 
-注：均是`Object`类的方法，都只能在同步方法或同步代码块中使用，否则会抛出异常`IllegalMonitorStateException`。
 
 ### 管程法
 &emsp;&emsp;解决方式一：并发协作模型“生产者/消费者模式”->管程法。
@@ -2306,60 +2773,3 @@ Output:
  */
  ```
 
-## 线程池
-&emsp;&emsp;经常创建和销毁、使用量特别大的资源，比如并发情况下的线程，对性能影响很大。因此，可以提前创建好多个线程，放入线程池中，使用时直接获取，使用完放回池中。可以避免频繁创建、销毁，实现重复利用。<font color=red>类似每次需要骑车时，去站点使用共享单车，而不是每次都去买一辆</font>。 
-
-这么做可以：
-* 提高响应速度（减少了创建新线程的时间）；
-* 降低资源消耗（重复利用线程池中线程，不需要每次都创建）；
-* 便于线程管理：
-    `corePoolSize`：管理核心池的大小；
-    `maximumPoolSize`：管理最大线程数；
-    `keepAliveTime`：管理线程没有任务时最多保持多长时间后会终止。
-
-### 使用线程池
-* `JDK5.0`起提供了线程池相关`API`：`ExecutorService`和`Executors`；
-* `ExecutorService`：真正的线程池接口。常见子类`ThreadPoolExecutor`：
-    1.`void execute(Runnable command)`：执行任务/命令，没有返回值，一般用来执行`Runnable`；
-    2.`<T>Future<T> submit(Callable<T> task)`：执行任务，有返回值，一般用来执行`Callable`；
-    3.`void shutdown()`：关闭连接池。
-* `Executors`：工具类、线程池的工厂类，用于创建并返回不同类型的线程池。
-
-```java
-package Thread;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-public class TestPool
-{
-    public static void main(String[] args)
-    {
-        // 1. 创建服务，创建线程池
-        ExecutorService service = Executors.newFixedThreadPool(10);  // 线程池的大小为10
-
-        service.execute(new MyThread());
-        service.execute(new MyThread());
-        service.execute(new MyThread());
-        service.execute(new MyThread());
-
-        // 2.关闭连接
-        service.shutdown();
-    }
-}
-
-class MyThread implements Runnable
-{
-    @Override
-    public void run()
-    {
-        System.out.println(Thread.currentThread().getName());
-    }
-}
-/*
-pool-1-thread-1
-pool-1-thread-3
-pool-1-thread-4
-pool-1-thread-2
- */
- ```
