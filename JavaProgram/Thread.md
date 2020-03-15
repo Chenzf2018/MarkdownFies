@@ -2508,6 +2508,8 @@ public class ThreadCooperation
 
 &emsp;&emsp;监视器(monitor)是一个相互排斥且具备同步能力的对象。监视器中的一个时间点上，只能有一个线程执行一个方法。线程通过获取监视器上的锁进入监视器，并且通过释放锁退出监视摇。任意对象都可能是一个监视器。一旦一个线程锁住对象，该对象就成为监视器。加锁是通过在方法或块上使用`synchronized`关键字来实现的。在执行同步方法或块之前，线程必须获取锁。如果条件不适合线程继续在监视器内执行，线程可能在监视器中等待。可以对监视器对象调用`wait()`方法来释放锁，这样其他的一些监视器中的线程就可以获取它，也就有可能改变监视器的状态。当条件合适时，另一线程可以调用`notify()`或`notifyAll()`方法来通知一个或所有的等待线程重新获取锁并且恢复执行。
 
+<div align=center><img src=Thread/监视器.png></div>
+
 
 ### 初识生产者消费者问题
 * 假设仓库中只能存放一件产品，生产者将生产出来的产品放入仓库，消费者将仓库中产品取走消费。
@@ -2521,7 +2523,7 @@ public class ThreadCooperation
 
 
 
-### 管程法
+#### 管程法
 &emsp;&emsp;解决方式一：并发协作模型“生产者/消费者模式”->管程法。
 * 生产者：负责生产数据的模块（方法、对象、线程、进程）；
 * 消费者：负责处理数据的模块（方法、对象、线程、进程）；
@@ -2655,7 +2657,7 @@ class SynContainer
 }
 ```
 
-### 信号灯法
+#### 信号灯法
 &emsp;&emsp;解决方式二：并发协作模型“生产者/消费者模式”->信号灯法（创建一个标志位）。
 
 ```java
@@ -2773,3 +2775,149 @@ Output:
  */
  ```
 
+## 生产者/消费者示例
+&emsp;&emsp;假设使用缓冲区存储整数。缓冲区的大小是受限的。缓冲区提供`write(int)`方法将一个`int`值添加到缓冲区中，还提供方法`read()`从缓冲区中读取和删除一个`int`值。为了同步这个操作，使用具有两个条件的锁：`notEmpty`(即缓冲区非空)和`notFull`(即缓冲区未满)。当任务向缓冲区添加一个`int`时，如果缓冲区是满的，那么任务将会等待`notFull`条件。当任务从缓冲区中读取一个`int`时，如果缓冲区是空的，那么任务将等待`notEmpty`条件。
+
+<div align=center><img src=Thread/生产者消费者.png width=80%></div>
+
+```java
+package Thread;
+
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
+
+public class ConsumerProducer
+{
+    // 创建一个缓存区
+    private static Buffer buffer = new Buffer();
+
+    public static void main(String[] args)
+    {
+        // Create a thread pool with two threads
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+        executorService.execute(new ProducerTask());
+        executorService.execute(new ConsumerTask());
+
+        executorService.shutdown();
+    }
+
+    // A task for adding an int to the buffer
+    private static class ProducerTask implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            try
+            {
+                int i = 1;
+                while (true)
+                {
+                    System.out.println("Producer writes " + i);
+                    buffer.write(i++);  // Add a value to the buffer
+                    Thread.sleep((int) (Math.random() * 10 * 1000));
+                }
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    // A task for reading and deleting an int from the buffer
+    private static class ConsumerTask implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            try
+            {
+                while (true)
+                {
+                    System.out.println("\t\t\t\t\t\t\t\t\tConsumer reads " + buffer.read());
+                    Thread.sleep((int) (Math.random() * 10 * 1000));
+                }
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    // An inner class for buffer
+    private static class Buffer
+    {
+        private static final int CAPACITY = 1;  // buffer size
+        private java.util.LinkedList<Integer> queue = new java.util.LinkedList<>();
+
+        // Create a new lock
+        private static Lock lock = new ReentrantLock();
+
+        // Create two conditions
+        // 删除时，等待notEmpty信号，等到继续删除
+        private static Condition notEmpty = lock.newCondition();
+        // 添加时，等待notFull信号，等到继续添加
+        private static Condition notFull = lock.newCondition();
+
+
+        public void write(int value)
+        {
+            lock.lock();
+            try
+            {
+                while (queue.size() == CAPACITY)
+                {
+                    // 此时满了，等待非满信号
+                    System.out.println("It's full now! Wait for notFull condition...");
+                    // notFull.wait();
+                    notFull.await();
+                }
+
+                // 添加数字，此时非空，发出信号可以读取删除数字了
+                queue.offer(value);
+                notEmpty.signal();  // Signal notEmpty condition
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+            finally
+            {
+                lock.unlock();
+            }
+        }
+
+        public int read()
+        {
+            int value = 0;
+            lock.lock();
+            try
+            {
+                while (queue.isEmpty())
+                {
+                    // 此时空了，等待非空信号
+                    System.out.println("\t\t\t\t\t\t\t\t\tIt's empty now! Wait for notEmpty condition...");
+                    //notEmpty.wait();
+                    notEmpty.await();
+                }
+
+                // 读取删除数字，此时非满，发出信号可以添加数字了
+                value = queue.remove();
+                notFull.signal();
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+            finally
+            {
+                lock.unlock();
+                return value;
+            }
+        }
+    }
+}
+ ```
+<div align=center><img src=Thread/生产者消费者结果.png width=90%></div>
