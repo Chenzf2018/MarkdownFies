@@ -343,7 +343,7 @@ value1.equals(value2): false
  ```
  <font color=red>`equals()`的默认行为是比较引用。所以除非在自己的新类中覆盖`equals()`方法，否则默认是比较引用，而不是实际内容</font>。大多数Java库类通过覆写`equals()`方法比较对象的内容而不是其引用。
 
- 在`Object,java`中：
+ 在`Object.java`中：
 ```java
 public boolean equals(Object obj) 
 {
