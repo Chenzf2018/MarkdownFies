@@ -1,3 +1,248 @@
+# 合集
+
+数据结构(data structure) 是以某种形式将数据组织在一起的`合集`(collection) 。数据结构不仅存储数据，还支持访问和处理数据的操作。
+
+在面向对象思想里，一种数据结构也被认为是一个`容器`(container) 或者`容器对象`(container object), 它是一个能存储其他对象的对象，这里的其他对象常称为数据或者元素。
+
+Java合集框架支持以下两种类型的容器：
+- 为了存储**键/值对**，称为**映射表(map)**。
+- 为了存储**一个元素**合集，简称为**合集(collection)**；
+  - `Set`用于存储一组**不重复**的元素。
+  - `List`用于存储一个**有序**元素合集。
+  - `Stack`用千存储采用**后进先出**方式处理的对象。
+  - `Queue`用于存储采用**先进先出**方式处理的对象。
+  - `Priority Queue`用于存储按照**优先级顺序**处理的对象。
+
+
+`Collection接口`为线性表、向量、栈、队列，优先队列以及集合定义了共同的操作。在Java合集框架中定义的所有接口和类都分组在`java.util`包中。
+
+<div align=center><img src=DataStructure\Collection.jpg></div>
+
+`Co11ection`接口包含了处理合集中元素的方法，并且可以得到一个**迭代器对象**用于遍历合集中的元素。
+
+<div align=center><img src=DataStructure\Collection方法.jpg width=80%></div>
+
+除开`java.util.PriorityQueue`没有实现`Cloneable`接口外， Java合集框架中的其他所有具体类都实现了`java.lang.Cloneable`和`java.io.Seria1izab1e`接口。因此，除开优先队列外，所有`Collection`的实例都是**可克隆**的、**可序列化**的。
+
+## 迭代器Iterator
+
+每种合集都是可迭代的(Iterable)。可以获得集合的`Iterator对象`来遍历合集中的所有元素。
+
+**`Collection`接口继承自`Iterable`接口**。`Iterable`接口中定义了`iterator`方法，<font color=red>该方法会返回一个迭代器</font>。`Iterator`接口为遍历各种类型的合集中的元素提供了一种统一的方法。`Iterable`接口中的`iterator()`方法返回一个`Iterator`的实例。
+
+```java {.line-numbers highlight=23}
+import java.util.*;
+
+public class TestIterator
+{
+    public static void main(String[] args)
+    {
+        Collection<String> collection = new ArrayList<>();
+        collection.add("New York");
+        collection.add("Atlanta");
+        collection.add("Dallas");
+        collection.add("Madison");
+
+        // iterator()方法返回一个Iterator的实例
+        Iterator<String> iterator = collection.iterator();
+        while (iterator.hasNext())
+            System.out.print(iterator.next().toUpperCase() + " ");
+
+        System.out.println();
+        for(String s : collection)
+            System.out.print(s.toUpperCase() + " ");
+
+        System.out.println();
+        collection.forEach(element -> System.out.print(element.toUpperCase() + " "));
+    }
+}
+```
+
+The statement in line 23 uses a `lambda expression` in (a), which is equivalent to using an `anonymous inner class` as shown in (b).
+
+<div align=center><img src=DataStructure\lambda.jpg width=80%></div>
+
+# 线性表List
+
+`Arraylist`和`Linkedlist`定义在`List`接口下。`List`接口继承`Collection`接口，定义了一个**允许重复**的**有序**合集。
+
+<div align=center><img src=DataStructure\List.jpg width=80%></div>
+
+方法`listIterator()`或`listIterator(startlndex)`都会返回`ListIterator`的一个实例。`ListIterator`接口继承了`Iterator`接口，以增加对线性表的双向遍历能力。
+
+<div align=center><img src=DataStructure\ListIterator.jpg width=70%></div>
+
+## 数组线性表类ArrayList和链表类LinkedList
+
+`ArrayList`用数组存储元素，这个数组是**动态创建**的。<font color=red>如果元素个数超过了数组的容量，就创建一个更大的新数组，并将当前数组中的所有元素都复制到新数组中</font>。`LinkedList`在一个链表(linked list)中存储元素。
+
+要选用这两种类中的哪一个，依赖于特定需求。如果需要通过**下标随机访问元素**，而不会在线性表起始位置插入或删除元素，那么**ArrayList**提供了最高效率的合集。但是，如果应用程序需要在线性表的**起始位置上插入或删除元素**，就应该选择`LinkedList`类。
+
+**线性表的大小**是可以**动态增大或减小**的。然而**数组**一旦被创建，它的大小就是**固定**的。如果应用程序不需要在线性表中插入或删除元素，那么数组是效率最高的数据结构。
+
+`ArrayList`使用**可变大小的数组**实现List接口：
+<div align=center><img src=DataStructure\ArrayList.jpg width=70%></div>
+
+`LinkedList`使用**链表**实现`List`接口。除了实现`List`接口外，这个类还提供**从线性表两端**提取、插入和删除元素的方法：
+<div align=center><img src=DataStructure\LinkedList.jpg width=70%></div>
+
+```java
+import java.util.*;
+
+public class TestArrayAndLinkedList
+{
+    public static void main(String[] args)
+    {
+        List<Integer> arrayList = new ArrayList<>();
+
+        arrayList.add(1); // 1 is autoboxed to new Integer(1)
+        arrayList.add(2);
+        arrayList.add(3);
+        arrayList.add(1);
+        arrayList.add(4);
+        arrayList.add(0, 10);
+        arrayList.add(3, 30);
+
+        System.out.println("A list of integers in the array list:");
+        System.out.println(arrayList);
+        arrayList.forEach(element -> System.out.print(element + " "));
+        System.out.println();
+
+        LinkedList<Object> linkedList = new LinkedList<>(arrayList);
+
+        linkedList.add(1, "red");
+        linkedList.removeLast();
+        linkedList.addFirst("green");
+
+        System.out.println("Display the linked list backward:");
+        for (int i = linkedList.size() - 1; i >= 0; i--)
+            System.out.print(linkedList.get(i) + " ");
+  }
+}
+```
+
+# Comparator接口
+
+Java API的一些类，比如`String`、`Date`、`Calendar`、`BigInteger`、`BigDecimal`以及所有**基本类型的数字包装类**都实现了`Comparable`接口。<font color=red>`Comparable`接口定义了`compareTo`方法，用于比较实现了`Comparable`接口的**同一个类**的两个元素</font>。
+
+如果元素的类没有实现Comparable接口又将如何呢？这些元素可以比较么？
+
+可以定义一个`比较器`(comparator)来比较**不同类**的元素。要做到这一点，需要创建一个实现`java.util.Comparator<T>`接口的类并重写它的`compare`方法。
+`public int compare(T elementl, T element2)`
+>如果`element1`**小于**`element2`, 就返回一个**负值**； 如果`element1`**大于**`element2`, 就返回一个**正值**； 若两者**相等**， 则返回**0**。
+
+```java
+// GeometricObjectComparator.java
+import java.util.Comparator;
+
+public class GeometricObjectComparator
+    implements Comparator<GeometricObject>, java.io.Serializable
+{
+    @Override
+    public int compare(GeometricObject o1, GeometricObject o2)
+    {
+        double area1 = o1.getArea();
+        double area2 = o2.getArea();
+
+        if (area1 < area2)
+            return -1;
+        else if (area1 == area2)
+            return 0;
+        else
+            return 1;
+  }
+}
+```
+
+`public int compare(GeometricObject o1, GeometricObject o2)`通过覆盖`compare`方法来比较两个几何对象。比较器类也实现了`Serializable`接口。通常对于比较器来说，实现`Serializable`是一个好主意，因为它们可以被用作可序列化数据结构的排序方法。为了使数据结构能够成功序列化，比较器（如果提供）必须实现`Serializable`接口。
+
+```java
+import java.util.Comparator;
+
+public class TestComparator
+{
+    public static void main(String[] args)
+    {
+        GeometricObject g1 = new Rectangle(5, 5);
+        GeometricObject g2 = new Circle(5);
+
+        GeometricObject g = max(g1, g2, new GeometricObjectComparator());
+
+        System.out.println("The area of the larger object is " + g.getArea());
+    }
+
+    public static GeometricObject max(GeometricObject g1, GeometricObject g2, Comparator<GeometricObject> c)
+    {
+        if (c.compare(g1, g2) > 0)
+            return g1;
+        else
+            return g2;
+    }
+}
+```
+
+`Comparable`用于比较实现`Comparable`的类的对象；`Comparator`用于比较没有实现`Comparable`的类的对象。
+
+使用`Comparable`接口来比较元素称为使用**自然顺序**(natural order)进行比较，使用`Comparator`接口来比较元素被称为使用**比较器**来进行比较。
+
+```java
+// SortStringByLength.java
+
+public class SortStringByLength
+{
+    public static void main(String[] args)
+    {
+        String[] cities = {"Atlanta", "Savannah", "New York", "Dallas"};
+        java.util.Arrays.sort(cities, new MyComparator());
+
+        for (String s : cities)
+            System.out.print(s + " ");
+    }
+
+    public static class MyComparator implements java.util.Comparator<String>
+    {
+        @Override
+        public int compare(String s1, String s2)
+        {
+            return s1.length() - s2.length();
+        }
+    }
+}
+
+// SortStringByLength1.java
+
+public class SortStringByLength1
+{
+    public static void main(String[] args)
+    {
+        String[] cities = {"Atlanta", "Savannah", "New York", "Dallas"};
+        java.util.Arrays.sort(cities, (s1, s2) -> s1.length() - s2.length());
+
+        for (String s : cities)
+            System.out.print(s + " ");
+    }
+}
+```
+
+```java
+public class SortStringIgnoreCase
+{
+    public static void main(String[] args)
+    {
+        java.util.List<String> cities = java.util.Arrays.asList("Atlanta", "Savannah", "New York", "Dallas");
+
+        cities.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
+
+        for (String s : cities)
+            System.out.print(s + " ");
+    }
+}
+```
+
+
+# 向量类和栈类
+
+
 # 集合Set
 
 集合(set)是一个用于存储和处理**无重复元素**的高效数据结构。
