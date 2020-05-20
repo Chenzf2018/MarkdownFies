@@ -239,16 +239,107 @@ public class SortStringIgnoreCase
 }
 ```
 
+# 线性表和合集Collections的静态方法
+
+`Collections`类包含了执行合集和线性表中通用操作的静态方法。
+
+`java.util.Collection`是一个**集合接口**（集合类的一个顶级接口）。它提供了对集合对象进行基本操作的通用接口方法。Collection接口在Java类库中有很多具体的实现。Collection接口的意义是为各种具体的集合提供了最大化的统一操作方式，其直接继承接口有List与Set。
+
+`Collections`则是集合类的一个**工具类/帮助类**，其中提供了一系列静态方法，用于对集合中元素进行排序、搜索以及线程安全等各种操作。
+
+<div align=center><img src=DataStructure\Collections.jpg width=90%></div>
+
 
 # 向量类和栈类
 
+Java合集框架是在Java 2中引入的。Java 2之前的版本也支持一些数据结构，其中就有`向量类Vector`与`栈类Stack`。为了适应Java合集框架，Java 2对这些类进行了重新设计，但是为了向后兼容，保留了它们所有的以前形式的方法。
+
+除了包含用于**访问**和**修改**向量的**同步方法**之外， Vector类与Arraylist是一样的。同步方法用于防止两个或多个线程同时访问和修改某个向量时引起数据损坏。<font color=red>对于许多不需要同步的应用程序来说，使用Arraylist比使用Vector效率更高</font>。
+
+<div align=center><img src=DataStructure\Vector.jpg width=80%></div>
+
+方法`elements()`返回一个`Enumeration`对象（枚举型对象）。`Enumeration`接口是在Java 2之前引入的，已经被`Iterator`接口所取代。
+
+在Java合集框架中，栈类Stack是作为Vector类的扩展来实现的：
+<div align=center><img src=DataStructure\Stack.jpg width=70%></div>
+
+
+# 队列和优先队列
+
+队列(queue)是一种先进先出的数据结构。元素被追加到队列末尾，然后从队列头删除。在优先队列(priority queue)中，元素被赋予优先级。<font color=red>当访问元素时，拥有最高优先级的元素首先被删除</font>。
+
+<div align=center><img src=DataStructure\Queue.jpg width=70%></div>
+
+## 双端队列Deque和链表LinkedList
+
+<div align=center><img src=DataStructure\Linkedlist实现了List和Deque.jpg width=50%></div>
+
+Linkedlist类实现了Deque接口，Deque又继承自Queue接口。因此、可以使用LinkedList创建一个队列。LinkedList很适合用于进行队列操作，因为它可以高效地在线性表的两端插入和移除元素。
+
+```java
+public class TestQueue
+{
+    public static void main(String[] args)
+    {
+        java.util.Queue<String> queue = new java.util.LinkedList<>();
+        queue.offer("Oklahoma");
+        queue.offer("Indiana");
+        queue.offer("Georgia");
+        queue.offer("Texas");
+
+        while (queue.size() > 0)
+            System.out.print(queue.remove() + " ");
+    }
+}
+
+/*
+Oklahoma Indiana Georgia Texas 
+ */
+```
+
+
+默认情况下，优先队列使用`Comparable`以元素的自然顺序进行排序。拥有最小数值的元素被赋予最高优先级，因此最先从队列中删除。如果几个元素具有相同的最高优先级，则任意选择一个。也可以使用构造方法`PriorityQueue(initialCapacity, comparator)`中的`Comparator`来指定一个顺序。
+
+<div align=center><img src=DataStructure\PriorityQueue.jpg width=70%></div>
+
+```java
+import java.util.Collections;
+import java.util.PriorityQueue;
+
+public class PriorityQueueDemo
+{
+    public static void main(String[] args)
+    {
+        PriorityQueue<String> priorityQueue = new PriorityQueue<>();
+
+        priorityQueue.offer("Oklahoma");
+        priorityQueue.offer("Indiana");
+        priorityQueue.offer("Georgia");
+        priorityQueue.offer("Texas");
+
+        System.out.println("Priority queue using Comparable: ");
+        while (priorityQueue.size() > 0)
+            System.out.print(priorityQueue.remove() + " ");
+
+        PriorityQueue<String> priorityQueue1 = new PriorityQueue<>(4, Collections.reverseOrder());
+        priorityQueue1.offer("Oklahoma");
+        priorityQueue1.offer("Indiana");
+        priorityQueue1.offer("Georgia");
+        priorityQueue1.offer("Texas");
+
+        System.out.println("\n\nPriority queue using Comparator: ");
+        while (priorityQueue1.size() > 0)
+            System.out.print(priorityQueue1.remove() + " ");
+    }
+}
+```
 
 # 集合Set
 
 集合(set)是一个用于存储和处理**无重复元素**的高效数据结构。
 
 `Set`接口扩展了`Collection`合集接口：
-<div align=center><img src=DataStructure\集合类.jpg></div>
+<div align=center><img src=DataStructure\集合类.jpg width=80%></div>
 
 `AbstractSet`类继承`AbstractCollection`类并部分实现`Set`接口。`AbstractSet`类提供`equals`方法和`hashCode`方法的具体实现。一个集合的散列码是这个集合中所有元素散列码的和。由于`AbstractSet`类没有实现`size`方法和`iterator`方法，所以`AbstractSet`类是一个抽象类。
 
@@ -686,13 +777,13 @@ The number of keywords in D:\Learning_Java\Java_Code\Inheritance\src\inheritance
 
 映射表(map)类似于目录，提供了使用**键值key**快速查询和荻取**值value**的功能。
 
-映射表(map) 是一种依照**键／值对**存储元素的容器。它提供了通过键快速获取、删除和更新键／值对的功能。映射表将值和键一起保存。键很像下标。在`List`中，下标是整数；而在`Map`中，键可以是**任意类型的对象**。映射表中**不能有重复的键**，每个键都对应一个值。一个键和它的对应值构成一个条目并保存在映射表中。
+映射表(map) 是一种依照**键/值对**存储元素的容器。它提供了通过键快速获取、删除和更新键／值对的功能。映射表将值和键一起保存。键很像下标。在`List`中，下标是整数；而在`Map`中，键可以是**任意类型的对象**。映射表中**不能有重复的键**，每个键都对应一个值。一个键和它的对应值构成一个条目并保存在映射表中。
 
 <div align=center><img src=DataStructure\映射表.jpg></div>
 
 映射表有三种类型：散列映射表`HashMap` 、链式散列映射表`LinkedHashMap`和树形映射表`TreeMap`。这些映射表的通用特性都定义在`Map`接口中：
 
-<div align=center><img src=DataStructure\三种映射表.jpg></div>
+<div align=center><img src=DataStructure\三种映射表.jpg width=90%></div>
 
 `Map接口`提供了查询、更新和获取合集的值和合集的键的方法：
 
