@@ -1,5 +1,41 @@
 # 基本概念
-* 一个进程(process)可以有多个线程(thread)：视频中声音与画面；
+
+**批处理操作系统**：
+
+最初的计算机只能接受一些特定的指令，用户每输入一个指令，计算机就做出一个操作。当用户在思考或者输入时，计算机就在等待。这样效率非常低下，在很多时候，计算机都处在等待状态。
+
+后来有了批处理操作体统,把一系列需要操作的指令写下来，形成一个清单，一次性交给计算机。但是由于批处理操作系统的指令运行方式仍然是串行的，<font color=red>内存中始终只有一个程序在运行</font>，后面的程序需要等待前面的程序执行完成后才能开始执行。
+
+**进程的提出**：
+
+批处理操作系统的瓶颈在于内存中只存在一个程序，那么内存中能不能存在多个程序呢？
+
+进程就是应用程序在内存中分配的空间，也就是正在运行的程序，各个进程之间互不干扰。此时，CPU采用**时间片轮转**的方式运行进程：CPU为每个进程分配一个时间段，称作它的时间片。如果在时间片结束时进程还在运行，则暂停这个进程的运行，并且CPU分配给另一个进程（这个过程叫做上下文切换）。如果进程在时间片结束前阻塞或结束，则CPU立即进行切换，不用等待时间片用完。
+
+对于单核CPU来说，任意具体时刻都只有一个任务在占用CPU资源。
+
+**线程的提出**：
+如果**一个进程有多个子任务**时，只能逐个得执行这些子任务，很影响效率。
+
+让一个线程执行一个子任务，这样一个进程就包含了多个线程，每个线程负责一个单独的子任务。
+
+
+进程让**操作系统的并发性**成为了可能，而线程让**进程的内部并发**成为了可能。
+
+**进程和线程的区别**：
+
+进程是一个独立的运行环境，而线程是在进程中执行的一个任务。他们两个本质的区别是<font color=red>是否单独占有内存地址空间及其它系统资源（比如I/O）</font>。
+
+- 进程单独占有一定的内存地址空间，所以进程间存在内存隔离，数据是分开的，**数据共享**复杂但是**同步**简单，各个进程之间互不干扰；而线程共享所属进程占有的内存地址空间和资源，数据共享简单，但是同步复杂。
+
+
+- 进程单独占有一定的内存地址空间，一个进程出现问题不会影响其他进程，不影响主程序的稳定性，可靠性高；一个线程崩溃可能影响整个程序的稳定性，可靠性较低。
+
+- 进程单独占有一定的内存地址空间，进程的创建和销毁不仅需要保存寄存器和栈信息，还需要资源的分配回收以及页调度，开销较大；线程只需要保存寄存器和栈信息，开销较小。
+  
+另外一个重要区别是，进程是**操作系统**进行**资源分配**的基本单位，而线程是操作系统进行**调度**的基本单位，即CPU分配时间的单位。
+
+* **一个进程**(process)可以有**多个线程**(thread)：视频中声音与画面；
 * 进程是程序的一次执行过程；真正的多线程是指有多个CPU（线程是CPU调度和执行的单位）。在一个CPU情况下，在一个时间点，CPU只能执行一个代码，模拟出来的多线程是因为切换得很快，产生同时执行的假象；
 * 对一份资源，会存在资源抢夺的问题，需要加入并发控制。
 
@@ -15,7 +51,9 @@
 
 <div align=center><img src=Thread/Thread类.png width=90%></div>
 
-不推荐使用这种方法，因为它将任务和运行任务的机制混在了一起。将任务从线程中分离出来是比较好的设计。
+**不推荐使用这种方法**，因为它**将任务和运行任务的机制混在了一起**。将任务从线程中分离出来是比较好的设计。
+
+**1. 继承Thread类；2. 重写run方法；3. 创建实列；4. 调用start开启线程**
 
 ```java
 package Thread;
@@ -69,9 +107,18 @@ In main() method! 1
 In main() method! 2
 In main() method! 3
  */
- ```
- `main, start`方法是交替进行的；而`main, run`方法则有先后之分。
- <div align=center><img src=Thread/普通方法调用和多线程.png width=80%></div>
+```
+`main, start`方法是交替进行的；而`main, run`方法则有先后之分。
+
+<div align=center><img src=Thread/普通方法调用和多线程.png width=60%></div>
+
+调用`start()`方法后，该线程才算启动！
+
+> 在程序里面调用了`start()`方法后，虚拟机会先为我们创建一个线程，然后等到这个线程第一次得到时间片时再调用run()方法。
+> 
+> 注意不可多次调用`start()`方法。在第一次调用`start()`方法后，再次调用`start()`方法会抛出异常。
+
+
 
 ### 案例：下载图片
 下载`Commons IO`，复制到工程目录下，按`Add as Library`。
@@ -152,13 +199,25 @@ Output:
 将下载的图片命名为 扬州2.jpeg
 将下载的图片命名为 扬州1.jpeg
  */
- ```
+```
 
- ## 实现`Runnable`
+## 实现`Runnable`
 
- * 定义`MyRunnable`类实现`Runnable`接口；
- * 实现`run()`方法，编写线程执行体；
- * 创建线程对象（执行线程需要丢入`Runnable`接口实现类的对象），调用`start()`方法启动线程。
+* 定义`MyRunnable`类实现`Runnable`接口；
+* 实现`run()`方法，编写线程执行体；
+* 创建线程对象（执行线程需要丢入`Runnable`接口实现类的对象），调用`start()`方法启动线程。
+
+`Runnable`接口：
+
+```java
+@FunctionalInterface
+public interface Runnable 
+{
+    public abstract void run();
+}
+```
+
+**1. 实现`Runnable`接口；2. 重写`run`方法；3. 创建任务；4. 创建线程； 5. 启动线程**
 
 ```java
 package Thread;
@@ -186,7 +245,7 @@ public class TaskThreadDemo
 }
 
 // Custom task class
-// 通过实现Runnable 接口定义一个任务类
+// 通过实现Runnable接口定义一个任务类
 class PrintChar implements Runnable
 {
     private char charToPrint;
@@ -213,7 +272,8 @@ Thread-1 b
 Thread-0 a
 ......
  */
- ```
+```
+
 任务中的`run()`方法指明如何完成这个任务。Java虚拟机会自动调用该方法，无需特意调用它。直接调用`run()`只是在同一个线程中执行该方法，而没有新线程被启动。
 
 
@@ -270,10 +330,11 @@ In run() method! 81
 In main() method! 143
 In main() method! 144
  */
- ``` 
+``` 
 
  ### 初识并发问题
- ```java
+
+```java
  package Thread;
 
 /*
@@ -319,11 +380,12 @@ feng 获得第 4 票！
 zu 获得第 1 票！
 chen 获得第 2 票！
  */
- ```
+```
  结果显示多个线程获得同一张票：`feng 获得第 10 票！...chen 获得第 10 票！`。即<font color=red>多个线程操作同一个资源情况下，线程不安全！</font>
 
- ### 案例：龟兔赛跑
- ```java
+### 案例：龟兔赛跑
+
+```java
  package Thread;
 
 /*
@@ -401,7 +463,8 @@ Winner is 兔子
  */
 ```
 
- ### 小结
+ ## Thread类与Runnable接口的比较
+
  继承`Thread`类：
  * 子类继承`Thread`类，具备多线程能力；
  * 启动线程：`子类对象.start()`。
@@ -411,6 +474,7 @@ Winner is 兔子
 * 实现`Runnable`接口，具有多线程能力；
 * 启动线程：`传入实现接口类的对象 + Thread对象.start()`。
 * 推荐使用：避免了OOP单继承的局限性；方便同一个对象被多个线程使用。
+
 ```java
 // 一份资源
 StartThread station = new StartThread();
@@ -418,9 +482,63 @@ StartThread station = new StartThread();
 new Thread(station, "chen").start();
 new Thread(station, "zu").start();
 new Thread(station, "feng").start();
- ```
+```
 
-## 实现`Callable`接口
+- 由于Java“单继承，多实现”的特性，`Runnable`接口使用起来比`Thread`更灵活。
+- `Runnable`接口出现更符合面向对象，将线程单独进行对象的封装。
+- `Runnable`接口出现，降低了线程对象和线程任务的耦合性。
+- 如果使用线程时不需要使用`Thread`类的诸多方法，显然使用`Runnable`接口更为轻量。
+
+所以，通常优先使用“实现`Runnable`接口”这种方式来**自定义线程类**。
+
+
+## Callable、Future与FutureTask
+
+使用`Runnable`和`Thread`来创建一个新的线程。但是它们有一个弊端，就是`run`**方法是没有返回值的**。而有时候我们希望开启一个线程去执行一个任务，并且这个任务执行完成后有一个返回值。
+
+JDK提供了`Callable接口`与`Future类`为我们解决这个问题，这也是所谓的**异步**模型。
+
+### 实现`Callable`接口
+
+`Callable`与`Runnable`类似，同样是只有一个抽象方法的函数式接口。不同的是，`Callable`提供的方法是**有返回值**的，而且支持**泛型**。
+
+```java
+@FunctionalInterface
+public interface Callable<V> 
+{
+    V call() throws Exception;
+}
+```
+
+`Callable`一般是配合**线程池工具**`ExecutorService`来使用的。`ExecutorService`可以使用`submit`方法来让一个`Callable`接口执行。它会返回一个`Future`，可以通过这个`Future`的`get`方法得到结果。
+
+```java
+package Thread;
+
+import java.util.concurrent.*;
+
+public class Task implements Callable<Integer>
+{
+    @Override
+    public Integer call() throws Exception
+    {
+        // 模拟计算需要1秒
+        Thread.sleep(1000);
+        return 2;
+    }
+
+    public static void main(String[] args) throws ExecutionException, InterruptedException
+    {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        Task task = new Task();
+        Future<Integer> result = executor.submit(task);
+        // 注意调用get方法会阻塞当前线程，直到得到结果。
+        // 所以实际编码中建议使用可以设置超时时间的重载get方法。
+        System.out.println(result.get());
+    }
+}
+```
+
 * 实现`Callable`接口，需要返回值类型；
 * 重写`call`方法，需要抛出异常；
 * 创建目标对象；
@@ -428,6 +546,8 @@ new Thread(station, "feng").start();
 * 提交执行：`Future<Boolean> result1 = ser.submit(t1)`；
 * 获取结果：`boolean r1 = result1.get()`；
 * 关闭服务：`ser.shutdownNow()`。
+
+
 ```java
 package Thread;
 
@@ -511,10 +631,75 @@ class WebDownloader2
         }
     }
 }
- ```
- `Callable`可以定义返回值；抛出异常。
+```
+`Callable`可以定义返回值；抛出异常。
 
- ## 三种实现方式总结
+### Future接口
+
+`Future接口`只有几个比较简单的方法：
+```java
+public abstract interface Future<V> 
+{
+    public abstract boolean cancel(boolean paramBoolean);
+    public abstract boolean isCancelled();
+    public abstract boolean isDone();
+    public abstract V get() throws InterruptedException, ExecutionException;
+    public abstract V get(long paramLong, TimeUnit paramTimeUnit)
+            throws InterruptedException, ExecutionException, TimeoutException;
+}
+```
+
+`cancel`方法是**试图取消**一个线程的执行。注意是试图取消，**并不一定能取消成功**。因为任务可能已完成、已取消、或者一些其它因素不能取消，存在取消失败的可能。`boolean`类型的返回值是**是否取消成功**的意思。参数`paramBoolean`表示是否采用**中断**的方式取消线程执行。
+
+所以有时候，为了**让任务有能够取消的功能**，就使用`Callable`来代替`Runnable`。如果为了可取消性而使用`Future`但又不提供可用的结果，则可以声明`Future<?>`形式类型、并返回`null`作为底层任务的结果。
+
+### FutureTask类
+
+`Future接口`有一个实现类叫`FutureTask`。`FutureTask`是实现的`RunnableFuture接口`的，而`RunnableFuture接口`同时继承了`Runnable接口`和`Future接口`：
+
+```java
+public interface RunnableFuture<V> extends Runnable, Future<V> 
+{
+    /**
+     * Sets this Future to the result of its computation unless it has been cancelled.
+     */
+    void run();
+}
+```
+
+为什么要有一个`FutureTask`类？前面说到了`Future`只是一个接口，而它里面的`cancel`，`get`，`isDone`等方法要自己实现起来都是非常复杂的。所以JDK提供了一个`FutureTask`类来供我们使用。
+
+```java
+package Thread;
+
+import java.util.concurrent.*;
+
+public class Task implements Callable<Integer>
+{
+    @Override
+    public Integer call() throws Exception
+    {
+        // 模拟计算需要1秒
+        Thread.sleep(1000);
+        return 2;
+    }
+
+    public static void main(String[] args) throws ExecutionException, InterruptedException
+    {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        FutureTask<Integer> futureTask = new FutureTask<>(new Task());
+        executor.submit(futureTask);
+        System.out.println(futureTask.get());
+    }
+}
+```
+
+使用上与之前的Demo有一点小的区别。首先，调用`submit`方法是**没有返回值**的。这里实际上是调用的`submit(Runnable task)`方法，而上面的Demo，调用的是`submit(Callable<T> task)`方法。然后，这里是使用`FutureTask`直接用`get`取值，而上面的Demo是通过`submit`方法返回的`Future`去取值。
+
+在很多高并发的环境下，有可能`Callable`和`FutureTask`会创建多次。`FutureTask`能够在高并发环境下确保任务只执行一次。
+
+## 三种实现方式总结
+
 ```java
 package Thread;
 
@@ -586,12 +771,13 @@ class MyThread3 implements Callable<Integer>
 3.实现Callable接口
 100
  */
- ```
+```
 
 # 知识点补充
 
 ## 静态代理
-&emsp;&emsp;静态代理模式：真实对象和代理对象都要实现同一个接口；代理对象要代理真实角色。
+
+静态代理模式：真实对象和代理对象都要实现同一个接口；代理对象要代理真实角色。
 
 好处：
 * 代理对象可以做很多真实对象做不了的事情；
@@ -648,15 +834,15 @@ class WeddingCompany implements Marry
 Get married.
 结婚后：婚庆公司收尾款！
  */
- ```
+```
 
- 对比与多线程关系：
- ```java
+对比与多线程关系：
+```java
  // Thread代理了System.out.println("Get married.")
  new Thread(() -> System.out.println("Get married.")).start();
 
  new WeddingCompany(new People()).HappyMarry();
- ```
+```
 
 
 ## `Lambda`表达式
@@ -664,14 +850,16 @@ Get married.
 &emsp;&emsp;可以避免匿名内部类定义过多；留下核心的逻辑，让代码看起来简洁。
 `new Thread(() -> System.out.println("Get married.")).start();`
 
-&emsp;&emsp;函数式接口的定义：任何接口，如果只包含唯一一个抽象方法，那么它就是一个函数式接口。
+&emsp;&emsp;**函数式接口**的定义：任何接口，如果**只包含唯一一个抽象方法**，那么它就是一个函数式接口。
+
 ```java
 public interface Runnable
 {
     public abstract void run();
 }
- ```
-对于函数式接口，可以通过`Lambda`表达式来创建该接口的对象。下面将一步步展现代码简化过程：
+```
+
+<font color=red>对于函数式接口，可以通过`Lambda`表达式来创建该接口的对象</font>。下面将一步步展现代码简化过程：
 
 1. 使用外部类`：
 ```java {.line-numbers highlight=20}
@@ -946,6 +1134,38 @@ interface FunctionInterface
 `Lambda`表达式只能在只有一行代码的情况下进行简化，如果有多行，必须得用代码块包裹；接口必须是函数式接口；多个参数也可以简化参数类型，但需要加括号。
 
 
+## 线程组(ThreadGroup)
+
+Java中用ThreadGroup来表示线程组，我们可以**使用线程组对线程进行批量控制**。
+
+ThreadGroup和Thread的关系就如同他们的字面意思一样简单粗暴，**每个Thread必然存在于一个ThreadGroup中**，Thread不能独立于ThreadGroup存在。执行`main()方法`线程的名字是`main`，如果在`new Thread`时没有显式指定，那么默认将**父线程**（**当前执行`new Thread`的线程**）线程组设置为自己的线程组。
+
+```java
+package Thread;
+
+public class ThreadGroup
+{
+    public static void main(String[] args)
+    {
+        Thread testThread = new Thread(() -> {
+            System.out.println("testThread当前线程组名字：" +
+                    Thread.currentThread().getThreadGroup().getName());
+            System.out.println("testThread线程名字：" +
+                    Thread.currentThread().getName());
+        });
+
+        testThread.start();
+        System.out.println("执行main方法线程名字：" +
+                Thread.currentThread().getName());
+    }
+}
+/*
+testThread当前线程组名字：main
+执行main方法线程名字：main
+testThread线程名字：Thread-0
+ */
+```
+
 # 线程状态
 线程的五大状态：
 <div align=center><img src=Thread/线程五大状态.png width=80%></div>
@@ -958,6 +1178,7 @@ interface FunctionInterface
 * 不推荐使用`JDK`提供的`stop(), destroy()`方法（已废弃）。
 * 推荐线程自己停下来；
 * 建议使用一个标志位进行终止变量：当`flag == false`，则终止线程。
+  
 ```java
 package Thread;
 
@@ -1008,7 +1229,7 @@ main线程运行至：900 时，线程停止！
 正在运行main线程：901
 正在运行main线程：902
  */
- ```
+```
 
 ## 线程休眠
 * `sleep`指定当前线程阻塞的毫秒时间，进入阻塞状态；
