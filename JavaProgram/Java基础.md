@@ -25,6 +25,14 @@
 * 非RAM存储：如果数据完全存活于程序之外，那么它可以不受程序的任何控制，在程序没有运行时也可以存在。其中两个基本的例子是流对象和持久化对象。
 
 ## 基本类型
+
+基本数据类型只有8种，可按照如下分类
+- 整数类型：`long`、`int`、`short`、`byte`
+- 浮点类型：`float`、`double`
+- 字符类型：`char`
+- 布尔类型：`boolean`
+
+
 &emsp;&emsp;<font color=red>`new`将对象存储在`堆`里，故用`new`创建一个对象——特别是小的、简单的变量，往往不是很有效</font>。对于这些类型，Java不用`new`来创建这些变量，而是<font color=red>创建一个并非是引用的“自动”变量。这个变量直接存储“值”，并置于栈(stack)中，因此更加高效</font>。
 
 <div align=center><img src=Basic/基本数据类型.png width=80%></div>
@@ -65,6 +73,208 @@ char char_c = character_c;  // 反向转换
 
 可以定义方法返回任意想要的类型，如果不想返回任何值，可以指示此方法返回`void`(空)。若返回类型是`void`，`return`关键字的作用只是用来<font color=red>退出方法</font>。
 
+
+## 基本数据类型和引用数据类型
+
+Java中的数据类型分为两大类，**基本数据类型**和**引用数据类型**。
+
+基本数据类型只有8种，引用数据类型非常多，大致包括：类、 接口类型、 数组类型、 枚举类型、 注解类型、 字符串型。例如，`String`类型就是引用类型。简单来说，所有的非基本数据类型都是引用数据类型。
+
+### 基本数据类型和引用数据类型的区别
+
+每个**变量**都代表一个存储值的**内存位置**。声明一个变量时，就是在告诉编译器这个变量可以存放什么类型的值。对**基本类型变量**来说，对应内存所存储的值是**基本类型值**。对**引用类型变量**来说，对应内存所存储的值是一个**引用**，是**对象的存储地址**。
+
+<div align=center><img src=Basic\PrimitiveAndReferenceType.jpg></div>
+
+将一个变量赋值给另一个变量时，另一个变量就被赋予同样的值。对**基本类型变量**而言，就是将一个变量的**实际值**赋给另一个变量。对**引用类型变量**而言，就是将一个变量的**引用**赋给另一个变量。
+
+<div align=center><img src=Basic\基本类型赋值.jpg></div>
+
+<div align=center><img src=Basic\引用类型赋值.jpg></div>
+
+执行完赋值语句`c1 = c2`后，`c1`指向`c2`所指向的同一对象。`c1`以前引用的对象就不再有用。现在它就成为垃圾（garbage)。垃圾会占用内存空间。Java运行系统会检测垃圾并自动回收它所占的空间，这个过程称为**垃圾回收**（garbage collection)。
+
+
+
+#### 存储位置
+
+- 基本变量类型
+在方法中定义的非全局基本数据类型变量的具体内容是存储在**栈**中的。
+
+- 引用变量类型
+只要是引用数据类型变量，其**具体内容**都是存放在**堆**中的，而**栈**中存放的是其具体内容所在内存的**地址**。
+<div align=center><img src=Basic\基本数据与引用数据类型.png width=40%></div>
+
+#### 传递方式
+
+```java
+public class Test
+{
+    public static void main(String[] args)
+    {
+        int msg = 100;
+        System.out.println("调用方法前msg的值："+ msg);    //100
+        fun(msg);  // 无返回
+        System.out.println("调用方法后msg的值："+ msg);    //100
+        msg = func(msg);
+        System.out.println("调用方法后msg的值："+ msg);
+    }
+
+    public static void fun(int temp)
+    {
+        temp = 0;
+    }
+
+    // public static int fun(int temp)
+    public static int func(int temp)
+    {
+        return temp = 0;
+    }
+}
+```
+
+```java
+class Book
+{
+    String name;
+    double price;
+
+    public Book(String name,double price)
+    {
+        this.name = name;
+        this.price = price;
+    }
+
+    public void getInfo()
+    {
+        System.out.println("图书名称："+ name + "，价格：" + price);
+    }
+
+    public void setPrice(double price)
+    {
+        this.price = price;
+    }
+}
+
+public class Test
+{
+    public static void main(String[] args)
+    {
+        Book book = new Book("Java开发指南",66.6);
+        book.getInfo();  //图书名称：Java开发指南，价格：66.6
+        fun(book);
+        book.getInfo();  //图书名称：Java开发指南，价格：99.9
+    }
+
+    public static void fun(Book temp)
+    {
+        temp.setPrice(99.9);
+    }
+}
+/*
+图书名称：Java开发指南，价格：66.6
+图书名称：Java开发指南，价格：99.9
+ */
+```
+
+调用时为temp在栈中开辟新空间，并指向book的具体内容，方法执行完毕后temp在栈中的内存被释放掉。
+
+<div align=center><img src=Basic\传递引用.png width=70%></div>
+
+#### 向方法传递对象参数
+
+Java只有一种参数传递方式：**值传递**（pass-by-value)。传递对象实际上是传递对象的引用。
+
+```java
+public class TestPassObject
+{
+    public static void main(String[] args)
+    {
+        // Create a Circle object with radius 1
+        CircleWithPrivateDataFields myCircle =
+                new CircleWithPrivateDataFields(1);
+
+        // Print areas for radius 1, 2.
+        int n = 2;
+        printAreas(myCircle, n);
+
+        // See myCircle.radius and times
+        System.out.println("\n" + "Radius is " + myCircle.getRadius());
+        System.out.println("n is " + n);
+    }
+
+    /** Print a table of areas for radius */
+    public static void printAreas(
+            CircleWithPrivateDataFields c, int times)
+    {
+        System.out.println("Radius \t\tArea");
+        while (times >= 1)
+        {
+            System.out.println(c.getRadius() + "\t\t" + c.getArea());
+            c.setRadius(c.getRadius() + 1);
+            times--;
+        }
+    }
+}
+/*
+Radius 		Area
+1.0		3.141592653589793
+2.0		12.566370614359172
+
+Radius is 3.0
+n is 2
+ */
+```
+
+当传递**基本数据类型**参数时，传递的是**实参的值**。传递**引用类型**的参数时，传递的是**对象的引用**。
+
+<div align=center><img src=Basic\TestPassObject.jpg></div>
+
+
+### 重载方法Overload
+
+重栽方法使得你可以使用**同样的名字**来定义**不同方法**，只要它们的**签名**（参数）是不同的。
+
+```java
+public class TestMethodOverloading
+{
+    public static void main(String[] args) 
+    {
+        // Invoke the max method with int parameters
+        System.out.println("The maximum between 3 and 4 is " + max(3, 4));
+
+        // Invoke the max method with the double parameters
+        System.out.println("The maximum between 3.0 and 5.4 is " + max(3.0, 5.4));
+
+        // Invoke the max method with three double parameters
+        System.out.println("The maximum between 3.0, 5.4, and 10.14 is " + max(3.0, 5.4, 10.14));    
+    }
+
+    /** Return the max between two int values */
+    public static int max(int num1, int num2)
+    {
+        if (num1 > num2)
+            return num1;
+        else
+            return num2;
+    }
+
+    /** Find the max between two double values */
+    public static double max(double num1, double num2) 
+    {
+        if (num1 > num2)
+            return num1;
+        else
+            return num2;
+    }
+
+    /** Return the max among three double values */
+    public static double max(double num1, double num2, double num3) 
+    {
+        return max(max(num1, num2), num3);
+    }
+}
+```
 
 ## static关键字
 &emsp;&emsp;当创建类时，就是在描述那个类的对象的外观与行为。除非用`new`创建那个类的对象，否则，实际上并未获得任何对象。<font color=red>执行`new`来创建对象时，数据存储空间才被分配，其方法才供外界调用</font>。
