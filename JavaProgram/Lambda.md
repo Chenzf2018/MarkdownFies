@@ -38,7 +38,7 @@ String aString = "Hello World!";
 
 最直观的作用就是使得代码变得异常简洁。
 
-我们可以对比一下Lambda表达式和传统的Java对同一个接口的实现：
+我们可以对比一下Lambda表达式和传统的Java对同一个**接口的实现**：
 <div align=center><img src=Lambda\Lambda7.jpg></div>
 
 这两种写法本质上是等价的。但是显然，Java 8中的写法更加优雅简洁。
@@ -219,10 +219,7 @@ public class LambdaTest
 `@FunctionalInterface`修饰函数式接口的，要求**接口中的抽象方法只有一个**。这个注解往往会和`lambda`表达式一起出现。
 
 **示例二**：
-
 ```java
-public class TestLambda
-{
     /**多参数无返回*/
     @FunctionalInterface
     public interface NoReturnMultiParam
@@ -264,7 +261,12 @@ public class TestLambda
     {
         int method(int a);
     }
+```
 
+
+```java
+public class TestLambda
+{
     public static void main(String[] args)
     {
         //无参无返回
@@ -311,6 +313,77 @@ public class TestLambda
 
         int res3 = returnMultiParam.method(6, 8);
         System.out.println("return:" + res3);
+    }
+}
+```
+
+### Lambda语法简化
+```java
+        //1.简化参数类型，可以不写参数类型，但是必须所有参数都不写
+        NoReturnMultiParam lamdba1 = (a, b) -> {
+            System.out.println("简化参数类型");
+        };
+        lamdba1.method(1, 2);
+
+        //2.简化参数小括号，如果只有一个参数则可以省略参数小括号
+        NoReturnOneParam lambda2 = a -> {
+            System.out.println("简化参数小括号");
+        };
+        lambda2.method(1);
+
+        //3.简化方法体大括号，如果方法条只有一条语句，则可以胜率方法体大括号
+        NoReturnNoParam lambda3 = () -> System.out.println("简化方法体大括号");
+        lambda3.method();
+
+        //4.如果方法体只有一条语句，并且是 return 语句，则可以省略方法体大括号
+        ReturnOneParam lambda4 = a -> a+3;
+        System.out.println(lambda4.method(5));
+
+        ReturnMultiParam lambda5 = (a, b) -> a+b;
+        System.out.println(lambda5.method(1, 1));
+```
+
+### lambda表达式引用方法
+
+有时候我们不是必须要自己重写某个匿名内部类的方法，我们可以可以利用lambda表达式的接口快速指向一个已经被实现的方法。
+
+语法：**方法归属者::方法名** 静态方法的归属者为类名，普通方法归属者为对象
+
+```java
+// ReturnOneParam.java
+package TestLambda;
+
+public class Exe1
+{
+    public static void main(String[] args)
+    {
+        ReturnOneParam lambda1 = a -> doubleNum(a);
+        System.out.println(lambda1.method(3));
+
+        //lambda2 引用了已经实现的 doubleNum 方法
+        ReturnOneParam lambda2 = Exe1::doubleNum;
+        System.out.println(lambda2.method(3));
+
+        Exe1 exe = new Exe1();
+
+        //lambda4 引用了已经实现的 addTwo 方法
+        ReturnOneParam lambda4 = exe::addTwo;
+        System.out.println(lambda4.method(2));
+    }
+
+    /**
+     * 要求
+     * 1.参数数量和类型要与接口中定义的一致
+     * 2.返回值类型要与接口中定义的一致
+     */
+    public static int doubleNum(int a)
+    {
+        return a * 2;
+    }
+
+    public int addTwo(int a)
+    {
+        return a + 2;
     }
 }
 ```

@@ -40,8 +40,8 @@
 * 对一份资源，会存在资源抢夺的问题，需要加入并发控制。
 
 # 线程的实现(重点)
-* 继承`Thread类`（重点）
-* 实现`Runnable接口`（核心）
+* 继承`Thread类`
+* 实现`Runnable接口`
 * 实现`Callable接口`
 
 ## 继承`Thread类`
@@ -1166,8 +1166,10 @@ testThread线程名字：Thread-0
  */
 ```
 
+`ThreadGroup`管理着它下面的`Thread`，`ThreadGroup`是一个标准的向下引用的树状结构，这样设计的原因是防止"上级"线程被"下级"线程引用而无法有效地被GC回收。
+
 # 线程状态
-线程的五大状态：
+
 <div align=center><img src=Thread/线程五大状态.png width=80%></div>
 <div align=center><img src=Thread/线程五大状态2.png width=80%></div>
 
@@ -1175,6 +1177,7 @@ testThread线程名字：Thread-0
 <div align=center><img src=Thread/线程方法.png width=60%></div>
 
 ## 停止线程
+
 * 不推荐使用`JDK`提供的`stop(), destroy()`方法（已废弃）。
 * 推荐线程自己停下来；
 * 建议使用一个标志位进行终止变量：当`flag == false`，则终止线程。
@@ -1384,7 +1387,7 @@ class MyYield implements Runnable
 线程B 线程开始执行！
 线程B 线程停止执行！
  */
- ```
+```
 
 ## 线程强制执行
 * `join`合并线程，待此线程执行完成后，再执行其他线程，其他线程阻塞；
@@ -1445,18 +1448,84 @@ Output:
 此时主线程执行到 498
 此时主线程执行到 499
  */
- ```
+```
 
  ## 观测线程状态
  `Thread.State`：
+ ```java
+    public enum State {
+        /**
+         * Thread state for a thread which has not yet started.
+         */
+        NEW,
+
+        /**
+         * Thread state for a runnable thread.  A thread in the runnable
+         * state is executing in the Java virtual machine but it may
+         * be waiting for other resources from the operating system
+         * such as processor.
+         */
+        RUNNABLE,
+
+        /**
+         * Thread state for a thread blocked waiting for a monitor lock.
+         * A thread in the blocked state is waiting for a monitor lock
+         * to enter a synchronized block/method or
+         * reenter a synchronized block/method after calling
+         * {@link Object#wait() Object.wait}.
+         */
+        BLOCKED,
+
+        /**
+         * Thread state for a waiting thread.
+         * A thread is in the waiting state due to calling one of the
+         * following methods:
+         * <ul>
+         *   <li>{@link Object#wait() Object.wait} with no timeout</li>
+         *   <li>{@link #join() Thread.join} with no timeout</li>
+         *   <li>{@link LockSupport#park() LockSupport.park}</li>
+         * </ul>
+         *
+         * <p>A thread in the waiting state is waiting for another thread to
+         * perform a particular action.
+         *
+         * For example, a thread that has called {@code Object.wait()}
+         * on an object is waiting for another thread to call
+         * {@code Object.notify()} or {@code Object.notifyAll()} on
+         * that object. A thread that has called {@code Thread.join()}
+         * is waiting for a specified thread to terminate.
+         */
+        WAITING,
+
+        /**
+         * Thread state for a waiting thread with a specified waiting time.
+         * A thread is in the timed waiting state due to calling one of
+         * the following methods with a specified positive waiting time:
+         * <ul>
+         *   <li>{@link #sleep Thread.sleep}</li>
+         *   <li>{@link Object#wait(long) Object.wait} with timeout</li>
+         *   <li>{@link #join(long) Thread.join} with timeout</li>
+         *   <li>{@link LockSupport#parkNanos LockSupport.parkNanos}</li>
+         *   <li>{@link LockSupport#parkUntil LockSupport.parkUntil}</li>
+         * </ul>
+         */
+        TIMED_WAITING,
+
+        /**
+         * Thread state for a terminated thread.
+         * The thread has completed execution.
+         */
+        TERMINATED;
+    }
+ ```
  * `NEW`：尚未启动的线程处于此状态；
  * `RUNNABLE`：在`Java`虚拟机中执行的线程处于此状态；
  * `BLOCKED`：被阻塞等待监视器锁定的线程处于此状态；
  * `WAITING`：正在等待另一个线程执行特定动作的线程处于此状态；
  * `TIMED_WAITING`：正在等待另一个线程执行动作达到指定等待时间的线程处于此状态；
  * `TERMINATED`：已退出的线程处于此状态。
- ```java
- package Thread;
+```java
+package Thread;
 
 public class ThreadState
 {
@@ -1524,10 +1593,13 @@ TERMINATED 10
 //Thread.sleep(500);
 //1000/500=2 2*5 = 10
  */
- ```
- 线程只能启动一次！
+```
+线程只能启动一次！
 
 ## 线程优先级
+
+Java默认的线程优先级为5，线程的执行顺序由调度程序来决定，线程的优先级会在线程被调用之前设定。通常情况下，高优先级的线程将会比低优先级的线程有**更高的几率**得到执行。
+
 * `Java`提供一个线程调度器来监控程序中启动后进入就绪状态的所有线程，线程调度器按照优先级决定应该调度哪个线程来执行。
 * 线程的优先级用数字表示，范围从1~10：
 `Thread.MIN_PRIORITY = 1;`
@@ -1591,7 +1663,52 @@ Thread-3 的优先级是 10
 Thread-1 的优先级是 1
 Thread-2 的优先级是 4
  */
- ```
+```
+
+Java中的优先级来说不是特别的可靠，Java程序中对线程所设置的优先级只是给操作系统一个**建议**，操作系统不一定会采纳。而真正的调用顺序，是由操作系统的线程调度算法决定的。
+
+```java
+package Thread;
+
+import java.util.stream.IntStream;
+
+public class Demo
+{
+    public static class T1 extends Thread
+    {
+        @Override
+        public void run()
+        {
+            super.run();
+            System.out.println(String.format("当前执行的线程是：%s，优先级：%d",
+                    Thread.currentThread().getName(),
+                    Thread.currentThread().getPriority()));
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        IntStream.range(1, 10).forEach(i -> {
+            Thread thread = new Thread(new T1());
+            thread.setPriority(i);
+            thread.start();
+        });
+    }
+}
+/*
+当前执行的线程是：Thread-15，优先级：8
+当前执行的线程是：Thread-17，优先级：9
+当前执行的线程是：Thread-13，优先级：7
+当前执行的线程是：Thread-5，优先级：3
+当前执行的线程是：Thread-11，优先级：6
+当前执行的线程是：Thread-3，优先级：2
+当前执行的线程是：Thread-1，优先级：1
+当前执行的线程是：Thread-7，优先级：4
+当前执行的线程是：Thread-9，优先级：5
+ */
+```
+
+Java提供一个**线程调度器**来监视和控制处于`RUNNABLE`状态的线程。线程的调度策略采用**抢占式**，优先级高的线程比优先级低的线程会有**更大的几率**优先执行。在优先级相同的情况下，按照“先到先得”的原则。每个Java程序都有一个默认的**主线程**，就是通过JVM启动的第一个线程**main线程**。
 
 ## 守护线程
 * 线程分为用户线程和守护(daemon)线程；
@@ -1657,7 +1774,7 @@ Goodbye World !  // 用户线程结束
 God blesses you !
 God blesses you !  // 随后守护线程也结束了
  */
- ```
+```
 
 # 线程池
 &emsp;&emsp;经常创建和销毁、使用量特别大的资源，比如并发情况下的线程，对性能影响很大。因此，可以提前创建好多个线程，放入线程池中，使用时直接获取，使用完放回池中。可以避免频繁创建、销毁，实现重复利用。<font color=red>类似每次需要骑车时，去站点使用共享单车，而不是每次都去买一辆</font>。 
@@ -1727,7 +1844,7 @@ pool-1-thread-3
 pool-1-thread-4
 pool-1-thread-2
  */
- ```
+```
 
 &emsp;&emsp;如果仅需要为一个任务创建一个线程，就使用`Thread`类。如果需要为多个任务创建线程，最好使用线程池。
 * `ExecutorService executor = Executors.newFixedThreadPool(1);`：这四个可运行的任务将顺次执行，因为在线程池中只有一个线程。
@@ -1737,7 +1854,7 @@ pool-1-thread-2
 
 # 线程的同步(重点)
 &emsp;&emsp;多个线程操作同一个资源——<font color=red>并发</font>。处理多线程问题时，多个线程访问同一个对象，并且某些线程还想修改这个对象，这时需要线程同步。<font color=red>线程同步其实就是一个等待机制，多个需要同时访问此对象的线程进入这个对象的等待池形成队列(排队)</font>，等待前面线程使用完毕，下一个线程再使用。
-&emsp;&emsp;队列与锁：排队去厕所，第一个人进入隔间锁上门独享资源。每个对象都有一把锁来保证线程安全。
+&emsp;&emsp;**队列与锁**：排队去厕所，第一个人进入隔间锁上门独享资源。每个对象都有一把锁来保证线程安全。
 
 &emsp;&emsp;由于同一进程的多个线程共享同一块存储空间，在带来方便的同时，也存在访问冲突问题。为了保证数据在方法中被访问时的正确性，在访问时加入<font color=red>锁机制(synchronized)</font>，当一个线程获得对象的<font color=red>排它锁</font>，独占资源时，其他线程必须等待，使用后释放锁。
 
@@ -1747,7 +1864,10 @@ pool-1-thread-2
 * 如果一个优先级高的线程等待一个优先级低的线程释放锁，会导致<font color=red>优先级倒置</font>，引起性能问题。
 
 ## 线程不安全案例
-&emsp;&emsp;每个线程都在自己的工作内存交互，内存控制不当会造成数据不一致。
+
+
+每个线程都在自己的工作内存交互，内存控制不当会造成数据不一致。
+
 ### 不安全地买票
 `chen 买到了第 -1 票！`：当票还剩一张时，由于没有排队，每个人都买了，于是变成-1了。
 ```java
@@ -1788,7 +1908,7 @@ class BuyTickets implements Runnable
     // 买票方法
     private void buy() throws InterruptedException
     {
-        // 判断是否邮票
+        // 判断是否有票
         if (ticketsNumber <= 0)
         {
             flag = false;
@@ -1943,10 +2063,10 @@ public class UnsafeList
 /*
 Output:9997
  */
- ```
+```
 
- ### 线程不安全案例四
- &emsp;&emsp;假设创建并启动100个线程，每个线程都往同一个账户中添加一个便士。定义一个名为`Account`的类模拟账户，一个名为`AddAPennyTask`的类用来向账户里添加一便士，以及一个用于创建和启动线程的主类。
+### 线程不安全案例四
+&emsp;&emsp;假设创建并启动100个线程，每个线程都往同一个账户中添加一个便士。定义一个名为`Account`的类模拟账户，一个名为`AddAPennyTask`的类用来向账户里添加一便士，以及一个用于创建和启动线程的主类。
 <div align=center><img src=Thread/线程不安全案例4.png width=90%></div>
 
 ```java
@@ -2020,7 +2140,7 @@ public class AccountWithoutSync
 main 正在存钱中！
 What's balance? 7
  */
- ```
+```
 
 当所有的线程都完成时，余额应该是100, 但是输出结果`What's balance? 7`并不是可预测的。出现问题的原因：
 <div align=center><img src=Thread/案例四线程不安全原因.png width=80%></div>
@@ -2035,16 +2155,19 @@ step | balance | newBalance | Task1                     | Task2 |
 问题是任务1和任务2以一种会引起冲突的方式访问一个公共资源。这是多线程程序中的一个普遍问题，称为竞争状态(`race condition`) 。如果一个类的对象在多线程程序中没有导致竞争状态，则称这样的类为线程安全的(`thread-safe`) 。
 
 
- ## 同步的方法
-&emsp;&emsp;为避免竞争状态，应该防止多个线程同时进入程序的某一特定部分，程序中的这部分称为临界区(`critical region`) 。可以使用关键字`synchronized`来同步方法，以便<font color=red>一次只有一个线程可以访问这个方法</font>。
+## 同步的方法
+
+### synchronized
+
+为避免竞争状态，应该防止多个线程同时进入程序的某一特定部分，程序中的这部分称为临界区(`critical region`) 。可以使用关键字`synchronized`来同步方法，以便<font color=red>一次只有一个线程可以访问这个方法</font>。
 `public synchronized void deposit(int amount)`
 
-&emsp;&emsp;一个同步方法在执行之前需要加锁。锁是一种实现资源排他使用的机制。<font color=red>对于实例方法，要给调用该方法的对象加锁。对于静态方法，要给这个类加锁</font>。如果一个线程调用一个对象上的同步实例方法（静态方法），首先给该对象（类）加锁，然后执行该方法，最后解锁。在解锁之前，另一个调用那个对象（类）中方法的线程将被阻塞，直到解锁。
+&emsp;&emsp;一个同步方法在执行之前需要**加锁**。锁是一种实现**资源排他使用**的机制。<font color=red>对于实例方法，要给调用该方法的对象加锁。对于静态方法，要给这个类加锁</font>。如果一个线程调用一个对象上的同步实例方法（静态方法），首先给该对象（类）加锁，然后执行该方法，最后解锁。在解锁之前，另一个调用那个对象（类）中方法的线程将被阻塞，直到解锁。
 <div align=center><img src=Thread/同步.png width=60%></div>
 
- * `synchronized`方法控制`对象`的访问，每个对象对应一把锁。每个`synchronized`方法都必须获得调用该方法对象的锁才能执行，否则线程会阻塞。方法一旦执行，就独占该锁，直到该方法返回才释放锁，后面被阻塞的线程才能获得这个锁，继续执行。
- * 若将一个大的方法声明为`synchronized`将会影响效率。
- 例如，A代码：只读；B代码：修改，方法里需要修改的内容才需要锁，锁得太多，浪费资源。
+* `synchronized`方法控制`对象`的访问，每个对象对应一把锁。每个`synchronized`方法都必须获得调用该方法对象的锁才能执行，否则线程会阻塞。方法一旦执行，就独占该锁，直到该方法返回才释放锁，后面被阻塞的线程才能获得这个锁，继续执行。
+* 若将一个大的方法声明为`synchronized`将会影响效率。
+例如，A代码：只读；B代码：修改，方法里需要修改的内容才需要锁，锁得太多，浪费资源。
 
 &emsp;&emsp;调用一个对象上的同步实例方法，需要给该对象加锁。而调用一个类上的同步静态方法，需要给该类加锁。当执行方法中某一个代码块时，同步语句不仅可用于对`this对象`加锁，而且可用于对任何对象加锁。这个代码块称为`同步块(synchronized block)`。
 
@@ -2364,8 +2487,8 @@ Process finished with exit code -1
  */
 ```
 
- 避免死锁：
- ```java
+避免死锁：
+```java
  private void makeup() throws InterruptedException
     {
         if (choice == 0)
@@ -2407,7 +2530,7 @@ Process finished with exit code -1
             }
         }
     }
- ```
+```
 
 #### 死锁避免方法
 产生死锁的四个必要条件：
@@ -2424,7 +2547,21 @@ Process finished with exit code -1
 * `ReentrantLock`类（可重入锁）实现了`Lock`，它拥有与`synchronized`相同的并发性和内存语义，在实现线程安全的控制中，比较常用的是`ReentrantLock`，可以显示加锁、释放锁。
     `ReentrantLock`是`Lock`的一个具体实现，用于创建相互排斥的锁。可以创建具有特定的公平策略的锁。<font color=red>公平策略值为真，则确保等待时间最长的线程首先获得锁。取值为假的公平策略将锁给任意一个在等待的线程</font>。被多个线程访问的使用公正锁的程序，其整体性能可能比那些使用默认设置的程序差，但是在获取锁且避免资源缺乏时可以有更小的时间变化。
 
-<div align=center><img src=Thread/ReentrantLock.png width=90%></div>
+<div align=center><img src=Thread/ReentrantLock.png width=80%></div>
+
+```java
+// ReentrantLock.java
+
+// 非公平锁：可以插队（默认使用非公平锁）
+public ReentrantLock() {sync = new NonfairSync();}
+
+// 传入的布尔值如果为true，则为公平锁
+// 公平锁：先来后到
+public ReentrantLock(boolean fair) 
+{
+    sync = fair ? new FairSync() : new NonfairSync();
+}
+```
 
 #### 加锁线程安全1
 ```java
@@ -2580,19 +2717,168 @@ zu 获得了第 2364 张票！
 zu 获得了第 2363 张票！
 
  */
- ```
+```
 
-#### `synchronized`与`Lock`的对比
- * `Lock`是显示锁（手动开启和关闭锁）；`sychronized`是隐式锁，出了作用域自动释放；
- * `Lock`只有代码块锁，`sychronized`有代码块锁和方法锁；
- * 使用`Lock`锁，`JVM`将花费较少的时间来调度线程，性能更好。并且具有更好的扩展性（提供更多的子类）。
- * 优先使用顺序：`Lock` > 同步代码块 > 同步方法
+### `synchronized`与`Lock`的对比
 
+**使用`synchronized`同步**：
+
+```java {.line-numbers highlight=56}
+/**
+ * 真正的多线程开发，公司中的开发，降低耦合性
+ * 线程就是一个单独的资源类，没有任何附属的操作！
+ * OOP 属性、方法
+ */
+public class SaleTicketDemo01
+{
+    public static void main(String[] args)
+    {
+        // 并发：多线程操作同一个资源类, 把资源类丢入线程
+        Ticket ticket = new Ticket();
+
+        // @FunctionalInterface 函数式接口，jdk1.8  lambda表达式 (参数)->{ 代码 }
+        new Thread(()->{
+            for (int i = 1; i < 40 ; i++)
+                ticket.sale();
+        },"A").start();
+
+        new Thread(()->{
+            for (int i = 1; i < 40 ; i++)
+                ticket.sale();
+        },"B").start();
+
+        new Thread(()->{
+            for (int i = 1; i < 40 ; i++)
+                ticket.sale();
+        },"C").start();
+
+    }
+}
+
+// 资源类 OOP
+class Ticket
+{
+    // 属性、方法
+    private int number = 30;
+
+    // 卖票的方式
+
+    /*
+    public void sale()
+    {
+        if (number > 0)
+            System.out.println(Thread.currentThread().getName() + "卖出了第" + (number--) + "张票,剩余：" + number);
+    }
+
+    A卖出了6票,剩余：5
+    A卖出了5票,剩余：4
+    C卖出了9票,剩余：8
+    C卖出了3票,剩余：2
+    B卖出了14票,剩余：13
+    B卖出了1票,剩余：0
+     */
+
+    // synchronized 本质: 队列，锁
+    public synchronized void sale()
+    {
+        if (number > 0)
+            System.out.println(Thread.currentThread().getName() + "卖出了第" + (number--) + "张票,剩余：" + number);
+    }
+    /*
+    A卖出了第26张票,剩余：25
+    A卖出了第25张票,剩余：24
+    B卖出了第24张票,剩余：23
+    B 卖出了第23张票,剩余：22
+    B卖出了第22张票,剩余：21
+     */
+}
+```
+
+**使用锁**：
+```java
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class SaleTicketDemo02
+{
+    public static void main(String[] args)
+    {
+
+        // 并发：多线程操作同一个资源类, 把资源类丢入线程
+        Ticket2 ticket = new Ticket2();
+
+        // @FunctionalInterface 函数式接口，jdk1.8  lambda表达式 (参数)->{ 代码 }
+        new Thread(()->{for (int i = 1; i < 40 ; i++) ticket.sale();},"A").start();
+        new Thread(()->{for (int i = 1; i < 40 ; i++) ticket.sale();},"B").start();
+        new Thread(()->{for (int i = 1; i < 40 ; i++) ticket.sale();},"C").start();
+
+
+    }
+}
+
+// Lock三部曲
+// 1、 new ReentrantLock();  //建锁
+// 2、 lock.lock(); // 加锁
+// 3、 finally=>  lock.unlock(); // 解锁
+
+class Ticket2
+{
+    // 属性、方法
+    private int number = 30;
+
+    Lock lock = new ReentrantLock();
+
+    public void sale()
+    {
+
+        lock.lock(); // 加锁
+
+        try
+        {
+           // 业务代码
+            if (number>0)
+                System.out.println(Thread.currentThread().getName() + "卖出了第" + (number--) + "张票，剩余：" + number);
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            lock.unlock(); // 解锁
+        }
+    }
+}
+```
+
+`synchronized`和`Lock`区别：
+
+* `synchronized`内置的Java**关键字**，`Lock`是一个Java**类**；
+* `synchronized`无法判断获取锁的状态，`Lock`可以判断是否获取到了锁；
+* `Lock`是显示锁（手动开启和关闭锁）必须手动释放锁！如果不释放，则会出现死锁；`sychronized`是隐式锁，出了作用域自动释放；
+* `Lock`只有代码块锁，`sychronized`有代码块锁和方法锁；
+* `synchronized`线程1（获得锁，阻塞）、线程2（等待，傻傻的等）；`Lock`锁就不一定会等待下去（`lock.tryLock();`）；
+* 使用`Lock`锁，`JVM`将花费较少的时间来调度线程，性能更好。并且具有更好的扩展性（提供更多的子类）。
+* `synchronized`可重入锁，不可以中断的，**非公平**；`Lock`可重入锁，可以判断锁，是否公平可以自己设置；
+* `synchronized`适合锁少量的代码同步问题，`Lock`适合锁大量的同步代码！
+* 优先使用顺序：`Lock` > 同步代码块 > 同步方法
 
 
 # 线程通信
 
-## 锁和条件
+## 监视器
+
+**锁和条件**是`Java 5`中的新内容。在`Java 5`之前，线程通信是使用对象的`内置监视器`编程实现的。锁和条件比内置监视器更加强大且灵活，因此无须使用监视器。然而，如果使用遗留的Java代码，就可能会碰到Java的内置监视器。
+
+&emsp;&emsp;监视器(monitor)是一个相互排斥且具备同步能力的对象。监视器中的一个时间点上，只能有一个线程执行一个方法。线程通过获取监视器上的锁进入监视器，并且通过释放锁退出监视摇。任意对象都可能是一个监视器。一旦一个线程锁住对象，该对象就成为监视器。加锁是通过在方法或块上使用`synchronized`关键字来实现的。在执行同步方法或块之前，线程必须获取锁。如果条件不适合线程继续在监视器内执行，线程可能在监视器中等待。可以对监视器对象调用`wait()`方法来释放锁，这样其他的一些监视器中的线程就可以获取它，也就有可能改变监视器的状态。当条件合适时，另一线程可以调用`notify()`或`notifyAll()`方法来通知一个或所有的等待线程重新获取锁并且恢复执行。
+
+<div align=center><img src=Thread/监视器.png></div>
+
+## Condition
+
+`Lock`替换`synchronized`方法和语句的使用；`Condition`取代了**对象监视器**方法的使用。
+
 &emsp;&emsp;通过保证在临界区上多个线程的相互排斥，线程同步完全可以避免竞争条件的发生， 但是有时候，还需要线程之间的相互协作。可以使用条件实现线程间通信。一个线程可以指定在某种条件下该做什么。条件是通过调用`Lock`对象的`newCondition()`方法而创建的对象。一旦创建了条件，就可以使用`await(), signal()`和`signalAll()`方法来实现线程之间的相互通信。`await()`方法可以让当前线程进人等待，直到条件发生。`signal()`方法唤醒一个等待的线程，而`signalAll()`唤醒所有等待的线程。
 <div align=center><img src=Thread/Condition接口定义完成同步的方法.png width=90%></div>
 
@@ -2720,16 +3006,11 @@ public class ThreadCooperation
         }
     }
 }
- ```
+```
 <div align=center><img src=Thread/两个任务交互的结果.png width=90%></div>
 
 
-## 监视器
-&emsp;&emsp;`锁和条件`是`Java 5`中的新内容。在`Java 5`之前，线程通信是使用对象的`内置监视器`编程实现的。锁和条件比内置监视器更加强大且灵活，因此无须使用监视器。然而，如果使用遗留的Java代码，就可能会碰到Java的内置监视器。
 
-&emsp;&emsp;监视器(monitor)是一个相互排斥且具备同步能力的对象。监视器中的一个时间点上，只能有一个线程执行一个方法。线程通过获取监视器上的锁进入监视器，并且通过释放锁退出监视摇。任意对象都可能是一个监视器。一旦一个线程锁住对象，该对象就成为监视器。加锁是通过在方法或块上使用`synchronized`关键字来实现的。在执行同步方法或块之前，线程必须获取锁。如果条件不适合线程继续在监视器内执行，线程可能在监视器中等待。可以对监视器对象调用`wait()`方法来释放锁，这样其他的一些监视器中的线程就可以获取它，也就有可能改变监视器的状态。当条件合适时，另一线程可以调用`notify()`或`notifyAll()`方法来通知一个或所有的等待线程重新获取锁并且恢复执行。
-
-<div align=center><img src=Thread/监视器.png></div>
 
 
 ### 初识生产者消费者问题
@@ -2994,9 +3275,195 @@ Output:
 演员表演了节目：快乐大本营
 观众观看了节目：快乐大本营
  */
- ```
+```
 
-## 生产者/消费者示例
+
+### 生产者/消费者示例
+
+#### 使用synchronized
+
+`synchronized`、`wait`、`notifyAll`
+
+```java
+/**
+ * 线程之间的通信问题：生产者和消费者问题！  等待唤醒，通知唤醒
+ * 线程交替执行  A   B 操作同一个变量   num = 0
+ * A num+1
+ * B num-1
+ */
+
+public class ProducerAndConsumer
+{
+    public static void main(String[] args)
+    {
+        Data data = new Data();
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.increment();
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"A").start();
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.decrement();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"B").start();
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.increment();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"C").start();
+
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.decrement();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"D").start();
+    }
+}
+
+// 判断是否需要等待，业务，通知
+class Data
+{ // 数字 资源类
+
+    private int number = 0;
+
+    //+1
+    public synchronized void increment() throws InterruptedException
+    {
+        while (number != 0)
+        {  //0
+            // 等待
+            this.wait();
+        }
+        number++;
+        System.out.println(Thread.currentThread().getName() + "=>" + number);
+        // 通知其他线程，我+1完毕了
+        this.notifyAll();
+    }
+
+    //-1
+    public synchronized void decrement() throws InterruptedException
+    {
+        while (number == 0)
+        { // 1
+            // 等待
+            this.wait();
+        }
+        number--;
+        System.out.println(Thread.currentThread().getName() + "=>" + number);
+        // 通知其他线程，我-1完毕了
+        this.notifyAll();
+    }
+
+}
+/*
+A=>1
+B=>0
+A=>1
+B=>0
+C=>1
+D=>0
+C=>1
+D=>0
+ */
+```
+
+##### 防止虚假唤醒
+
+虚假唤醒：线程也可以唤醒，而不被通知，中断或超时。等待应该总是出现在循环中：
+```java
+synchronized (obj)
+{
+    while(condition)
+    {
+        obj.wait(timeout);
+    }
+}
+```
+
+如果`while`换成`if`出现问题：
+```java
+class Data
+{ // 数字 资源类
+
+    private int number = 0;
+
+    //+1
+    public synchronized void increment() throws InterruptedException
+    {
+        //while (number != 0)
+        if (number != 0)
+        {  //0
+            // 等待
+            this.wait();
+        }
+        number++;
+        System.out.println(Thread.currentThread().getName() + "=>" + number);
+        // 通知其他线程，我+1完毕了
+        this.notifyAll();
+    }
+
+    //-1
+    public synchronized void decrement() throws InterruptedException
+    {
+        //while (number == 0)
+        if (number == 0)
+        { // 1
+            // 等待
+            this.wait();
+        }
+        number--;
+        System.out.println(Thread.currentThread().getName() + "=>" + number);
+        // 通知其他线程，我-1完毕了
+        this.notifyAll();
+    }
+}
+/*
+B=>0
+C=>1
+A=>2
+C=>3
+A=>4
+*/
+```
+
+#### 使用JUC.Condition
+
+`lock`、`await`、`signal`
+
 &emsp;&emsp;假设使用缓冲区存储整数。缓冲区的大小是受限的。缓冲区提供`write(int)`方法将一个`int`值添加到缓冲区中，还提供方法`read()`从缓冲区中读取和删除一个`int`值。为了同步这个操作，使用具有两个条件的锁：`notEmpty`(即缓冲区非空)和`notFull`(即缓冲区未满)。当任务向缓冲区添加一个`int`时，如果缓冲区是满的，那么任务将会等待`notFull`条件。当任务从缓冲区中读取一个`int`时，如果缓冲区是空的，那么任务将等待`notEmpty`条件。
 
 <div align=center><img src=Thread/生产者消费者.png width=80%></div>
@@ -3140,5 +3607,267 @@ public class ConsumerProducer
         }
     }
 }
- ```
+```
 <div align=center><img src=Thread/生产者消费者结果.png width=90%></div>
+
+
+```java
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class ProducerAndConsumer1
+{
+    public static void main(String[] args)
+    {
+        Data2 data = new Data2();
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.increment();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"A").start();
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.decrement();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"B").start();
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.increment();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"C").start();
+
+        new Thread(()->{
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    data.decrement();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        },"D").start();
+    }
+}
+
+// 判断等待，业务，通知
+class Data2{ // 数字 资源类
+
+    private int number = 0;
+
+    Lock lock = new ReentrantLock();
+    Condition condition = lock.newCondition();
+
+    //condition.await(); // 等待
+    //condition.signalAll(); // 唤醒全部
+
+    //+1
+    public void increment() throws InterruptedException
+    {
+        lock.lock();
+        try
+        {
+            // 业务代码
+            while (number != 0)
+            {  //0
+                // 等待
+                condition.await();
+            }
+            number++;
+            System.out.println(Thread.currentThread().getName() + "=>" + number);
+            // 通知其他线程，我+1完毕了
+            condition.signalAll();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            lock.unlock();
+        }
+
+    }
+
+    //-1
+    public void decrement() throws InterruptedException
+    {
+        lock.lock();
+        try
+        {
+            while (number == 0)
+            { // 1
+                // 等待
+                condition.await();
+            }
+            number--;
+            System.out.println(Thread.currentThread().getName() + "=>" + number);
+            // 通知其他线程，我-1完毕了
+            condition.signalAll();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+}
+```
+
+##### Condition精准的通知和唤醒线程
+
+上述结果是随机的：
+```
+A=>1
+B=>0
+A=>1
+B=>0
+C=>1
+D=>0
+C=>1
+D=>0
+```
+
+希望线程有序执行：`A B C D`。
+
+```java
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * A 执行完调用B，B执行完调用C，C执行完调用A
+ */
+
+public class ProducerAndConsumer2
+{
+    public static void main(String[] args)
+    {
+        Data3 data = new Data3();
+
+        new Thread(() -> { for (int i = 0; i <10 ; i++) data.printA(); },"A").start();
+        new Thread(() -> { for (int i = 0; i <10 ; i++) data.printB(); },"B").start();
+        new Thread(() -> { for (int i = 0; i <10 ; i++) data.printC(); },"C").start();
+    }
+}
+
+class Data3{ // 资源类 Lock
+
+    private Lock lock = new ReentrantLock();
+    private Condition condition1 = lock.newCondition();
+    private Condition condition2 = lock.newCondition();
+    private Condition condition3 = lock.newCondition();
+    private int number = 1; // 1A  2B  3C
+
+    public void printA()
+    {
+        lock.lock();
+        try {
+            // 业务，判断-> 执行-> 通知
+            while (number != 1)
+            {
+                // 等待
+                condition1.await();
+            }
+            System.out.println(Thread.currentThread().getName() + "=>AAAAAAA");
+            // 唤醒，唤醒指定的人，B
+            number = 2;
+            condition2.signal();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+
+    public void printB()
+    {
+        lock.lock();
+        try {
+            // 业务，判断-> 执行-> 通知
+            while (number != 2)
+            {
+                condition2.await();
+            }
+            System.out.println(Thread.currentThread().getName() + "=>BBBBBBBBB");
+            // 唤醒，唤醒指定的人，C
+            number = 3;
+            condition3.signal();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+    public void printC()
+    {
+        lock.lock();
+        try {
+            // 业务，判断-> 执行-> 通知
+            // 业务，判断-> 执行-> 通知
+            while (number != 3)
+            {
+                condition3.await();
+            }
+            System.out.println(Thread.currentThread().getName() + "=>CCCCCCCCC");
+            // 唤醒，唤醒指定的人，A
+            number = 1;
+            condition1.signal();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+}
+/*
+A=>AAAAAAA
+B=>BBBBBBBBB
+C=>CCCCCCCCC
+A=>AAAAAAA
+B=>BBBBBBBBB
+ */
+```
+
+# 8锁现象
