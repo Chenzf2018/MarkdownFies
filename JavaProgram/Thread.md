@@ -500,7 +500,7 @@ JDK提供了`Callable接口`与`Future类`为我们解决这个问题，这也�
 
 ### 实现`Callable`接口
 
-`Callable`与`Runnable`类似，同样是只有一个抽象方法的函数式接口。不同的是，`Callable`提供的方法是**有返回值**的，而且支持**泛型**。
+`Callable`与`Runnable`类似，同样是只有一个抽象方法的函数式接口。不同的是，`Callable`提供的方法是**有返回值**的，而且支持**泛型**。它可以抛出异常。
 
 ```java
 @FunctionalInterface
@@ -520,7 +520,7 @@ import java.util.concurrent.*;
 public class Task implements Callable<Integer>
 {
     @Override
-    public Integer call() throws Exception
+    public Integer call() throws Exception  // 返回值类型与Callable<Integer>中一致
     {
         // 模拟计算需要1秒
         Thread.sleep(1000);
@@ -539,8 +539,52 @@ public class Task implements Callable<Integer>
 }
 ```
 
-* 实现`Callable`接口，需要返回值类型；
-* 重写`call`方法，需要抛出异常；
+```java
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
+public class CallableTest
+{
+    public static void main(String[] args) throws ExecutionException, InterruptedException
+    {
+        // new Thread(new Runnable()).start();
+        // new Thread(new FutureTask<V>()).start();
+        // new Thread(new FutureTask<V>( Callable )).start();
+
+        new Thread().start(); // 怎么启动Callable
+
+        MyThread thread = new MyThread();
+        FutureTask futureTask = new FutureTask(thread); // 适配类
+
+        new Thread(futureTask,"A").start();
+        new Thread(futureTask,"B").start(); // 只打印了一个"call()"。结果会被缓存，效率高
+
+        Integer o = (Integer) futureTask.get(); //这个get 方法可能会产生阻塞！把他放到最后
+        // 或者使用异步通信来处理！
+        System.out.println(o);
+
+    }
+}
+
+class MyThread implements Callable<Integer>
+{
+    @Override
+    public Integer call()
+    {
+        System.out.println("call()"); // 会打印几个call
+        // 耗时的操作
+        return 1024;
+    }
+}
+/*
+call()
+1024
+ */
+```
+
+* 实现`Callable`接口，需要**返回值**类型；
+* 重写`call`方法，需要**抛出异常**；
 * 创建目标对象；
 * 创建执行服务（开启服务）：`ExecutorService ser = Executors.newFixedThreadPool(1)`；
 * 提交执行：`Future<Boolean> result1 = ser.submit(t1)`；
@@ -696,6 +740,8 @@ public class Task implements Callable<Integer>
 
 使用上与之前的Demo有一点小的区别。首先，调用`submit`方法是**没有返回值**的。这里实际上是调用的`submit(Runnable task)`方法，而上面的Demo，调用的是`submit(Callable<T> task)`方法。然后，这里是使用`FutureTask`直接用`get`取值，而上面的Demo是通过`submit`方法返回的`Future`去取值。
 
+`get`方法可能会产生阻塞，因为结果需要等待！
+
 在很多高并发的环境下，有可能`Callable`和`FutureTask`会创建多次。`FutureTask`能够在高并发环境下确保任务只执行一次。
 
 ## 三种实现方式总结
@@ -721,14 +767,17 @@ public class CreateThread4
         // 3.实现Callable接口  //参考线程池
         FutureTask<Integer> futureTask = new FutureTask<>(new MyThread3());
         new Thread(futureTask).start();
+
         try
         {
             Integer integer = futureTask.get();
             System.out.println(integer);
-        }catch (InterruptedException ie)
+        }
+        catch (InterruptedException ie)
         {
             ie.printStackTrace();
-        }catch (ExecutionException ee)
+        }
+        catch (ExecutionException ee)
         {
             ee.printStackTrace();
         }
@@ -2162,7 +2211,7 @@ step | balance | newBalance | Task1                     | Task2 |
 为避免竞争状态，应该防止多个线程同时进入程序的某一特定部分，程序中的这部分称为临界区(`critical region`) 。可以使用关键字`synchronized`来同步方法，以便<font color=red>一次只有一个线程可以访问这个方法</font>。
 `public synchronized void deposit(int amount)`
 
-&emsp;&emsp;一个同步方法在执行之前需要**加锁**。锁是一种实现**资源排他使用**的机制。<font color=red>对于实例方法，要给调用该方法的对象加锁。对于静态方法，要给这个类加锁</font>。如果一个线程调用一个对象上的同步实例方法（静态方法），首先给该对象（类）加锁，然后执行该方法，最后解锁。在解锁之前，另一个调用那个对象（类）中方法的线程将被阻塞，直到解锁。
+&emsp;&emsp;一个同步方法在执行之前需要**加锁**。锁是一种实现**资源排他使用**的机制。<font color=red>对于**实例方法**，要给**调用该方法的对象加锁**。对于**静态方法**，要给这个*类*加锁</font>。如果一个线程调用一个对象上的同步实例方法（静态方法），首先给该对象（类）加锁，然后执行该方法，最后解锁。在解锁之前，另一个调用那个对象（类）中方法的线程将被阻塞，直到解锁。
 <div align=center><img src=Thread/同步.png width=60%></div>
 
 * `synchronized`方法控制`对象`的访问，每个对象对应一把锁。每个`synchronized`方法都必须获得调用该方法对象的锁才能执行，否则线程会阻塞。方法一旦执行，就独占该锁，直到该方法返回才释放锁，后面被阻塞的线程才能获得这个锁，继续执行。
@@ -2343,49 +2392,6 @@ Output:
 客户：customer1 取了 10000 元！账户：购房基金 还剩余金额：990000
 客户：customer1 手中尚余金额：10000
 金额不足，customer2 无法取钱！
- */
-```
-
-### JUC安全类型的集合
-```java
-package Thread;
-
-import java.util.concurrent.CopyOnWriteArrayList;
-
-public class TestJUC
-{
-    public static void main(String[] args)
-    {
-        CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
-        for (int i = 0; i < 200000; i++)
-        {
-            new Thread(() -> {
-                list.add(Thread.currentThread().getName());
-            }).start();
-
-            /*
-            try
-            {
-                Thread.sleep(1000);
-            }catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }*/
-        }
-
-        try
-        {
-            Thread.sleep(1000);
-        }catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        System.out.println(list.size());
-    }
-}
-/*
-Output:200000
  */
 ```
 
@@ -3870,4 +3876,755 @@ B=>BBBBBBBBB
  */
 ```
 
-# 8锁现象
+# 关于锁的8个问题
+
+如何判断锁的是谁！永远的知道什么锁，锁到底锁的是谁！
+
+一个同步方法在执行之前需要加锁。锁是一种实现资源排他使用的机制。对于**实例方法**，要给**调用该方法的对象加锁**。对于**静态方法**，要给这个**类**加锁。
+
+**synchronized锁的对象是方法的调用者**
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 关于锁的8个问题
+ * 1、标准情况下(sendSms不延迟)，两个线程先打印”发短信“还是”打电话“？
+ * 输出：1/发短信  2/打电话
+ * 2、sendSms延迟4秒，两个线程先打印”发短信“还是”打电话“？
+ * 输出：1/发短信  2/打电话
+ */
+public class Test1
+{
+    public static void main(String[] args)
+    {
+        Phone phone = new Phone();
+
+        //锁的存在
+        new Thread(() -> { phone.sendSms(); },"A").start();  // 先调用并不一定先执行
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(() -> { phone.call(); },"B").start();
+    }
+}
+
+class Phone
+{
+    // synchronized锁的对象是方法的调用者！
+    // 两个方法用的是同一个锁，谁先拿到谁执行！
+    public synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(0);  // sendSms延迟4s
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ *
+ * 3、 增加了一个普通方法后！先执行”发短信：还是“Hello”？
+ * sendSms有延迟2s，输出：普通方法
+ */
+public class Test2
+{
+    public static void main(String[] args)
+    {
+        Phone2 phone = new Phone2();
+        /*
+        // 两个对象，两个调用者，两把锁！
+        Phone2 phone1 = new Phone2();
+        Phone2 phone2 = new Phone2();*/
+
+        //锁的存在
+        new Thread(()->{ phone.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone.hello(); },"B").start();
+    }
+}
+
+
+class Phone2
+{
+    // synchronized锁的对象是方法的调用者！
+    public synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(2);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+
+    // 这里没有锁！不是同步方法，不受锁的影响
+    public void hello(){ System.out.println("hello"); }
+}
+```
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 4、 两个对象，两个同步方法， “发短信”还是“打电话”？
+ * 输出：打电话
+ */
+public class Test3
+{
+    public static void main(String[] args)
+    {
+        // 两个对象，两个调用者，两把锁！
+        Phone3 phone1 = new Phone3();
+        Phone3 phone2 = new Phone3();
+
+        //锁的存在
+        new Thread(()->{ phone1.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone2.call(); },"B").start();
+    }
+}
+
+
+class Phone3
+{
+    // synchronized 锁的对象是方法的调用者！
+    public synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+**锁的是Class**
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 5、增加两个静态的同步方法，只有一个对象，先打印“发短信”还是“打电话”？
+ * 输出：发短信
+ */
+public class Test4  
+{
+    public static void main(String[] args)
+    {
+        // 两个对象的Class类模板只有一个，static，锁的是Class
+        Phone4 phone = new Phone4();
+
+        //锁的存在
+        new Thread(()->{ phone.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone.call(); },"B").start();
+    }
+}
+
+// Phone4唯一的一个 Class 对象
+class Phone4
+{
+    // synchronized 锁的对象是方法的调用者！
+    // static 静态方法
+    // 只要类一加载就有了！锁的是Class
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public static synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 6、两个对象！增加两个静态的同步方法， 先打印“发短信”还是“打电话”？
+ * 输出：发短信
+ */
+public class Test5
+{
+    public static void main(String[] args)
+    {
+        // 两个对象的Class类模板只有一个，static，锁的是Class
+        Phone5 phone1 = new Phone5();
+        Phone5 phone2 = new Phone5();
+
+        //锁的存在
+        new Thread(()->{ phone1.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone2.call(); },"B").start();
+    }
+}
+
+// Phone5唯一的一个 Class 对象
+class Phone5
+{
+    // synchronized 锁的对象是方法的调用者！
+    // static 静态方法
+    // 只要类一加载就有了！锁的是Class
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public static synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+**锁调用者与锁class**
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 7、1个静态的同步方法，1个普通的同步方法 ，一个对象，先打印“发短信”还是“打电话”？
+ * 输出：打电话
+ */
+public class Test6
+{
+    public static void main(String[] args)
+    {
+        // 两个对象的Class类模板只有一个，static，锁的是Class
+        Phone6 phone = new Phone6();
+
+        //锁的存在
+        new Thread(()->{ phone.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone.call(); },"B").start();
+    }
+}
+
+// Phone6唯一的一个 Class 对象
+class Phone6
+{
+    // 静态的同步方法 锁的是 Class 类模板
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    // 普通的同步方法  锁的调用者
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 7、1个静态的同步方法，1个普通的同步方法 ，一个对象，先打印“发短信”还是“打电话”？
+ * 输出：打电话
+ */
+public class Test6
+{
+    public static void main(String[] args)
+    {
+        // 两个对象的Class类模板只有一个，static，锁的是Class
+        Phone6 phone = new Phone6();
+
+        //锁的存在
+        new Thread(()->{ phone.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone.call(); },"B").start();
+    }
+}
+
+// Phone6唯一的一个 Class 对象
+class Phone6
+{
+    // 静态的同步方法 锁的是 Class 类模板
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    // 普通的同步方法  锁的调用者
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+# 集合类不安全
+
+## List不安全
+
+`java.util.ConcurrentModificationException`并发修改异常
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+public class TestList1
+{
+    public static void main(String[] args)
+    {
+        /*
+        List<String> list = Arrays.asList("1", "2", "3");
+        list.forEach(System.out::print);
+        输出：123
+        */
+
+        List<String> list = new ArrayList<>();
+
+        // 增大i，出现java.util.ConcurrentModificationException 并发修改异常
+        for (int i = 1; i <= 100; i++) 
+        {
+            new Thread(() -> {
+                list.add(UUID.randomUUID().toString().substring(0, 5));
+                System.out.println(list);
+            }, String.valueOf(i)).start();
+        }
+    }
+}
+```
+
+**解决方案**
+- `List<String> list = new Vector<>();`
+- `List<String> list = Collections.synchronizedList(new ArrayList<>());`
+- `List<String> list = new CopyOnWriteArrayList<>();`（重要）
+
+## Set不安全
+
+```java
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+/*
+出现java.util.ConcurrentModificationException
+ */
+public class SetTest
+{
+    public static void main(String[] args) {
+        Set<String> set = new HashSet<>();
+
+        for (int i = 1; i <= 300 ; i++)
+        {
+            new Thread(() ->
+            {
+                set.add(UUID.randomUUID().toString().substring(0, 5));
+                System.out.println(set);
+            }, String.valueOf(i)).start();
+        }
+    }
+}
+```
+
+解决方案：
+- `Set<String> set = Collections.synchronizedSet(new HashSet<>());`(通过工具类转化成synchronized)
+- `Set<String> set = new CopyOnWriteArraySet<>();`(JUC，写入时复制，保证效率)
+
+`HashSet`**底层是什么**？
+
+```java
+public HashSet() 
+{
+    map = new HashMap<>();
+}
+
+// add set本质就是map key是无法重复的！
+public boolean add(E e) 
+{
+    return map.put(e, PRESENT)==null;
+}
+
+private static final Object PRESENT = new Object(); // 不变得值！
+```
+
+## Map不安全
+
+```java
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+// ConcurrentModificationException
+public class MapTest
+{
+    public static void main(String[] args)
+    {
+        // map 是这样用的吗？ 不是，工作中不用 HashMap
+        // Map<String, String> map = new HashMap<>();  不安全
+
+        // 默认等价于什么？  new HashMap<>(16,0.75); 初始化容量，加载因子
+
+        // 研究ConcurrentHashMap的原理
+        Map<String, String> map = new ConcurrentHashMap<>();
+
+        for (int i = 1; i <=30; i++)
+        {
+            new Thread(() ->
+            {
+                map.put(Thread.currentThread().getName(), UUID.randomUUID().toString().substring(0, 5));
+                System.out.println(map);
+            }, String.valueOf(i)).start();
+        }
+    }
+}
+```
+
+## JUC安全类型的集合
+```java
+package Thread;
+
+import java.util.concurrent.CopyOnWriteArrayList;
+
+public class TestJUC
+{
+    public static void main(String[] args)
+    {
+        CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+        for (int i = 0; i < 200000; i++)
+        {
+            new Thread(() -> {
+                list.add(Thread.currentThread().getName());
+            }).start();
+
+            /*
+            try
+            {
+                Thread.sleep(1000);
+            }catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }*/
+        }
+
+        try
+        {
+            Thread.sleep(1000);
+        }catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        System.out.println(list.size());
+    }
+}
+/*
+Output:200000
+ */
+```
+
+# 常用辅助类（必会）
+
+## CountDownLatch
+
+```java
+import java.util.concurrent.CountDownLatch;
+
+// 减法计数器
+// 倒计时结束会执行某种操作
+// 等到线程结束完毕
+public class CountDownLatchDemo
+{
+    public static void main(String[] args) throws InterruptedException
+    {
+        // 总数是6，必须要执行任务的时候，再使用！
+        CountDownLatch countDownLatch = new CountDownLatch(6);
+
+        for (int i = 1; i <=6 ; i++)
+        {
+            new Thread(() -> {
+                System.out.println(Thread.currentThread().getName() + " Go out");
+                countDownLatch.countDown(); // 数量-1
+            }, String.valueOf(i)).start();
+        }
+
+        countDownLatch.await(); // 等待计数器归零，然后再向下执行
+
+        System.out.println("Close Door");
+    }
+}
+/*
+2 Go out
+3 Go out
+4 Go out
+1 Go out
+6 Go out
+5 Go out
+Close Door
+ */
+```
+
+**原理**
+- `countDownLatch.countDown();` // 数量-1
+- `countDownLatch.await();` // 等待计数器归零，然后再向下执行
+- 每次有线程调用`countDown()`，数量-1，假设计数器变为0，`countDownLatch.await()`就会被唤醒，继续执行！
+
+
+## CyclicBarrier
+
+```java
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+
+// 简单理解为加法计数器
+
+public class CyclicBarrierDemo
+{
+    public static void main(String[] args)
+    {
+        /*
+         * 集齐7颗龙珠召唤神龙
+         */
+        // 召唤龙珠的线程
+        // 如果parties=8则一直在等待
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(7, () -> {
+            System.out.println("召唤神龙成功！"); });
+
+        for (int i = 1; i <=7 ; i++)
+        {
+            final int temp = i;
+            // lambda能操作到 i 吗
+            new Thread(() -> {
+                System.out.println(Thread.currentThread().getName() + "收集" + temp + "个龙珠");  // 不能直接得到for中的i
+                try
+                {
+                    cyclicBarrier.await(); // 等待
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                catch (BrokenBarrierException e)
+                {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+    }
+}
+/*
+Thread-0收集1个龙珠
+Thread-1收集2个龙珠
+Thread-4收集5个龙珠
+Thread-2收集3个龙珠
+Thread-5收集6个龙珠
+Thread-6收集7个龙珠
+Thread-3收集4个龙珠
+召唤神龙成功！
+ */
+```
+
+## Semaphore信号量
+
+抢车位！6辆车抢3个停车位置。
+
+```java
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+public class SemaphoreDemo
+{
+    public static void main(String[] args)
+    {
+        // 线程数量：停车位！ 限流！
+        Semaphore semaphore = new Semaphore(3);
+
+        for (int i = 1; i <=6 ; i++) {
+            new Thread(()->{
+                try
+                {
+                    // acquire() 得到
+                    semaphore.acquire();
+
+                    System.out.println(Thread.currentThread().getName() + "抢到车位");
+                    TimeUnit.SECONDS.sleep(0);  // 停车时间
+                    System.out.println(Thread.currentThread().getName() + "离开车位");
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    // release() 释放
+                    semaphore.release();
+                }
+            }, String.valueOf(i)).start();
+        }
+    }
+}
+/*
+6抢到车位
+6离开车位
+3抢到车位
+5抢到车位
+5离开车位
+3离开车位
+1抢到车位
+1离开车位
+2抢到车位
+4抢到车位
+4离开车位
+2离开车位
+ */
+```
+
+**原理**
+- `semaphore.acquire()`获得，假设如果已经满了，等待，等待被释放为止！
+- `semaphore.release();` 释放，会将当前的信号量释放+1，然后唤醒等待的线程！
+
+作用：多个共享资源互斥的使用！并发限流，控制最大的线程数！
