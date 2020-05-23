@@ -4715,3 +4715,1337 @@ public class SemaphoreDemo
 - `semaphore.release();` 释放，会将当前的信号量释放+1，然后唤醒等待的线程！
 
 作用：多个共享资源互斥的使用！并发限流，控制最大的线程数！
+
+
+# 读写锁
+
+```java
+public interface ReadWriteLock
+```
+
+读可以被多线程同时读，写的时候只能有一个线程去写！
+
+```java
+package Lock;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+/**
+ * 独占锁（写锁） 一次只能被一个线程占有
+ * 共享锁（读锁） 多个线程可以同时占有
+ * ReadWriteLock
+ * 读-读  可以共存！
+ * 读-写  不能共存！
+ * 写-写  不能共存！
+ */
+public class ReadWriteLockDemo
+{
+    public static void main(String[] args)
+    {
+        MyCache myCache = new MyCache();
+
+        // MyCacheLock myCache = new MyCacheLock();
+
+        // 写入
+        for (int i = 1; i <= 5 ; i++)
+        {
+            final int temp = i;
+            new Thread(() -> { myCache.put(temp + " ", temp + " "); }, String.valueOf(i)).start();
+        }
+
+        // 读取
+        for (int i = 1; i <= 5 ; i++)
+        {
+            final int temp = i;
+            new Thread(() -> { myCache.get(temp + " "); }, String.valueOf(i)).start();
+        }
+    }
+}
+
+// 加锁的
+class MyCacheLock
+{
+
+    private volatile Map<String, Object> map = new HashMap<>();
+    // 读写锁： 更加细粒度的控制
+    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private Lock lock = new ReentrantLock();
+
+    // 存，写入的时候，只希望同时只有一个线程写
+    public void put(String key, Object value)
+    {
+        readWriteLock.writeLock().lock();
+        try
+        {
+            System.out.println(Thread.currentThread().getName() + "写入" + key);
+            map.put(key, value);
+            System.out.println(Thread.currentThread().getName() + "写入OK");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+
+    // 取，读，所有人都可以读！
+    public void get(String key)
+    {
+        readWriteLock.readLock().lock();
+        try
+        {
+            System.out.println(Thread.currentThread().getName() + "读取" + key);
+            Object o = map.get(key);
+            System.out.println(Thread.currentThread().getName() + "读取OK");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            readWriteLock.readLock().unlock();
+        }
+    }
+    /*
+
+    3写入3
+    3写入OK
+    4读取4
+    5读取5
+    3读取3
+    3读取OK
+    5读取OK
+    4读取OK
+     */
+
+}
+
+/**
+ * 自定义缓存
+ */
+class MyCache
+{
+
+    private volatile Map<String, Object> map = new HashMap<>();
+
+    // 存，写
+    public void put(String key, Object value)
+    {
+        System.out.println(Thread.currentThread().getName() + "写入" + key);
+        map.put(key, value);
+        System.out.println(Thread.currentThread().getName() + "写入OK");
+    }
+
+    // 取，读
+    public void get(String key)
+    {
+        System.out.println(Thread.currentThread().getName() + "读取" + key);
+        Object o = map.get(key);
+        System.out.println(Thread.currentThread().getName() + "读取OK");
+    }
+
+    /*
+    1写入1
+    2写入2  // 写时被插队
+    5写入5
+    5写入OK
+    3写入3
+     */
+}
+```
+
+# 阻塞队列
+
+- 写入，如果队列满了，就必须阻塞等待；
+- 取：如果队列是空的，必须阻塞等待生产！
+
+多线程并发处理和线程池需要用到阻塞队列！
+
+
+学会使用队列：
+方式 | 抛出异常 | 有返回值，不抛出异常 | 阻塞等待 | 超时等待
+:-: | :-: | :-: | :-: | :-:
+添加 | add() | offer() | put() | offer(...)| 
+移除 | remove()| poll() | take() | poll(...)|
+检测队首元素 | element()| peek() | - | -|
+
+```java
+package BlockQueue;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+public class Test
+{
+    //public static void main(String[] args)
+    public static void main(String[] args) throws InterruptedException  // test3()test4()需要
+    {
+        test4();
+    }
+
+    /**
+     * 1. 抛出异常
+     */
+    public static void test1()
+    {
+        // 队列的大小
+        ArrayBlockingQueue blockingQueue = new ArrayBlockingQueue<>(3);
+
+        /*
+        public boolean add(E e) {return super.add(e);}
+         */
+        System.out.println(blockingQueue.add("a"));
+        System.out.println(blockingQueue.add("b"));
+        System.out.println(blockingQueue.add("c"));
+
+        // IllegalStateException: Queue full 抛出异常！
+        // System.out.println(blockingQueue.add("d"));
+
+        System.out.println("====");
+
+        System.out.println(blockingQueue.element()); // 查看队首元素是谁
+        System.out.println("==");
+
+        System.out.println(blockingQueue.remove());
+        System.out.println(blockingQueue.remove());
+        System.out.println(blockingQueue.remove());
+
+        // java.util.NoSuchElementException 抛出异常！
+        // System.out.println(blockingQueue.remove());
+    }
+
+    /**
+     * 2. 有返回值，不抛出异常
+     */
+    public static void test2()
+    {
+        // 队列的大小
+        ArrayBlockingQueue blockingQueue = new ArrayBlockingQueue<>(3);
+
+        System.out.println(blockingQueue.offer("a"));
+        System.out.println(blockingQueue.offer("b"));
+        System.out.println(blockingQueue.offer("c"));
+        System.out.println(blockingQueue.offer("d")); // false 不抛出异常！
+        System.out.println("====");
+
+        System.out.println(blockingQueue.peek());
+
+        System.out.println("==");
+
+        System.out.println(blockingQueue.poll());
+        System.out.println(blockingQueue.poll());
+        System.out.println(blockingQueue.poll());
+        System.out.println(blockingQueue.poll()); // null  不抛出异常！
+    }
+
+    /**
+     * 3. 等待，阻塞（一直阻塞）
+     */
+    public static void test3() throws InterruptedException
+    {
+        // 队列的大小
+        ArrayBlockingQueue blockingQueue = new ArrayBlockingQueue<>(3);
+
+        // 一直阻塞
+        blockingQueue.put("a");
+        blockingQueue.put("b");
+        blockingQueue.put("c");
+        //blockingQueue.put("d"); // 队列没有位置了，一直阻塞
+
+        System.out.println(blockingQueue.take());
+        System.out.println(blockingQueue.take());
+        System.out.println(blockingQueue.take());
+        //System.out.println(blockingQueue.take()); // 没有这个元素，一直阻塞
+    }
+
+    /**
+     * 4. 等待，阻塞（等待超时）
+     */
+    public static void test4() throws InterruptedException
+    {
+        // 队列的大小
+        ArrayBlockingQueue blockingQueue = new ArrayBlockingQueue<>(3);
+
+        blockingQueue.offer("a");
+        blockingQueue.offer("b");
+        blockingQueue.offer("c");
+        blockingQueue.offer("d",2,TimeUnit.SECONDS); // 等待超过2秒就退出
+        System.out.println("===============");
+
+        System.out.println(blockingQueue.poll());
+        System.out.println(blockingQueue.poll());
+        System.out.println(blockingQueue.poll());
+        blockingQueue.poll(2, TimeUnit.SECONDS); // 等待超过2秒就退出
+    }
+}
+```
+
+## SynchronousQueue同步队列
+
+没有容量，进去一个元素(put)，必须等待取出来(take)之后，才能再往里面放一个元素！
+
+```java
+package BlockQueue;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 同步队列
+ * 和其他的BlockingQueue 不一样， SynchronousQueue 不存储元素
+ * put了一个元素，必须从里面先take取出来，否则不能在put进去值！
+ */
+
+public class SynchronousQueueDemo
+{
+    public static void main(String[] args)
+    {
+        BlockingQueue<String> blockingQueue = new SynchronousQueue<>(); // 同步队列
+
+        new Thread(() -> {
+            try
+            {
+                System.out.println(Thread.currentThread().getName() + " put 1");
+                blockingQueue.put("1");
+                System.out.println(Thread.currentThread().getName() + " put 2");
+                blockingQueue.put("2");
+                System.out.println(Thread.currentThread().getName() + " put 3");
+                blockingQueue.put("3");
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }, "T1").start();
+
+
+        new Thread(()->{
+            try
+            {
+                TimeUnit.SECONDS.sleep(1);
+                System.out.println(Thread.currentThread().getName() + " take " + blockingQueue.take());
+                TimeUnit.SECONDS.sleep(1);
+                System.out.println(Thread.currentThread().getName() + " take " + blockingQueue.take());
+                TimeUnit.SECONDS.sleep(1);
+                System.out.println(Thread.currentThread().getName() + " take " + blockingQueue.take());
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }, "T2").start();
+    }
+}
+/*
+T1 put 1
+T2 take 1
+T1 put 2
+T2 take 2
+T1 put 3
+T2 take 3
+ */
+```
+
+# 再探线程池
+
+程序的运行，本质：占用系统的资源！ 
+
+创建、销毁，十分浪费资源。优化资源的使用！=> 池化技术
+
+线程池、连接池、内存池、对象池..... 
+
+池化技术：事先准备好一些资源，有人要用，就来我这里拿，用完之后还给我。
+
+线程池：**三大方法、7大参数、四种拒绝策略**。
+
+线程池的好处：线程复用、可以控制最大并发数、管理线程
+1、降低资源的消耗
+2、提高响应的速度
+3、方便管理。
+
+## 三大方法
+
+```java
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+// Executors 工具类、3大方法
+
+public class Pool1
+{
+    public static void main(String[] args) {
+        // ExecutorService threadPool = Executors.newSingleThreadExecutor();// 单个线程
+        // ExecutorService threadPool = Executors.newFixedThreadPool(5); // 创建一个固定的线程池的大小
+        ExecutorService threadPool = Executors.newCachedThreadPool(); // 可伸缩的，遇强则强，遇弱则弱
+        try {
+            for (int i = 0; i < 100; i++) {
+                // 使用了线程池之后，使用线程池来创建线程
+                threadPool.execute(()->{
+                    System.out.println(Thread.currentThread().getName() + " ok");
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // 线程池用完，程序结束，关闭线程池
+            threadPool.shutdown();
+        }
+    }
+}
+/*
+ExecutorService threadPool = Executors.newSingleThreadExecutor()
+...
+pool-1-thread-1 ok
+pool-1-thread-1 ok
+pool-1-thread-1 ok
+pool-1-thread-1 ok
+pool-1-thread-1 ok
+...
+
+ExecutorService threadPool = Executors.newFixedThreadPool(5);
+...
+pool-1-thread-1 ok
+pool-1-thread-2 ok
+pool-1-thread-3 ok
+pool-1-thread-1 ok
+pool-1-thread-5 ok
+pool-1-thread-5 ok
+pool-1-thread-4 ok
+...
+
+ExecutorService threadPool = Executors.newCachedThreadPool();
+...
+pool-1-thread-6 ok
+pool-1-thread-23 ok
+pool-1-thread-8 ok
+pool-1-thread-9 ok
+pool-1-thread-37 ok
+pool-1-thread-36 ok
+...
+ */
+```
+
+## 七大参数
+
+源码：
+```java
+public static ExecutorService newSingleThreadExecutor() {
+    return new FinalizableDelegatedExecutorService(
+        new ThreadPoolExecutor(1, 1, 0L, 
+        TimeUnit.MILLISECONDS,
+        new LinkedBlockingQueue<Runnable>()));
+}
+
+public static ExecutorService newFixedThreadPool(int nThreads) {
+    return new ThreadPoolExecutor(nThreads, nThreads, 0L, 
+    TimeUnit.MILLISECONDS,
+    new LinkedBlockingQueue<Runnable>());
+}
+
+public static ExecutorService newCachedThreadPool() {
+    return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, 
+    TimeUnit.SECONDS,
+    new SynchronousQueue<Runnable>());
+}
+```
+
+本质都是调用`ThreadPoolExecutor`：
+```java
+public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小
+                            int maximumPoolSize,  // 2.最大核心线程池大小
+                            long keepAliveTime,  // 3.超时了没有人调用就会释放
+                            TimeUnit unit,  // 4.超时单位
+                            BlockingQueue<Runnable> workQueue,  // 5.阻塞队列
+                            ThreadFactory threadFactory,  // 6.线程工厂：创建线程的，一般不用动
+                            // 7.拒绝策略
+                            RejectedExecutionHandler handler) {
+        if (corePoolSize < 0 ||
+            maximumPoolSize <= 0 ||
+            maximumPoolSize < corePoolSize ||
+            keepAliveTime < 0)
+            throw new IllegalArgumentException();
+        if (workQueue == null || threadFactory == null || handler == null)
+            throw new NullPointerException();
+        this.corePoolSize = corePoolSize;
+        this.maximumPoolSize = maximumPoolSize;
+        this.workQueue = workQueue;
+        this.keepAliveTime = unit.toNanos(keepAliveTime);
+        this.threadFactory = threadFactory;
+        this.handler = handler;
+    }
+```
+
+## ThreadPoolExecutor
+
+《阿里巴巴Java手册》建议：线程池不允许使用`Executors`去创建，而是通过`ThreadPoolExecutor`的方式，可以更明确线程池的运行规则，规避资源耗尽的风险。
+
+<div align=center><img src=Thread\线程池七大参数.jpg width=70%></div>
+
+### 四种拒绝策略
+
+* `new ThreadPoolExecutor.AbortPolicy()` // 银行满了，还有人进来，不处理这个人的，抛出异常
+* `new ThreadPoolExecutor.CallerRunsPolicy()` // 哪来的去哪里！
+* `new ThreadPoolExecutor.DiscardPolicy()` //队列满了，丢掉任务，不会抛出异常！
+* `new ThreadPoolExecutor.DiscardOldestPolicy()` //队列满了，尝试去和最早的竞争，也不会抛出异常！
+
+### 最大线程到底该如何设置（调优）
+- CPU密集型：几核，就是几，可以保持CPU的效率最高！并行！`Runtime.getRuntime().availableProcessors()`
+- IO密集型：判断你程序中十分耗IO的线程，大于其两倍（程序有15个大型任务，IO十分占用资源！，可设置成30。）
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
+
+public class Pool
+{
+    public static void main(String[] args) {
+        // 自定义线程池！工作 ThreadPoolExecutor
+
+        // 最大线程到底该如何定义
+        // 1、CPU 密集型，几核，就是几，可以保持CPu的效率最高！
+        // 2、IO  密集型   > 判断你程序中十分耗IO的线程，
+        // 程序   15个大型任务  io十分占用资源！
+
+        // 获取CPU的核数
+        System.out.println(Runtime.getRuntime().availableProcessors());
+
+        List list = new ArrayList();
+
+        ExecutorService threadPool = new ThreadPoolExecutor(
+                2,
+                5,  //Runtime.getRuntime().availableProcessors(),
+                3,
+                TimeUnit.SECONDS,
+                new LinkedBlockingDeque<>(3),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.DiscardOldestPolicy());  //队列满了，尝试去和最早的竞争，也不会抛出异常！
+
+        /* 四种拒绝策略
+         * new ThreadPoolExecutor.AbortPolicy() // 银行满了，还有人进来，不处理这个人的，抛出异常
+         * new ThreadPoolExecutor.CallerRunsPolicy() // 哪来的去哪里！
+         * new ThreadPoolExecutor.DiscardPolicy() //队列满了，丢掉任务，不会抛出异常！
+         * new ThreadPoolExecutor.DiscardOldestPolicy() //队列满了，尝试去和最早的竞争，也不会抛出异常！
+         */
+
+        try {
+            // 最大承载：Deque + max
+            // 超过 RejectedExecutionException
+            for (int i = 1; i <= 9; i++) {
+                // 使用了线程池之后，使用线程池来创建线程
+                threadPool.execute(()->{
+                    System.out.println(Thread.currentThread().getName() + " ok");
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // 线程池用完，程序结束，关闭线程池
+            threadPool.shutdown();
+        }
+    }
+}
+```
+
+
+# 四大函数式接口（必须掌握）
+
+新时代的程序员：**lambda表达式、链式编程、函数式接口、Stream流式计算**
+
+函数式接口：只有一个方法的接口。
+
+```java
+@FunctionalInterface
+public interface Runnable {
+    public abstract void run();
+}
+// 泛型、枚举、反射：jdk1.5
+// lambda表达式、链式编程、函数式接口、Stream流式计算：jdk1.8
+// 超级多FunctionalInterface
+// 简化编程模型，在新版本的框架底层大量应用！
+// forEach(消费者类的函数式接口)
+```
+
+## Function
+
+Function函数型接口：有一个输入参数，有一个输出！
+
+```java
+@FunctionalInterface
+public interface Function<T, R> {
+    R apply(T t);
+}
+```
+
+```java
+package Function;
+
+import java.util.function.Function;
+
+/**
+ * Function 函数型接口, 有一个输入参数，有一个输出
+ * 只要是 函数型接口 可以用 lambda 表达式简化
+ */
+
+public class Demo1
+{
+    public static void main(String[] args) {
+        /*
+        Function<String, String> function = new Function<String, String>() {
+           @Override
+           public String apply(String str) {
+                return str;
+           }
+        };*/
+
+        Function<String, String> function = str -> {return str;};
+
+        System.out.println(function.apply("asd"));
+    }
+}
+```
+
+## Predicate
+
+断定型接口：有一个输入参数，返回值只能是布尔值！
+
+```java
+@FunctionalInterface
+public interface Predicate<T> {
+    boolean test(T t);
+}
+```
+
+```java
+package Function;
+
+import java.util.function.Predicate;
+
+/**
+ * 断定型接口：有一个输入参数，返回值只能是 布尔值！
+ */
+public class Demo2 {
+    public static void main(String[] args) {
+        // 判断字符串是否为空
+        /*
+       Predicate<String> predicate = new Predicate<String>(){
+            @Override
+            public boolean test(String str) {
+                return str.isEmpty();
+            }
+        };*/
+
+        Predicate<String> predicate = (str) -> {return str.isEmpty(); };
+        System.out.println(predicate.test("")); // true
+        // System.out.println(predicate.test(" "));  // false
+    }
+}
+```
+
+## Consumer
+
+Consumer消费型接口: 只有输入，没有返回值。
+
+```java
+public interface Consumer<T> {
+    void accept(T t);
+}
+```
+
+```java
+package Function;
+
+import java.util.function.Consumer;
+
+/**
+ * Consumer 消费型接口: 只有输入，没有返回值
+ */
+public class Demo3 {
+    public static void main(String[] args) {
+        /*
+        Consumer<String> consumer = new Consumer<String>() {
+            @Override
+            public void accept(String str) {
+                System.out.println(str);
+            }
+        };*/
+
+        Consumer<String> consumer = (str) -> {System.out.println(str);};
+        consumer.accept("作用是打印字符串");
+    }
+}
+```
+
+## Supplier
+
+Supplier供给型接口：没有参数，只有返回值！
+
+```java
+public interface Supplier<T> {
+    T get();
+}
+```
+
+```java
+package Function;
+
+import java.util.function.Supplier;
+
+/**
+ * Supplier 供给型接口 没有参数，只有返回值
+ */
+public class Demo4 {
+    public static void main(String[] args) {
+        /*
+        Supplier supplier = new Supplier<Integer>() {
+            @Override
+            public Integer get() {
+                System.out.println("get()");
+                return 1024;
+            }
+        };*/
+
+        Supplier supplier = () -> { return 1024; };
+        System.out.println(supplier.get());
+    }
+}
+```
+
+
+# Stream流式计算
+
+大数据：存储（集合、MySQL本质就是存储东西的）+ 计算（计算都应该交给流来操作！）
+
+新建`maven`项目，安装插件`lombok`，在`pom.xml`中添加：
+```
+<dependencies>
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.12</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+`Project Structure`中`Project`和`Modules`下的`Project language level`都设置成`8 - Lambda...`。
+
+```java
+// User.java
+package Stream;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+// 有参，无参构造，get、set、toString方法！
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+
+    private int id;
+    private String name;
+    private int age;
+}
+
+// Test.java
+package Stream;
+
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * 题目要求：一分钟内完成此题，只能用一行代码实现！
+ * 现在有5个用户！筛选：
+ * 1、ID 必须是偶数
+ * 2、年龄必须大于23岁
+ * 3、用户名转为大写字母
+ * 4、用户名字母倒着排序
+ * 5、只输出一个用户！
+ */
+public class Test {
+    public static void main(String[] args) {
+        User u1 = new User(1, "a", 21);
+        User u2 = new User(2, "b", 22);
+        User u3 = new User(3, "c", 23);
+        User u4 = new User(4, "d", 24);
+        User u5 = new User(6, "e", 25);
+
+        // 集合就是存储
+        List<User> list = Arrays.asList(u1, u2, u3, u4, u5);
+
+        // 计算交给Stream流
+        // lambda表达式、链式编程、函数式接口、Stream流式计算
+        list.stream()
+                .filter(u -> {return u.getId()%2 == 0;})
+                .filter(u -> {return u.getAge() > 23;})
+                .map(u -> {return u.getName().toUpperCase();})
+                .sorted((uu1,uu2)->{return uu2.compareTo(uu1);})
+                .limit(1)
+                .forEach(System.out::println);
+    }
+}
+
+/*
+E
+*/
+```
+
+
+# ForkJoin
+
+ForkJoin（分支合并）在JDK 1.7，**并行执行任务**！提高效率。**大数据量**！
+
+大数据：Map Reduce（把大任务拆分为小任务）
+
+<div align=center><img src=Thread\ForkJoin.jpg width=60%></div>
+
+ForkJoin特点：工作窃取！这个里面维护的都是双端队列！
+
+A和B两个线程，A线程任务尚未执行完毕，而B线程的任务已经执行完，那么B线程会“窃取”A线程的任务去执行，不让线程去等待，提高了效率！
+
+```java
+// ForkJoinDemo.java
+
+package ForkJoin;
+
+import java.util.concurrent.RecursiveTask;
+
+/**
+ * 求和（数据量大）计算的任务！
+ * 简单for循环求和   ForkJoin  Stream并行流
+ * // 如何使用 forkjoin
+ * // 1、forkjoinPool 通过它来执行
+ * // 2、计算任务 forkjoinPool.execute(ForkJoinTask task)
+ * // 3. 计算类要继承 ForkJoinTask
+ */
+
+public class ForkJoinDemo extends RecursiveTask<Long>
+{
+
+    private Long start;  // 1
+    private Long end;    // 1990900000
+
+    // 临界值
+    private Long temp = 10000L;  // 超过临界值，分成子任务
+
+    public ForkJoinDemo(Long start, Long end) {
+        this.start = start;
+        this.end = end;
+    }
+
+    // 计算方法
+    @Override
+    protected Long compute() {
+        if ((end - start) < temp){
+            Long sum = 0L;
+            for (Long i = start; i <= end; i++) {
+                sum += i;
+            }
+            return sum;
+        }else { // ForkJoin 递归
+            long middle = (start + end) / 2; // 中间值
+            ForkJoinDemo task1 = new ForkJoinDemo(start, middle);
+            task1.fork(); // 拆分任务，把任务压入线程队列
+
+            ForkJoinDemo task2 = new ForkJoinDemo(middle + 1, end);
+            task2.fork(); // 拆分任务，把任务压入线程队列
+
+            return task1.join() + task2.join();
+        }
+    }
+}
+
+
+// Test.java
+
+package ForkJoin;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.stream.LongStream;
+
+/**
+ * 同一个任务，别人效率高你几十倍！
+ */
+public class Test {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        // test1(); // 5820
+        // test2(); // 4900
+        test3(); // 110
+    }
+
+    // 普通程序员 简单for循环求和
+    public static void test1(){
+        Long sum = 0L;
+        long start = System.currentTimeMillis();
+        for (Long i = 1L; i <= 10_0000_0000; i++) {
+            sum += i;
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("sum = " + sum + " 时间：" + (end - start));
+    }
+
+    // 会使用ForkJoin
+    // 调节临界值来提高效率
+    public static void test2() throws ExecutionException, InterruptedException {
+        long start = System.currentTimeMillis();
+
+        ForkJoinPool forkJoinPool = new ForkJoinPool();
+        ForkJoinTask<Long> task = new ForkJoinDemo(0L, 10_0000_0000L);
+        ForkJoinTask<Long> submit = forkJoinPool.submit(task);// 提交任务
+        Long sum = submit.get();
+
+        long end = System.currentTimeMillis();
+
+        System.out.println("sum = " + sum + " 时间：" + (end - start));
+    }
+
+    // Stream并行流
+    public static void test3(){
+        long start = System.currentTimeMillis();
+
+        long sum = LongStream.rangeClosed(0L, 10_0000_0000L).parallel().reduce(0, Long::sum);
+
+        long end = System.currentTimeMillis();
+        System.out.println("sum = " + sum + "时间：" + (end - start));
+    }
+}
+```
+
+# 异步回调
+
+Future设计的初衷：对将来的某个事件的结果进行建模！
+
+```java
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 异步调用： CompletableFuture
+ * // 异步执行
+ * // 成功回调
+ * // 失败回调
+ */
+public class FutureDemo {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        /*
+        // 没有返回值的 runAsync 异步回调
+        CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(()->{
+            try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName() + "runAsync => Void");
+        });
+
+        System.out.println("1111");
+
+        completableFuture.get(); // 获取阻塞执行结果*/
+
+        // 有返回值的 supplyAsync 异步回调
+        // ajax，成功和失败的回调
+        // 失败返回的是错误信息；
+        CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(()->{
+            System.out.println(Thread.currentThread().getName() + "supplyAsync => Integer");
+            int i = 10/0;
+            return 1024;
+        });
+
+        System.out.println(completableFuture.whenComplete((t, u) -> {
+            System.out.println("t=> " + t); // 正常的返回结果
+            System.out.println("u=> " + u); // 错误信息：java.util.concurrent.CompletionException: java.lang.ArithmeticException: / by zero
+        }).exceptionally((e) -> {
+            System.out.println(e.getMessage());
+            return 233; // 可以获取到错误的返回结果
+        }).get());
+    }
+}
+/*
+ForkJoinPool.commonPool-worker-19supplyAsync => Integer
+t=> null
+u=> java.util.concurrent.CompletionException: java.lang.ArithmeticException: / by zero
+java.lang.ArithmeticException: / by zero
+233  // 错误
+ */
+```
+
+# JMM
+
+> 请你谈谈你对`Volatile`的理解
+
+`Volatile`是Java虚拟机提供轻量级的同步机制
+- 保证可见性
+- 不保证原子性
+- 禁止指令重排
+
+> 什么是JMM
+> 
+JMM：Java内存模型，不存在的东西，概念！约定！
+
+关于JMM的一些同步的约定：
+- 线程解锁前，必须把共享变量**立刻**刷回主存。
+- 线程加锁前，必须读取主存中的最新值到工作内存中！
+- 加锁和解锁是同一把锁
+
+<div align=center><img src=Thread\JMM.jpg width=90%></div>
+
+存在的问题：
+
+<div align=center><img src=Thread\JMM1.jpg width=90%></div>
+
+内存交互操作有8种，虚拟机实现必须保证每一个操作都是原子的，不可在分的（对于double和long类
+型的变量来说，load、store、read和write操作在某些平台上允许例外）
+
+- lock（锁定）：作用于主内存的变量，把一个变量标识为线程独占状态
+- unlock（解锁）：作用于主内存的变量，它把一个处于锁定状态的变量释放出来，释放后的变量
+才可以被其他线程锁定
+- read（读取）：作用于主内存变量，它把一个变量的值从主内存传输到线程的工作内存中，以便
+随后的load动作使用
+- load（载入）：作用于工作内存的变量，它把read操作从主存中变量放入工作内存中
+- use（使用）：作用于工作内存中的变量，它把工作内存中的变量传输给执行引擎，每当虚拟机
+遇到一个需要使用到变量的值，就会使用到这个指令
+- assign（赋值）：作用于工作内存中的变量，它把一个从执行引擎中接受到的值放入工作内存的变
+量副本中
+- store（存储）：作用于主内存中的变量，它把一个从工作内存中一个变量的值传送到主内存中，
+以便后续的write使用
+- write（写入）：作用于主内存中的变量，它把store操作从工作内存中得到的变量的值放入主内
+存的变量中
+
+JMM对这八种指令的使用，制定了如下规则：
+- 不允许read和load、store和write操作之一单独出现。即使用了read必须load，使用了store必须write
+- 不允许线程丢弃他最近的assign操作，即工作变量的数据改变了之后，必须告知主存
+- 不允许一个线程将没有assign的数据从工作内存同步回主内存
+- 一个新的变量必须在主内存中诞生，不允许工作内存直接使用一个未被初始化的变量。就是怼变量实施use、store操作之前，必须经过assign和load操作
+- 一个变量同一时间只有一个线程能对其进行lock。多次lock后，必须执行相同次数的unlock才能解锁
+- 如果对一个变量进行lock操作，会清空所有工作内存中此变量的值，在执行引擎使用这个变量前，必须重新load或assign操作初始化变量的值
+- 如果一个变量没有被lock，就不能对其进行unlock操作。也不能unlock一个被其他线程锁住的变量
+- 对一个变量进行unlock操作之前，必须把此变量同步回主内存
+
+# Volatile
+
+`Volatile`是Java虚拟机提供轻量级的同步机制
+- 保证可见性
+- 不保证原子性
+- 禁止指令重排
+
+## 保证可见性
+
+```java
+package VolatileTest;
+
+import java.util.concurrent.TimeUnit;
+
+public class JMMDemo {
+    // 不加 volatile 程序就会死循环！
+    // 加 volatile 可以保证可见性
+    private volatile static int num = 0;  // 使线程1线程知道num发生了变化
+
+    public static void main(String[] args) { // main线程
+
+        new Thread(() -> { // 线程1对主内存的变化不知道的
+            while (num == 0){ }
+        }).start();
+
+        try {
+            TimeUnit.SECONDS.sleep(3);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        num = 1;
+        System.out.println(num);
+    }
+}
+```
+
+<div align=center><img src=Thread\JMM2.jpg width=90%></div>
+
+## 不保证原子性
+
+原子性：不可分割
+线程A在执行任务的时候，不能被打扰的，也不能被分割。要么同时成功，要么同时失败。
+
+```java
+package VolatileTest;
+
+// volatile 不保证原子性
+public class JMMDemo1 {
+
+    // volatile 不保证原子性
+    private volatile static int num = 0;
+
+    public static void add(){
+        num++; // 不是一个原子性操作
+    }
+
+    public static void main(String[] args) {
+
+        //理论上num结果应该为 2 万
+        for (int i = 1; i <= 20; i++) {
+            new Thread(() -> {
+                for (int j = 0; j < 1000 ; j++) {
+                    add();
+                }
+            }).start();
+        }
+
+        while (Thread.activeCount() > 2){ // main和gc，这两个线程默认在执行
+            Thread.yield();
+        }
+
+        System.out.println(Thread.currentThread().getName() + " " + num); // main 18250
+    }
+}
+```
+
+
+如果不加`lock`和`synchronized`，怎么样保证原子性：（`num++;` // 不是一个原子性操作）
+
+<div align=center><img src=Thread\JMM3.jpg width=90%></div>
+
+
+使用**原子类**，解决原子性问题：
+
+```java
+package VolatileTest;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+// volatile 不保证原子性
+public class JMMDemo2 {
+
+    // volatile 不保证原子性
+    // 原子类的 Integer
+    private volatile static AtomicInteger num = new AtomicInteger();
+
+    public static void add(){
+        // num++; // 不是一个原子性操作
+        num.getAndIncrement(); // AtomicInteger + 1 方法， CAS
+    }
+
+    public static void main(String[] args) {
+
+        //理论上num结果应该为 2 万
+        for (int i = 1; i <= 20; i++) {
+            new Thread(()->{
+                for (int j = 0; j < 1000 ; j++) {
+                    add();
+                }
+            }).start();
+        }
+
+        while (Thread.activeCount()>2){ // main和gc，这两个线程默认在执行
+            Thread.yield();
+        }
+
+        System.out.println(Thread.currentThread().getName() + " " + num);  // main 20000
+    }
+}
+```
+
+`getAndIncrement(); // AtomicInteger + 1 方法， CAS`
+`native`这些类的底层都直接和操作系统挂钩！在内存中修改值！`Unsafe类`是一个很特殊的存在！
+
+## 指令重排
+
+什么是**指令重排**：你写的程序，计算机并不是按照你写的那样去执行的。
+
+源代码-->编译器优化的重排--> 指令并行也可能会重排--> 内存系统也会重排---> 执行
+
+处理器在进行指令重排的时候，考虑：**数据之间的依赖性**！
+
+```
+int x = 1; // 1
+int y = 2; // 2
+x = x + 5; // 3
+y = x * x; // 4
+我们所期望的：1234 但是可能执行的时候回变成 2134 1324，不可能是 4123！
+```
+
+可能造成影响的结果： a b x y 这四个值默认都是 0：
+线程A | 线程B | 
+:-: | :-: | 
+x = a | y = b | 
+b = 1 | a = 2 | 
+
+正常的结果： x = 0；y = 0；但是可能由于指令重排
+线程A | 线程B | 
+:-: | :-: | 
+b = 1 | a = 2 | 
+x = a | y = b | 
+
+指令重排导致的诡异结果： x = 2；y = 1；
+
+volatile可以避免指令重排：
+**内存屏障**。CPU指令。作用：
+1、保证特定的操作的执行顺序！
+2、可以保证某些变量的内存可见性 （利用这些特性volatile实现了可见性）
+
+<div align=center><img src=Thread\内存屏障.jpg width=40%></div>
+
+Volatile是可以保持 可见性。不能保证原子性，由于内存屏障，可以保证避免指令重排的现象产生！
+
+内存屏障在**单例模式**中使用最多！
+
+
+# 彻底玩转单例模式
+
+```java
+// Hungry.jva
+package Single;
+
+// 饿汉式单例
+public class Hungry {
+
+    // 可能会浪费空间
+    private byte[] data1 = new byte[1024*1024];
+    private byte[] data2 = new byte[1024*1024];
+    private byte[] data3 = new byte[1024*1024];
+    private byte[] data4 = new byte[1024*1024];
+
+    private Hungry(){ }
+
+    private final static Hungry HUNGRY = new Hungry();
+
+    public static Hungry getInstance(){
+        return HUNGRY;
+    }
+
+}
+
+// LazyMan.java
+
+package Single;
+
+// import com.sun.corba.se.impl.orbutil.CorbaResourceUtil;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+
+// 懒汉式单例
+// 道高一尺，魔高一丈！
+public class LazyMan {
+
+    private static boolean qinjiang = false;
+
+    private LazyMan(){
+        synchronized (LazyMan.class){
+            if (qinjiang == false){
+                qinjiang = true;
+            }else {
+                throw new RuntimeException("不要试图使用反射破坏异常");
+            }
+        }
+    }
+
+    private volatile static LazyMan lazyMan;
+
+    // 双重检测锁模式的 懒汉式单例  DCL懒汉式
+    public static LazyMan getInstance(){
+        if (lazyMan == null){
+            synchronized (LazyMan.class){
+                if (lazyMan == null){
+                    lazyMan = new LazyMan(); // 不是一个原子性操作
+                    /*
+                     * 1. 分配内存空间
+                     * 2、执行构造方法，初始化对象
+                     * 3、把这个对象指向这个空间
+                     *
+                     * 期望顺序：123
+                     * 可能顺序：132 A
+                     *                           B // 此时lazyMan还没有完成构造
+                     */
+                }
+            }
+        }
+        return lazyMan;
+    }
+
+    // 反射！
+    public static void main(String[] args) throws Exception {
+      // LazyMan instance = LazyMan.getInstance();
+
+        Field qinjiang = LazyMan.class.getDeclaredField("qinjiang");
+        qinjiang.setAccessible(true);
+
+        Constructor<LazyMan> declaredConstructor = LazyMan.class.getDeclaredConstructor(null);
+        declaredConstructor.setAccessible(true);
+        LazyMan instance = declaredConstructor.newInstance();
+
+        qinjiang.set(instance,false);
+
+        LazyMan instance2 = declaredConstructor.newInstance();
+
+        System.out.println(instance);
+        System.out.println(instance2);
+    }
+}
+
+
+// Holder.java
+package Single;
+
+// 静态内部类，不安全
+public class Holder {
+    // 构造其私有
+    private Holder(){ }
+
+    public static Holder getInstace(){
+        return InnerClass.HOLDER;
+    }
+
+    public static class InnerClass{
+        private static final Holder HOLDER = new Holder();
+    }
+}
+
+
+// EnumSingle.java
+
+package Single;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
+// enum 是一个什么？ 本身也是一个Class类
+public enum EnumSingle {
+
+    INSTANCE;
+
+    public EnumSingle getInstance(){
+        return INSTANCE;
+    }
+}
+
+class Test{
+
+    public static void main(String[] args) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        EnumSingle instance1 = EnumSingle.INSTANCE;
+        Constructor<EnumSingle> declaredConstructor = EnumSingle.class.getDeclaredConstructor(String.class,int.class);
+        declaredConstructor.setAccessible(true);
+        EnumSingle instance2 = declaredConstructor.newInstance();
+
+        // NoSuchMethodException: com.kuang.single.EnumSingle.<init>()
+        System.out.println(instance1);
+        System.out.println(instance2);
+    }
+}
+```
+
+
