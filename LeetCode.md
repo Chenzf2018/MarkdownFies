@@ -43,7 +43,7 @@
 
 如果我们依次递增地枚举**子串的起始位置**，那么子串的结束位置也是递增的！
 
-这里的原因在于，假设我们选择字符串中的第$k$个字符作为起始位置，并且得到了**不包含重复字符的最长子串的结束位置为$r_k$**。那么**当我们选择第$k+1$个字符作为起始位置时（移除第$k$个字符`hashSet.remove(s.charAt(i - 1));`）**，首先从$k+1$到$r_k$的字符显然是不重复的，并且由于少了原本的第$k$个字符，我们可以尝试继续增大$r_k$，直到右侧出现了重复字符为止。
+这里的原因在于，假设我们选择字符串中的第$k$个字符作为起始位置，并且得到了**不包含重复字符的最长子串的结束位置为$r_k$**。那么**当我们选择第$k+1$个字符作为起始位置时（移除第$k$个字符`hashSet.remove(s.charAt(i - 1));`），首先从$k+1$到$r_k$的字符显然是不重复的，并且由于少了原本的第$k$个字符，我们可以尝试继续增大$r_k$，直到右侧出现了重复字符为止**。
 
 这样以来，我们就可以使用**滑动窗口**来解决这个问题了：
 
@@ -420,7 +420,192 @@ public class RegularExpressionMatching {
 
 用$T$和$P$分别表示匹配串和模式串的长度，时间复杂度和空间复杂度均为：$O\big((T+P)2^{T + \frac{P}{2}}\big)$
 
+
+## 17. 电话号码的字母组合(**)
+
+给定一个仅包含数字`2-9`的字符串，返回所有它能表示的字母组合。
+
+给出数字到字母的映射如下（与电话按键相同）。注意`1`不对应任何字母。
+
+<div align=center><img src=LeetCode\17_telephone_keypad.png width=50%></div>
+
+**示例**：
+```
+输入："23"
+输出：["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
+```
+
+### 思路与算法
+
+回溯是一种通过**穷举**所有可能情况来找到所有解的算法。如果一个候选解**最后被发现并不是可行解，回溯算法会舍弃它，并在前面的一些步骤做出一些修改，并重新尝试找到可行解**。
+
+给出如下回溯函数`backtrack(combination, next_digits)`，它将一个目前已经产生的组合`combination`和接下来准备要输入的数字`next_digits`作为参数。
+
+如果没有更多的数字需要被输入，那意味着当前的组合已经产生好了。
+如果还有数字需要被输入：
+- 遍历下一个数字所对应的所有映射的字母。
+- 将当前的字母添加到组合最后，也就是`combination = combination + letter`。
+- 重复这个过程，输入剩下的数字：`backtrack(combination + letter, next_digits[1:])`。
+
+这是个排列组合问题！这个排列组合可以用树的形式表示出来；当给定了输入字符串，比如："23"，那么整棵树就构建完成了，如下：
+
+<div align=center><img src=LeetCode\17_telephone_keypad1.png width=80%></div>
+
+问题转化成了**从根节点到空节点一共有多少条路径**！
+
+### 代码
+```java
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 17. 电话号码的字母组合(**)
+ */
+
+public class LetterCombinationsofPhoneNumber {
+    static Map<String, String> phone = new HashMap<>(){{
+        put("2", "abc");
+        put("3", "def");
+        put("4", "ghi");
+        put("5", "jkl");
+        put("6", "mno");
+        put("7", "pqrs");
+        put("8", "tuv");
+        put("9", "wxyz");
+    }};
+
+     static List<String> output = new ArrayList<>();
+
+    private static void backtrack(String combination, String next_digits){
+        // if there is no more digits to check
+        if (next_digits.length() == 0){
+            // the combination is done
+            output.add(combination);
+        }
+        else {  // if there are still digits to check
+            // iterate over all letters which map the next available digit
+            String digit = next_digits.substring(0, 1);
+            String letters = phone.get(digit);
+
+            for (int i = 0; i < letters.length(); i++){
+                String letter = phone.get(digit).substring(i, i + 1);
+                // append the current letter to the combination and proceed to the next digits
+                backtrack(combination + letter, next_digits.substring(1));
+            }
+        }
+    }
+
+    private static List<String> letterCombinations(String digits){
+        if (digits.length() != 0)
+            backtrack("", digits);
+        return output;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(letterCombinations("23"));
+    }
+}
+```
+
+
 # 栈
+
+## 20. 有效的括号(*)
+
+给定一个只包括`'('`，`')'`，`'{'`，`'}'`，`'['`，`']'`的字符串，判断字符串是否有效。
+
+有效字符串需满足：
+- 左括号必须用相同类型的右括号闭合。
+- 左括号必须以正确的顺序闭合。
+
+注意空字符串可被认为是有效字符串。
+
+**示例**：
+
+```
+输入: "()"
+输出: true
+
+输入: "()[]{}"
+输出: true
+
+输入: "(]"
+输出: false
+
+输入: "([)]"
+输出: false
+
+输入: "{[]}"
+输出: true
+```
+
+### 思路与算法
+
+- 初始化栈`S`。
+- 一次处理表达式的每个括号。
+- 如果遇到**开括号**，我们只需将其**推到栈上**即可。这意味着我们将稍后处理它，让我们简单地转到前面的子表达式。
+- 如果我们遇到一个**闭括号**，那么我们**检查栈顶**的元素。如果栈顶的元素是一个相同类型的左括号，那么我们将它从栈中弹出并继续处理。否则，这意味着表达式无效。
+- 如果到最后我们剩下的栈中仍然有元素，那么这意味着表达式无效。
+
+<div align=center><img src=LeetCode\20.png></div>
+
+
+### 代码
+```java
+import java.util.HashMap;
+import java.util.Stack;
+
+/**
+ * 20. 有效的括号(*)
+ */
+
+public class ValidParentheses {
+    // Hash table that takes care of the mappings.
+    private HashMap<Character, Character> mappings;
+
+    // Initialize hash map with mappings. This simply makes the code easier to read.
+    public ValidParentheses(){
+        this.mappings = new HashMap<Character, Character>();
+        this.mappings.put(')', '(');
+        this.mappings.put('}', '{');
+        this.mappings.put(']', '[');
+    }
+
+    public boolean isValid(String s){
+        // Initialize a stack to be used in the algorithm.
+        Stack<Character> stack = new Stack<>();
+
+        for (int i = 0; i < s.length(); i++){
+            char c = s.charAt(i);
+
+            // If the current character is a closing bracket.
+            if (this.mappings.containsKey(c)){
+                // Get the top element of the stack. If the stack is empty, set a dummy value of '#'
+                char topElement = stack.empty() ? '#' : stack.pop();
+
+                // If the mapping for this bracket doesn't match the stack's top element, return false.
+                if (topElement != this.mappings.get(c))
+                    return false;
+            }
+            else{
+                // If it was an opening bracket, push to the stack.
+                stack.push(c);
+            }
+        }
+
+        // If the stack still contains elements, then it is an invalid expression.
+        return stack.isEmpty();
+    }
+}
+```
+
+### 复杂度分析
+
+- 时间复杂度：$O(n)$，因为我们一次只遍历给定的字符串中的一个字符并在栈上进行$O(1)$的推入和弹出操作。
+- 空间复杂度：$O(n)$，当我们将所有的开括号都推到栈上时以及在最糟糕的情况下，我们最终要把所有括号推到栈上。例如`((((((((((`。
+
 
 ## 84. 柱状图中最大的矩形(***)
 
@@ -613,6 +798,75 @@ public class AddTwoNumbers {
 }
 ```
 
+## 19. 删除链表的倒数第N个节点(**)
+
+给定一个链表，删除链表的倒数第n个节点，并且返回链表的头结点。
+
+**示例**：
+```
+给定一个链表: 1->2->3->4->5, 和 n = 2.
+
+当删除了倒数第二个节点后，链表变为 1->2->3->5.
+```
+
+### 思路与算法
+
+这个问题可以容易地简化成另一个问题：删除从列表开头数起的第$(L - n + 1)$个结点，其中$L$是列表的长度。只要我们找到列表的长度 $L$，这个问题就很容易解决。
+
+**两次遍历**：
+首先我们将添加一个**哑结点**作为辅助，该结点位于列表头部。哑结点用来简化某些极端情况，例如列表中只含有一个结点，或需要删除列表的头部。
+
+在**第一次遍历**中，我们**找出列表的长度**$L$。**然后设置一个指向哑结点的指针，并移动它遍历列表**，直至它到达第$(L - n)$个结点那里。我们把第$(L - n)$个结点的`next`指针重新链接至第$(L - n + 2)$个结点，完成这个算法。
+
+**一次遍历**：
+
+可以使用**两个指针**而不是一个指针。**第一个指针从列表的开头向前移动$n+1$步**，而**第二个指针将从列表的开头出发**。现在，这**两个指针被$n$个结点分开**。我们通过**同时移动两个指针向前来保持这个恒定的间隔，直到第一个指针到达最后一个结点**。此时第二个指针将指向从最后一个结点数起的第$n$个结点。我们重新链接第二个指针所引用的结点的`next`指针指向该结点的下下个结点。
+<div align=center><img src=LeetCode\19.png width = 80%></div>
+
+### 代码
+```java
+// ListNode.java
+public class ListNode {
+    int val;
+    ListNode next;
+    ListNode() {}
+    ListNode(int val) { this.val = val; }
+    ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+}
+
+// RemoveNthNodeFromEndofList.java
+
+public class RemoveNthNodeFromEndofList {
+    private ListNode removeNthFromEnd(ListNode head, int n){
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+        ListNode first = dummy;
+        ListNode second = dummy;
+
+        // Advances first pointer so that the gap between first and second is n nodes apart
+        for (int i = 1; i <= n + 1; i++)
+            first = first.next;
+
+        // Move first to the end and Move second, maintaining the gap
+        while (first != null){
+            first = first.next;
+            second = second.next;
+        }
+
+        second.next = second.next.next;
+        return dummy.next;
+    }
+}
+```
+
+### 复杂度分析
+
+时间复杂度：$O(L)$，该算法对含有$L$个结点的列表进行了一次遍历。因此时间复杂度为$O(L)$。
+
+空间复杂度：$O(1)$，只用了常量级的额外空间。
+
+
+
 # 二分查找
 
 ## 4. 寻找两个正序数组的中位数（***）
@@ -721,3 +975,172 @@ class Solution {
     }
 }
 ```
+
+# 双指针
+
+## 11. 盛最多水的容器（**）
+
+给你n个非负整数$a1，a2，...，an$，每个数代表坐标中的一个点$(i, ai)$。在坐标内画n条垂直线，垂直线i的两个端点分别为$(i, ai)$和$(i, 0)$。找出其中的两条线，使得它们与x轴共同构成的容器可以容纳最多的水。
+
+说明：你不能倾斜容器，且n的值至少为2。
+
+
+**示例**：
+```
+输入：[1,8,6,2,5,4,8,3,7]
+输出：49
+```
+
+### 思路与算法
+
+题目中的示例为：
+```
+[1, 8, 6, 2, 5, 4, 8, 3, 7]
+ ^                       ^
+```
+在初始时，**左右指针分别指向数组的左右两端**，它们可以容纳的水量为$\min(1, 7) * 8 = 8$。
+
+此时我们需要移动一个指针。移动哪一个呢？直觉告诉我们，**应该移动对应数字较小的那个指针**（即此时的左指针）。这是因为，由于容纳的水量是由
+
+$两个指针指向的数字中较小值 * 指针之间的距离$
+
+
+决定的。
+
+**总是移动数字较小的那个指针**的思路是正确的！
+
+所以，我们将左指针向右移动：
+```
+[1, 8, 6, 2, 5, 4, 8, 3, 7]
+    ^                    ^
+```
+此时可以容纳的水量为$\min(8, 7) * 7 = 49$。由于右指针对应的数字较小，我们移动右指针：
+```
+[1, 8, 6, 2, 5, 4, 8, 3, 7]
+    ^                 ^
+```
+此时可以容纳的水量为$\min(8, 3) * 6 = 18$。由于右指针对应的数字较小，我们移动右指针：
+```
+[1, 8, 6, 2, 5, 4, 8, 3, 7]
+    ^              ^
+```
+此时可以容纳的水量为$\min(8, 8) * 5 = 40$。两指针对应的数字相同，我们可以任意移动一个，例如左指针：
+```
+[1, 8, 6, 2, 5, 4, 8, 3, 7]
+       ^           ^
+```
+此时可以容纳的水量为$\min(6, 8) * 4 = 24$。由于左指针对应的数字较小，我们移动左指针，并且可以发现，在这之后左指针对应的数字总是较小，因此我们会一直移动左指针，直到两个指针重合。在这期间，对应的可以容纳的水量为：$\min(2, 8) * 3 = 6，\min(5, 8) * 2 = 10，\min(4, 8) * 1 = 4$。
+
+在我们移动指针的过程中，计算到的最多可以容纳的数量为$49$，即为最终的答案。
+
+### 代码
+
+```java
+public class ContainerWithMostWater {
+    private static int maxArea(int[] height){
+        int left = 0, right = height.length - 1;
+        int ans = 0;
+
+        while (left < right){
+            int area = Math.min(height[left], height[right]) * (right - left);
+            ans = Math.max(ans, area);
+
+            if (height[left] < height[right])
+                left++;
+            else
+                right--;
+        }
+
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(maxArea(new int[] {1, 8, 6, 2, 5, 4, 8, 3, 7}));
+    }
+}
+```
+
+### 复杂度分析
+时间复杂度：$O(N)$，双指针总计最多遍历整个数组一次。
+空间复杂度：$O(1)$，只需要额外的常数级别的空间。
+
+## 15. 三数之和
+
+给你一个包含n个整数的数组nums，判断nums中是否存在三个元素$a，b，c$，使得$a + b + c = 0$？请你找出所有满足条件且不重复的三元组。
+
+**示例**：
+```
+给定数组 nums = [-1, 0, 1, 2, -1, -4]，
+
+满足要求的三元组集合为：
+[
+  [-1, 0, 1],
+  [-1, -1, 2]
+]
+```
+
+### 思路与算法
+
+- 首先对数组进行排序，排序后固定一个数$nums[i]$，再使用左右指针指向$nums[i]$后面的两端，数字分别为$nums[L]$和$nums[R]$，计算三个数的和`sum`判断是否满足为`0`，满足则添加进结果集；
+- 如果$nums[i]$大于$0$，则三数之和必然无法等于$0$，结束循环；
+- 如果$nums[i] == nums[i-1]$，则说明该数字重复，会导致结果重复，所以应该跳过；
+    - 当$sum == 0$时，$nums[L] == nums[L+1]$则会导致结果重复，应该跳过，$L++$；$nums[R] == nums[R-1]$则会导致结果重复，应该跳过，$R--$。
+    - 当$sum < 0$时，$L++$；
+    - 当$sum > 0$时，$R--$
+
+### 代码
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class ThreeSum {
+    private static List<List<Integer>> threeSum(int[] nums){
+        List<List<Integer>> ans = new ArrayList<>();
+        int len = nums.length;
+
+        if (nums == null || len < 3)
+            return ans;
+
+        Arrays.sort(nums);  // 排序
+
+        for (int i = 0; i < len; i++){
+            if (nums[i] > 0)
+                break;
+
+            if (i > 0 && nums[i] == nums[i - 1])
+                continue;  // 提前进入下一个循环，去重
+
+            int left = i + 1, right = len - 1;
+            while (left < right){
+                int sum = nums[i] + nums[left] + nums[right];
+                if (sum == 0){
+                    ans.add(Arrays.asList(nums[i], nums[left], nums[right]));
+                    while (left < right && nums[left] == nums[left + 1])
+                        left++;  // 去重
+                    while (left < right && nums[right] == nums[right - 1])
+                        right--;  // 去重
+
+                    left++;
+                    right--;
+                }
+                else if (sum < 0)
+                    left++;
+                else
+                    right--;
+            }
+        }
+
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(threeSum(new int[] {-1, 0, 1, 2, -1, -4}));
+    }
+}
+```
+
+### 复杂度分析
+
+- 时间复杂度$O(N^2)$
+- 空间复杂度$O(1)$：指针使用常数大小的额外空间。
