@@ -60,7 +60,7 @@
 
 还需要使用一种数据结构来判断**是否有重复的字符**，常用的数据结构为**哈希集合**(`HashSet`)。在左指针向右移动的时候，我们从哈希集合中移除一个字符，在右指针向右移动的时候，我们往哈希集合中添加一个字符。
 
-### 代码
+**代码：**
 
 ```java
 import java.util.HashSet;
@@ -104,7 +104,7 @@ public class LongestSubstringWithoutRepeatingCharacters {
 }
 ```
 
-### 复杂度分析
+**复杂度分析：**
 
 - 时间复杂度：$O(N)$，其中$N$是字符串的长度。左指针和右指针分别会遍历整个字符串一次。
 
@@ -512,7 +512,7 @@ p = "mis*is*p*."
 输出: false
 ```
 
-### 思路与算法
+**思路与算法：**
 
 - 如果没有星号（正则表达式中的`*`），只需要从左到右检查匹配串 `s`是否能匹配模式串`p`的每一个字符。
 
@@ -520,7 +520,7 @@ p = "mis*is*p*."
     - 可以直接忽略**模式串**中这一部分；
     - 或者**删除匹配串**的第一个字符，**前提**是它能够匹配模式串当前位置字符，即$\text{pattern[0]}$
 
-### 代码
+**代码：**
 
 ```java
 import java.util.Scanner;
@@ -553,7 +553,7 @@ public class RegularExpressionMatching {
 }
 ```
 
-### 复杂度分析
+**复杂度分析：**
 
 用$T$和$P$分别表示匹配串和模式串的长度，时间复杂度和空间复杂度均为：$O\big((T+P)2^{T + \frac{P}{2}}\big)$
 
@@ -572,7 +572,7 @@ public class RegularExpressionMatching {
 输出：["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
 ```
 
-### 思路与算法
+**思路与算法：**
 
 回溯是一种通过**穷举**所有可能情况来找到所有解的算法。如果一个候选解**最后被发现并不是可行解，回溯算法会舍弃它，并在前面的一些步骤做出一些修改，并重新尝试找到可行解**。
 
@@ -590,7 +590,7 @@ public class RegularExpressionMatching {
 
 问题转化成了**从根节点到空节点一共有多少条路径**！
 
-### 代码
+**代码：**
 ```java
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -678,7 +678,7 @@ public class LetterCombinationsofPhoneNumber {
 输出: true
 ```
 
-### 思路与算法
+**思路与算法：**
 
 - 初始化栈`S`。
 - 一次处理表达式的每个括号。
@@ -689,7 +689,7 @@ public class LetterCombinationsofPhoneNumber {
 <div align=center><img src=LeetCode\20.png></div>
 
 
-### 代码
+**代码：**
 ```java
 import java.util.HashMap;
 import java.util.Stack;
@@ -738,7 +738,7 @@ public class ValidParentheses {
 }
 ```
 
-### 复杂度分析
+**复杂度分析：**
 
 - 时间复杂度：$O(n)$，因为我们一次只遍历给定的字符串中的一个字符并在栈上进行$O(1)$的推入和弹出操作。
 - 空间复杂度：$O(n)$，当我们将所有的开括号都推到栈上时以及在最糟糕的情况下，我们最终要把所有括号推到栈上。例如`((((((((((`。
@@ -794,7 +794,7 @@ public class ValidParentheses {
 所以返回 [0, 1]
 ```
 
-### 思路与算法
+**思路与算法：**
 
 **暴力法**很简单，遍历每个元素$x$，并查找是否存在一个值与$target - x$相等的目标元素。
 
@@ -825,7 +825,7 @@ class Solution {
 一个简单的实现使用了**两次迭代**。在第一次迭代中，我们将每个元素的值和它的索引**添加**到表中。然后，在第二次迭代中，我们将**检查**每个元素所对应的目标元素$(target - nums[i])$是否存在于表中。注意，**该目标元素不能是$nums[i]$本身**！
 
 
-### 代码
+**代码：**
 ```java
 import java.util.HashMap;
 import java.util.Map;
@@ -871,7 +871,7 @@ public class TwoSum {
 原因：342 + 465 = 807
 ```
 
-### 思路与算法
+**思路与算法：**
 
 <div align=center><img src=LeetCode\2预先指针.png></div>
 
@@ -881,7 +881,7 @@ $l1=[0,1]，l2=[0,1,2]$ | 当一个列表比另一个列表长时 |
 $l1=[]，l2=[0,1]$ | 当一个列表为空时，即出现空列表 | 
 $l1=[9,9]，l2=[1]$ | 求和运算最后可能出现额外的进位，这一点很容易被遗忘 | 
 
-### 代码
+**代码：**
 
 ```java
 /**
@@ -946,7 +946,7 @@ public class AddTwoNumbers {
 当删除了倒数第二个节点后，链表变为 1->2->3->5.
 ```
 
-### 思路与算法
+**思路与算法：**
 
 这个问题可以容易地简化成另一个问题：删除从列表开头数起的第$(L - n + 1)$个结点，其中$L$是列表的长度。只要我们找到列表的长度 $L$，这个问题就很容易解决。
 
@@ -960,7 +960,7 @@ public class AddTwoNumbers {
 可以使用**两个指针**而不是一个指针。**第一个指针从列表的开头向前移动$n+1$步**，而**第二个指针将从列表的开头出发**。现在，这**两个指针被$n$个结点分开**。我们通过**同时移动两个指针向前来保持这个恒定的间隔，直到第一个指针到达最后一个结点**。此时第二个指针将指向从最后一个结点数起的第$n$个结点。我们重新链接第二个指针所引用的结点的`next`指针指向该结点的下下个结点。
 <div align=center><img src=LeetCode\19.png width = 80%></div>
 
-### 代码
+**代码：**
 ```java
 // ListNode.java
 public class ListNode {
@@ -996,7 +996,7 @@ public class RemoveNthNodeFromEndofList {
 }
 ```
 
-### 复杂度分析
+**复杂度分析：**
 
 时间复杂度：$O(L)$，该算法对含有$L$个结点的列表进行了一次遍历。因此时间复杂度为$O(L)$。
 
@@ -1025,7 +1025,7 @@ nums2 = [3, 4]
 则中位数是 (2 + 3)/2 = 2.5
 ```
 
-### 思路与算法
+**思路与算法：**
 
 给定两个有序数组，要求找到两个有序数组的中位数，最直观的思路有以下两种：
 
@@ -1128,7 +1128,7 @@ class Solution {
 输出：49
 ```
 
-### 思路与算法
+**思路与算法：**
 
 题目中的示例为：
 ```
@@ -1170,7 +1170,7 @@ $两个指针指向的数字中较小值 * 指针之间的距离$
 
 在我们移动指针的过程中，计算到的最多可以容纳的数量为$49$，即为最终的答案。
 
-### 代码
+**代码：**
 
 ```java
 public class ContainerWithMostWater {
@@ -1197,7 +1197,7 @@ public class ContainerWithMostWater {
 }
 ```
 
-### 复杂度分析
+**复杂度分析：**
 时间复杂度：$O(N)$，双指针总计最多遍历整个数组一次。
 空间复杂度：$O(1)$，只需要额外的常数级别的空间。
 
@@ -1216,7 +1216,7 @@ public class ContainerWithMostWater {
 ]
 ```
 
-### 思路与算法
+**思路与算法：**
 
 - 首先对数组进行排序，排序后固定一个数$nums[i]$，再使用左右指针指向$nums[i]$后面的两端，数字分别为$nums[L]$和$nums[R]$，计算三个数的和`sum`判断是否满足为`0`，满足则添加进结果集；
 - 如果$nums[i]$大于$0$，则三数之和必然无法等于$0$，结束循环；
@@ -1225,7 +1225,7 @@ public class ContainerWithMostWater {
     - 当$sum < 0$时，$L++$；
     - 当$sum > 0$时，$R--$
 
-### 代码
+**代码：**
 ```java
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1277,7 +1277,7 @@ public class ThreeSum {
 }
 ```
 
-### 复杂度分析
+**复杂度分析：**
 
 - 时间复杂度$O(N^2)$
 - 空间复杂度$O(1)$：指针使用常数大小的额外空间。
