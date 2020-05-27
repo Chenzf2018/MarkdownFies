@@ -166,14 +166,14 @@ P(i,i+1)=(S_i == S_{i+1})&
 
 注意：在状态转移方程中，我们是**从长度较短的字符串**向**长度较长的字符串**进行转移的，因此一定要注意动态规划的循环顺序。
 
-### 状态转移方程
+**状态转移方程：**
 
 - 状态：$dp[i][j]$表示子串$s[i...j]$是否是回文；
 - 状态转移方程：$dp[i][j] = ((s[i] == s[j])$ `and` $dp[i+1][j-1])$，在$s[i] == s[j]$前提下，子串是否回文决定了整体是否是回文。
 - 边界条件：$(j - 1) - (i + 1) + 1< 2$，即$j - i < 3$或$s[i...j]$长度小于3时，不用检查子串是否回文，不需要状态转移。
 - <font color=red>结合边界条件，可将状态转移方程写成</font>$dp[i][j] = ((s[i] == s[j])$ `and` $(dp[i+1][j-1]$ `or` $j - i < 3))$
 
-### 用填表来理解状态转移
+**用填表来理解状态转移：**
 <div align=center><img src=LeetCode\dp填表法.png width=60%></div>
 
 **初始化dp表**：（由于$i\leqslant j$，表左下角全为`FALSE`）
@@ -182,7 +182,7 @@ P(i,i+1)=(S_i == S_{i+1})&
 **注意右上角填表顺序**：
 <div align=center><img src=LeetCode\dp填表.png></div>
 
-### 代码
+**代码**：
 ```java
 import java.util.Scanner;
 
@@ -236,7 +236,7 @@ public class LongestPalindromicSubstring {
 }
 ```
 
-### 复杂度分析
+**复杂度分析**：
 
 - 时间复杂度： $O(n^2)$ 两个for循环
 - 空间复杂度： $O(n^2)$ dp数组的大小
@@ -276,7 +276,7 @@ public class LongestPalindromicSubstring {
 <div align=center><img src=LeetCode\正数增益.png></div>
 
 ​
-### 代码
+**代码：**
 
 ```java
 import java.util.Scanner;
@@ -317,10 +317,147 @@ public class MaximumSubArray {
 }
 ```
 
-### 复杂度分析
+**复杂度分析：**
 
 - 时间复杂度：$O(n)$，其中$n$为`nums`数组的长度。我们只需要遍历一遍数组即可求得答案。
 - 空间复杂度：$O(1)$。我们只需要常数空间存放若干变量。
+
+
+## 818. 赛车（***）
+
+你的赛车起始停留在位置0，速度为+1，正行驶在一个无限长的数轴上。（车也可以向负数方向行驶。）
+
+你的车会根据一系列由$A$（加速）和$R$（倒车）组成的指令进行自动驾驶。
+
+当车得到指令`"A"`时, 将会做出以下操作：`position += speed, speed *= 2`。
+
+当车得到指令`"R"`时, 将会做出以下操作：如果当前速度是正数，则将车速调整为`speed = -1`；否则将车速调整为`speed = 1`。  (当前所处位置不变。)
+
+例如，当得到一系列指令`"AAR"`后, 你的车将会走过位置 `0->1->3->3`，并且速度变化为`1->2->4->-1`。
+
+现在给定一个目标位置，请给出能够到达目标位置的最短指令列表的长度。
+
+**示例：**
+```
+示例 1:
+输入: 
+target = 3
+输出: 2
+解释: 
+最短指令列表为 "AA"
+位置变化为 0->1->3
+
+示例 2:
+输入: 
+target = 6
+输出: 5
+解释: 
+最短指令列表为 "AAARA"
+位置变化为 0->1->3->7->7->6
+```
+
+**思路与算法**
+
+我们用$A^k$表示连续使用`k`次$A$指令，这样就可以用$A^{k_1} R A^{k_2} R \cdots A^{k_n}, k_i \geq 0$表示任意一种指令列表。注意到**最优的指令列表不可能以$R$结束，因为在到了终点后转向是无意义的；同样最优的指令列表也不必以$R$开始**，假设$R A^{k_1} R A^{k_2} \cdots R A^{k_n}$是一种最优的指令列表，那么我们可以将$R A^{k_1} R$根据$n$的奇偶性将其变为$R A^{k_1}$或$RR A^{k_1}$放在指令列表的末尾。
+
+对于指令列表$A^{k_1} R A^{k_2} R \cdots A^{k_n}$，它可以使得赛车到达的位置为$(2^{k_1} - 1) - (2^{k_2} - 1) + (2^{k_3} - 1) - \cdots$，因此不失一般性，可以交换$k_1, k_3, \cdots$这些奇数位置的$k_i$使得这个数列单调不增，同样可以交换$k_2, k_4, \cdots$这些偶数位置的$k_i$使得这个数列单调不增。同时所有的$k_i$都有一个上界$a + 1$，其中$a$为最小满足$2^a \geq \text{target}$的整数，即如果在某一时刻赛车经过了终点，那么折返比继续行驶更优。
+
+可以使用动态规划来找到最短的指令长度。
+
+假设我们需要到达位置`x`，且$2^{k-1} \leq x < 2^k$，我们用 `dp[x]`表示到达位置`x`的最短指令长度。如果$t = 2^k - 1$（$t$表示当前位置），那么我们只需要用$A^k$即可。否则我们需要考虑两种情况：
+
+- 我们首先用$A^{k-1}$到达位置$2^{k-1} - 1$，此时我们已经**逼近了终点**，随后折返并使用$A^j$，这样我们到达了位置$2^{k-1} - 2^j$，使用的指令为$A^{k-1} R A^j R$（方向需要对着`target`），长度为$k - 1 + j + 2$，剩余的距离为$x - (2^{k-1} - 2^j) < x$；
+
+- 我们首先用$A^k$到达位置$2^k - 1$，随后仅使用折返指令，此时我们已经**超过了终点**并且速度方向朝向终点，使用的指令为$A^k R$，长度为$k + 1$，剩余的距离为$x - (2^k - 1) < x$。
+
+**另一种思路（推荐）**：
+
+`dp[i]`：车子从0行驶到`i`的最短指令长度，起始速度是1，和target方向相同。
+`dp[0] = 0`，我们要求的是`dp[target]`。
+
+因为每次转向，车速会变为1，所以我们可以利用这个特性来复用之前在`dp`里存的值，即可以找到重复子问题。每次车子转向了，车速变为1，如果这时的速度方向也是朝向`target`，那就和起初状态相同了，可以用`dp`了！所以，我们需要找到这种情况，就可以分解成子问题了。
+
+我们能用的是$A$和$R$，但我们不知道中途会用多少次$A$和$R$。假设我们先$A$了$k$次，在$k$次加速后的位置是：`pos = 2^k - 1`
+
+- 如果`pos < target`：要先$A$若干次再$R$（这时行驶方向和`target`相反了）再若干次$A$再$R$。即$AA…ARA…AR$。在这两次$R$之间，假设$A$了$q$次，这时的位置在`pos - (2^q - 1)`。然后这时候是第二次的$R$，`speed = 1`，方向和`target`相同。这个就等于从0走到`target - (pos - (2^q - 1))`，这个步骤的最短指令集长度就是`dp[target - (pos - (2^q - 1))]`。
+所以，这个情况的全部指令集长度是`k（先A了k次）+ 1（R）+ q（再A了q次）+ 1（R）+ dp[target - (pos - (2^q - 1))]`。即`dp[i] = min(dp[i], k + 1 + q + 1 + dp[target - (pos - 2^q - 1)])`
+
+- 如果`pos == target`：可以直接一直$A$到`target`。即$AA…A$
+这时最短指令集长度就是`k`，不用任何转向。即`dp[i] = k`。
+
+- 如果`pos > target`：需要一次$R$，使车子现在朝向`target`。$AA…ARAA…A$。$R$过之后，现在需要达到`target`的距离是`pos - target`，速度为1，等同于原来从正方向驶向`target`的指令集长度。再加上之前的$k$次$A$和一次$R$，所以总的指令集长度为`k + 1 + dp[pos - target]`。即`dp[i] = min{dp[i], k + 1 + dp[pos - target]`。
+
+
+**另一种思路（推荐）：**
+
+- `dp[i]`：到距离为i的点的最少操作次数（前提条件：运动方向要指向i点，初始速度大小要为1）
+- 经过`m`次连续$A$操作之后的走过的距离：`len = 2^m - 1`
+- 由于dp的条件为：速度为1，面朝目标点，所以只有进行R操作后，且运动方向朝向目标点才可以使用dp[]
+- 因此计算`dp[i]`的思路就是：通过$k$次操作到达**最接近**`i`点的$K$点，且此时的运动方向朝向`i`，遍历每一种$k$然后计算`min(k + dp[abs(i - K)])`。
+- 这个$K$点有三种可能；
+    - `K < i`: 首先通过$m$次$A$操作到达`j = (1 << m) - 1`（$2^m - 1$）（再多走，就超过了），然后执行一次$R$操作，此时方向与i点相反，于是进行$q$次$A$操作，移动了`p = (1 << q) - 1`步，到达`j - p`点，此时只需要先翻转一次，然后执行`dp[i - (j - p)]`次操作即可。 这种情况下的条件为：`j < i`，`p < j`。
+    - `K = i`：通过$m$次$A$操作到达`j = (1 << m) - 1`，此时`j = i`，因此`dp[i] = m`。
+    - `K > i`：首先通过$m$次$A$操作到达`j = (1 << m) - 1`，然后执行一次$R$操作，此时就可以通过`dp[j - i]`获得`j - i`步的最少操作数，因为翻转一次之后速度为1，且方向也指向i的方向。
+- 最终`dp[i]`就是在以上三种情况下找到一个最小值。
+
+
+**代码：**
+```java
+import java.util.Arrays;
+
+/**
+ * 818. 赛车（***）
+ */
+
+public class RaceCar {
+    private static int raceCar(int target){
+        int[] dp = new int[target + 3];
+        Arrays.fill(dp, Integer.MAX_VALUE);
+        dp[0] = 0; dp[1] = 1; dp[2] = 4; // AARA
+
+        for (int t = 3; t <= target; t++){
+            // 指定一个int，返回这个数的二进制串中从最左边算起连续的“0”的总数量
+            /*
+            >>> Integer.toBinaryString(4)
+            u'100'
+            >>> 32-Integer.numberOfLeadingZeros(4)
+            3
+
+            >>> Integer.toBinaryString(8)
+            u'1000'
+            >>> 32-Integer.numberOfLeadingZeros(8)
+            4 // k = 4, 2^k < t
+             */
+            int k = 32 - Integer.numberOfLeadingZeros(t);
+
+            // t表示当前位置
+            if (t == (1<<k) - 1){
+                dp[t] = k;
+                continue;
+            }
+
+            for (int j = 0; j < k - 1; j++)
+                dp[t] = Math.min(dp[t], dp[t - (1<<(k - 1)) + (1<<j)] + k -1 + j + 2);
+
+            if ((1<<k) - 1 - t < t)
+                dp[t] = Math.min(dp[t], dp[(1<<k) - 1 - t] + k + 1);
+        }
+
+        return dp[target];
+    }
+
+    public static void main(String[] args) {
+        System.out.println(raceCar(6));
+    }
+}
+```
+
+
+**复杂度分析：**
+
+- 时间复杂度：$O(T \log T)$。对于每一个位置`x`，需要循环$O(\log x)$次。
+
+- 空间复杂度：$O(T)$。
 
 
 
@@ -1144,3 +1281,82 @@ public class ThreeSum {
 
 - 时间复杂度$O(N^2)$
 - 空间复杂度$O(1)$：指针使用常数大小的额外空间。
+
+
+# 堆
+
+## 23. 合并K个排序链表（***）
+
+合并k个排序链表，返回合并后的排序链表。请分析和描述算法的复杂度。
+
+**示例**：
+```
+输入:
+[
+  1->4->5,
+  1->3->4,
+  2->6
+]
+输出: 1->1->2->3->4->4->5->6
+```
+
+**思路与算法**：
+
+思路一：K指针：K个指针分别指向K条链表。
+
+思路二：
+把链表**放入`堆`中**，然后由堆根据节点的`val`自动排好序：
+<div align=center><img src=LeetCode\23.jpg width=80%></div>
+
+这是一个`小根堆`，我们只需要每次**输出`堆顶`的元素**，直到整个堆为空即可。
+
+执行过程如下：
+<div align=center><img src=LeetCode\23_1.jpg></div>
+
+**代码**：
+```java
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
+/**
+ * 23. 合并K个排序链表（***）
+ */
+
+public class MergekSortedLists {
+    private ListNode mergeKLists(ListNode[] listNodes){
+        if (listNodes == null || listNodes.length == 0)
+            return null;
+
+        //创建一个堆，并设置元素的排序方式
+        PriorityQueue<ListNode> queue = new PriorityQueue<>(new Comparator<ListNode>() {
+            @Override
+            public int compare(ListNode o1, ListNode o2) {
+                return (o1.val - o2.val);
+            }
+        });
+
+        //遍历链表数组，然后将每个链表的每个节点都放入堆中
+        for (int i = 0; i < listNodes.length; i++){
+            while (listNodes[i] != null){
+                queue.add(listNodes[i]);
+                // 若采用题中示例，此处listNodes.length=3，有三个链表
+                listNodes[i] = listNodes[i].next;
+            }
+        }
+
+        ListNode dummy = new ListNode(-1);
+        ListNode head = dummy;
+
+        //从堆中不断取出元素，并将取出的元素串联起来
+        while (! queue.isEmpty()){
+            dummy.next = queue.poll();
+            dummy = dummy.next;
+        }
+        
+        dummy.next = null;
+        
+        return head.next;
+    }
+}
+```
+
