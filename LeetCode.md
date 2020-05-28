@@ -1521,6 +1521,8 @@ class SymmetricTree {
 ```
 
 **思路与算法：递归，DFS(深度优先搜索)**
+$H(1) = 1 + max(H(2), H(7))$
+即$H(1) = 1 + max(H(1).left, H(1).right)$
 <div align=center><img src=LeetCode\104.jpg></div>
 
 **代码：**
