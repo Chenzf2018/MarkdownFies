@@ -1360,3 +1360,324 @@ public class MergekSortedLists {
 }
 ```
 
+# 深度优先搜索
+
+## 100. 相同的树（*）
+
+**问题：**
+给定两个二叉树，编写一个函数来检验它们是否相同。如果两个树在结构上相同，并且节点具有相同的值，则认为它们是相同的。
+
+**示例：**
+```
+输入:       1         1
+          / \       / \
+         2   3     2   3
+
+        [1,2,3],   [1,2,3]
+
+输出: true
+
+输入:      1          1
+          /           \
+         2             2
+
+        [1,2],     [1,null,2]
+
+输出: false
+```
+
+**思路与算法：递归**
+
+终止条件与返回值：
+
+- 当两棵树的当前节点都为`null`时返回`true`
+- 当其中一个为`null`另一个不为`null`时返回`false`
+- 当两个都不为空但是值不相等时，返回`false`
+
+执行过程：当满足终止条件时进行返回，不满足时分别判断左子树和右子树是否相同，其中要注意代码中的短路效应（当左子树不相等时，右子树不需要再进行判断！）
+
+
+**代码：**
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+
+class SameTree {
+    public boolean isSameTree(TreeNode p, TreeNode q) {
+        if(p == null && q == null)
+            return true;
+        if(p == null || q == null)
+            return false;
+        if(p.val != q.val)
+            return false;
+        return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);  // 短路效应
+    }
+}
+```
+
+**复杂度分析：**
+时间复杂度：$O(n)$，$n$为树的节点个数
+空间复杂度 : 最优情况（完全平衡二叉树）时为$O(\log(N))$，最坏情况下（完全不平衡二叉树）时为${O}(N)$，用于维护递归栈。
+
+## 101. 对称二叉树(*)
+
+**题目：**
+给定一个二叉树，检查它是否是镜像对称的。
+
+**示例：**
+```
+例如，二叉树 [1,2,2,3,4,4,3] 是对称的。
+
+    1
+   / \
+  2   2
+ / \ / \
+3  4 4  3
+ 
+
+但是下面这个 [1,2,2,null,3,null,3] 则不是镜像对称的:
+
+    1
+   / \
+  2   2
+   \   \
+   3    3
+```
+
+**思路与算法：递归**
+
+递归结束条件：
+
+- 都为空指针则返回`true`
+- 只有一个为空则返回`false`
+
+递归过程：
+
+- 判断两个指针当前节点值是否相等
+- 判断`A`的右子树与`B`的左子树是否对称
+- 判断`A`的左子树与`B`的右子树是否对称
+
+短路：
+
+在递归判断过程中存在短路现象，也就是做`与`操作时，如果前面的值返回`false`则后面的不再进行计算。
+
+判断二叉树是否对称，就像照镜子一样（复制了一个相同的树）！
+<div align=center><img src=LeetCode\101.jpg></div>
+
+**代码：**
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class SymmetricTree {
+    public boolean isSymmetric(TreeNode root) {
+        return isMirror(root, root);
+    }
+
+    public boolean isMirror(TreeNode t1, TreeNode t2){
+        if(t1 == null && t2 == null)
+            return true;
+        if(t1 == null || t2 == null)
+            return false;
+        
+        return (t1.val == t2.val) && isMirror(t1.right, t2.left) && isMirror(t1.left, t2.right);
+    }
+}
+```
+
+## 104. 二叉树的最大深度(*)
+
+**题目：**
+
+给定一个二叉树，找出其最大深度。
+
+二叉树的深度为根节点到最远叶子节点的最长路径上的节点数。
+
+说明: 叶子节点是指没有子节点的节点。
+
+**示例：**
+```
+给定二叉树 [3,9,20,null,null,15,7]，
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回它的最大深度 3 。
+```
+
+**思路与算法：递归，DFS(深度优先搜索)**
+<div align=center><img src=LeetCode\104.jpg></div>
+
+**代码：**
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class MaximumDepthofBinaryTree {
+    public int maxDepth(TreeNode root) {
+        if(root == null)
+            return 0;
+        else{
+            int left_height = maxDepth(root.left);
+            int right_height = maxDepth(root.right);
+            return java.lang.Math.max(left_height, right_height) + 1;
+        }
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：我们每个结点只访问一次，因此时间复杂度为$O(N)$，其中$N$是结点的数量。
+
+空间复杂度：在最糟糕的情况下，树是完全不平衡的，例如每个结点只剩下左子结点，递归将会被调用$N$次（树的高度），因此保持调用栈的存储将是$O(N)$。但在最好的情况下（树是完全平衡的），树的高度将是$\log(N)$。因此，在这种情况下的空间复杂度将是$O(\log(N))$。
+
+
+## 108. 将有序数组转换为二叉搜索树(*)
+
+将一个按照升序排列的有序数组，转换为一棵高度平衡二叉搜索树。
+
+本题中，一个高度平衡二叉树是指一个二叉树**每个节点的左右两个子树的高度差的绝对值不超过1**。
+
+**二叉搜索树定义：**
+
+二叉查找树（Binary Search Tree），（又：二叉搜索树，二叉排序树）它或者是一棵空树，或者是具有下列性质的二叉树：
+- 若它的左子树不空，则**左子树上所有结点的值均小于它的根结点的值**； 
+- 若它的右子树不空，则**右子树上所有结点的值均大于它的根结点的值**； 
+- 它的左、右子树也分别为二叉排序树。
+
+**示例：**
+```
+给定有序数组: [-10,-3,0,5,9],
+
+一个可能的答案是：[0,-3,9,-10,null,5]，它可以表示下面这个高度平衡二叉搜索树：
+
+      0
+     / \
+   -3   9
+   /   /
+ -10  5
+```
+
+**思路与算法：**
+
+遍历树的两种通用策略：
+
+- 深度优先遍历（DFS）
+
+    这种方法以深度depth优先为策略，从根节点开始一直遍历到某个叶子节点，然后回到根节点，再遍历另外一个分支。根据根节点，左孩子节点和右孩子节点的访问顺序又可以将`DFS`细分为**先序遍历**`preorder`，**中序遍历**`inorder`和**后序遍历**`postorder`。
+
+- 广度优先遍历（BFS）
+
+    按照高度顺序，从上往下逐层遍历节点。先遍历上层节点再遍历下层节点。
+
+下图中按照不同的方法遍历对应子树，得到的遍历顺序都是`1-2-3-4-5`：
+<div align=center><img src=LeetCode\bfs_dfs.png></div>
+
+**将有序数组转换为二叉搜索树的结果为什么*不唯一*？**
+
+**二叉搜索树的中序遍历是一个升序序列**。将有序数组作为输入，可以把该问题看做**根据中序遍历序列创建二叉搜索树**。
+
+这个问题的答案唯一吗？例如：是否可以根据中序遍历序列和二叉搜索树之间是否一一对应，答案是否定的。
+
+下面是一些关于`BST`（二叉查找树）的知识：
+- 中序遍历不能唯一确定一棵二叉搜索树。
+- 先序和后序遍历不能唯一确定一棵二叉搜索树。
+- 先序/后序遍历和中序遍历的关系：`inorder = sorted(postorder) = sorted(preorder)`
+- `中序+后序`、`中序+先序`可以唯一确定一棵二叉树。
+
+因此，**“有序数组 -> BST”有多种答案**。
+
+<div align=center><img src=LeetCode\bfs_dfs1.png></div>
+
+如果添加一个附件条件：树的高度应该是平衡的。例如：**每个节点的两棵子树高度差不超过1**。这种情况下答案唯一吗？
+
+仍然不是唯一的：
+<div align=center><img src=LeetCode\bfs_dfs2.png></div>
+
+**高度平衡意味着每次必须选择中间数字作为根节点**。这对于**奇数个数**的数组是有用的，但对**偶数个数**的数组没有预定义的选择方案。
+
+<div align=center><img src=LeetCode\bfs_dfs3.png></div>
+
+对于偶数个数的数组，要么选择中间位置左边的元素作为根节点，要么选择中间位置右边的元素作为根节点，不同的选择方案会创建不同的平衡二叉搜索树。
+
+**方法：**
+中序遍历：始终选择**中间位置左边元素**作为根节点
+<div align=center><img src=LeetCode\bfs_dfs4.png></div>
+
+- 方法`helper(left, right)`使用数组`numsnums`中索引从`left`到`right`的元素创建`BST`：
+    - 如果`left > right`，子树中不存在元素，返回空。
+    - 找出中间元素：`p = (left + right) // 2`。
+    - 创建根节点：`root = TreeNode(nums[p])`。
+    - 递归创建左子树`root.left = helper(left, p - 1)`和右子树`root.right = helper(p + 1, right)`。
+
+- 返回`helper(0, len(nums) - 1)`。
+
+**代码：**
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode sortedArrayToBST(int[] nums) {
+        this.nums = nums;
+        return helper(0, nums.length - 1);
+    }
+
+    int[] nums;
+
+    // 方法helper(left, right)使用数组numsnums中索引从left到right的元素创建BST
+    public TreeNode helper(int left, int right){
+        if(left > right)
+            return null;
+        
+        // always choose left middle node as a root
+        int p = (left + right) / 2;
+
+        /*
+        // always choose right middle node as a root
+        int p = (left + right) / 2;
+        if ((left + right) % 2 == 1) ++p;
+        */
+
+        // inorder traversal: left -> node -> right
+        TreeNode root = new TreeNode(nums[p]);
+        root.left = helper(left, p - 1);
+        root.right = helper(p + 1, right);
+        return root;
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：$\mathcal{O}(N)$，每个元素只访问一次。
+
+空间复杂度：$\mathcal{O}(N)$，二叉搜索树空间$\mathcal{O}(N)$，递归栈深度$\mathcal{O}(\log N)$。
