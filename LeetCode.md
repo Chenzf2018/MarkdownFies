@@ -744,6 +744,832 @@ public class ValidParentheses {
 - 空间复杂度：$O(n)$，当我们将所有的开括号都推到栈上时以及在最糟糕的情况下，我们最终要把所有括号推到栈上。例如`((((((((((`。
 
 
+## 155. 最小栈（*）
+**题目：**
+设计一个支持`push`，`pop`，`top`操作，并能在**常数时间内检索到最小元素**的栈。
+
+`push(x)` —— 将元素`x`推入栈中。
+`pop()` —— 删除栈顶的元素。
+`top()` —— 获取栈顶元素。
+`getMin()` —— 检索栈中的最小元素。
+
+**示例：**
+```
+输入：
+["MinStack","push","push","push","getMin","pop","top","getMin"]
+[[],[-2],[0],[-3],[],[],[],[]]
+
+输出：
+[null,null,null,null,-3,null,0,-2]
+
+解释：
+MinStack minStack = new MinStack();
+minStack.push(-2);
+minStack.push(0);
+minStack.push(-3);
+minStack.getMin();   --> 返回 -3.
+minStack.pop();
+minStack.top();      --> 返回 0.
+minStack.getMin();   --> 返回 -2.
+```
+
+**思路与算法：辅助栈**
+
+要做出这道题目，首先要理解栈结构先进后出的性质。
+
+对于栈来说，如果一个元素`a`在入栈时，栈里有其它的元素`b, c, d`，那么无论这个栈在之后经历了什么操作，只要`a`在栈中，`b, c, d`就一定在栈中，因为在`a`被弹出之前，`b, c, d`不会被弹出。
+
+因此，在操作过程中的任意一个时刻，只要栈顶的元素是`a`，那么我们就可以确定栈里面现在的元素一定是`a, b, c, d`。
+
+那么，我们可以在每个元素`a`入栈时把当前栈的最小值`m`存储起来。在这之后无论何时，如果栈顶元素是`a`，我们就可以直接返回存储的最小值`m`。
+
+<div align=center><img src=LeetCode\155_MinStack.gif></div>
+
+- `push()`方法： 每当`push()`新值进来时，如果**小于等于`min_stack`栈顶值**，则一起`push()`，即更新了栈顶最小值；
+- `pop()`方法： 判断将`pop()`出去的元素值**是否是`min_stack`栈顶元素值（即最小值）**，如果是则将`min_stack`栈顶元素一起`pop()`，这样可以保证`min_stack`栈顶元素始终是`stack`中的最小值。
+- getMin()方法： 返回`min_stack`栈顶即可。
+
+
+**代码：**
+```java
+class MinStack {
+
+    /** initialize your data structure here. */
+    private Stack<Integer> dataStack;
+    private Stack<Integer> minStack;
+
+    public MinStack() {
+        dataStack = new Stack<>();
+        minStack = new Stack<>();
+    }
+    
+    public void push(int x) {
+        dataStack.push(x);
+        if(minStack.isEmpty() || x <= minStack.peek())
+            minStack.push(x);
+    }
+    
+    public void pop() {
+        int x = dataStack.pop();
+        if(x == minStack.peek())
+            minStack.pop();
+    }
+    
+    public int top() {
+        return dataStack.peek();
+    }
+    
+    public int getMin() {
+        return minStack.peek();
+    }
+}
+
+/**
+ * Your MinStack object will be instantiated and called as such:
+ * MinStack obj = new MinStack();
+ * obj.push(x);
+ * obj.pop();
+ * int param_3 = obj.top();
+ * int param_4 = obj.getMin();
+ */
+```
+
+## 225. 用队列实现栈
+
+**题目：**
+使用队列实现栈的下列操作：
+- `push(x)` -- 元素`x`入栈
+- `pop()` -- 移除栈顶元素
+- `top()` -- 获取栈顶元素
+- `empty()` -- 返回栈是否为空
+
+注意:
+
+- 你只能使用队列的基本操作-- 也就是`push to back`, `peek/pop from front`, `size`, 和 `is empty`这些操作是合法的。
+- 你所使用的语言也许不支持队列。 你可以使用`list`或者`deque`（双端队列）来模拟一个队列 , 只要是标准的队列操作即可。
+- 你可以假设所有操作都是有效的（例如, 对一个空的栈不会调用`pop`或者`top`操作）。
+
+
+**思路与算法：**
+- 栈是一种**后进先出**（last in - first out， LIFO）的数据结构，栈内元素从顶端压入（push），从顶端弹出（pop）。一般我们用**数组**或者**链表**来实现栈。
+- 队列是一种与栈相反的**先进先出**（first in - first out， FIFO）的数据结构，队列中元素只能从**后端**（`rear`）入队（push），然后从**前端**（`front`）端出队（pop）。
+
+为了满足栈的特性，我们需要维护**两个队列**`q1`和`q2`。同时，我们用一个额外的变量来保存栈顶元素。
+
+**压入**（push）：
+新元素永远从`q1`的**后端入队**，同时`q1`的后端也是栈的 栈顶（top）元素：
+<div align=center><img src=LeetCode\225_1.png></div>
+
+```java
+private Queue<Integer> q1 = new LinkedList<>();
+private Queue<Integer> q2 = new LinkedList<>();
+private int top;
+
+// Push element x onto stack.
+public void push(int x) {
+    q1.add(x);
+    top = x;
+}
+```
+
+- 时间复杂度：$O(1)$
+**队列是通过链表来实现**的，入队（add）操作的时间复杂度为$O(1)$。
+
+- 空间复杂度：$O(1)$
+
+**弹出**（pop）：
+我们需要把栈顶元素弹出，就是`q1`中最后入队的元素。
+
+考虑到队列是一种`FIFO`的数据结构，最后入队的元素应该在最后被出队。因此我们需要维护另外一个队列`q2`，这个队列用作**临时存储`q1`中出队的元素**。`q2`中最后入队的元素将作为新的栈顶元素。接着将`q1`中最后剩下的元素出队。我们通过**把`q1`和`q2`互相交换**（STEP4）的方式来避免把`q2`中的元素往`q1`中拷贝。
+
+<div align=center><img src=LeetCode\225_2.png></div>
+
+```java
+// Removes the element on top of the stack.
+public void pop() {
+    while (q1.size() > 1) {
+        top = q1.remove();
+        q2.add(top);
+    }
+    q1.remove();
+    Queue<Integer> temp = q1;
+    q1 = q2;
+    q2 = temp;
+}
+```
+
+时间复杂度：$O(n)$
+算法让`q1`中的$n$个元素出队，让$n - 1$个元素从`q2`入队，在这里$n$是栈的大小。这个过程总共产生了$2n - 1$次操作，时间复杂度为$O(n)$。
+
+**压入**（push)：
+
+接下来介绍的算法让每一个新元素从`q2`入队，同时把这个元素作为栈顶元素保存。当`q1`非空（也就是栈非空），我们让`q1`中所有的元素全部出队，再将出队的元素从`q2`入队。通过这样的方式，新元素（栈中的栈顶元素）将会在`q2`的前端。我们通过将`q1，q2`互相交换的方式来避免把`q2`中的元素往`q1`中拷贝。
+
+<div align=center><img src=LeetCode\225_3.png></div>
+
+```java
+public void push(int x) {
+    q2.add(x);
+    top = x;
+    while (!q1.isEmpty()) {                
+        q2.add(q1.remove());
+    }
+    Queue<Integer> temp = q1;
+    q1 = q2;
+    q2 = temp;
+}
+```
+
+时间复杂度：$O(n)$
+算法会让`q1`出队$n$个元素，同时入队$n + 1$个元素到`q2`。这个过程会产生$2n + 1$步操作，同时`链表`中`插入`操作和`移除`操作的时间复杂度为$O(1)$，因此时间复杂度为$O(n)$。
+
+空间复杂度：$O(1)$
+
+**弹出**（pop）:
+
+直接让`q1`中元素出队，同时将出队后的`q1`中的队首元素作为栈顶元素保存。
+
+<div align=center><img src=LeetCode\225_4.png></div>
+
+```java
+// Removes the element on top of the stack.
+public int pop() {
+    q1.remove();
+    int res = top;
+    if (!q1.isEmpty()) {
+        top = q1.peek();
+    }
+    return res;
+}
+```
+
+时间复杂度：$O(1)$；空间复杂度：$O(1)$
+
+
+上面介绍的两个方法都有一个缺点，它们都用到了两个队列。下面介绍的方法只需要**使用一个队列**。
+
+**压入**（push）：
+
+当我们将一个元素从队列入队的时候，根据队列的性质这个元素会存在队列的后端。但当我们实现一个栈的时候，最后入队的元素应该在前端，而不是在后端。为了实现这个目的，**每当入队一个新元素的时候，我们可以把队列的顺序反转过来**。
+
+<div align=center><img src=LeetCode\225_5.png></div>
+
+```java
+private LinkedList<Integer> q1 = new LinkedList<>();
+
+// Push element x onto stack.
+public void push(int x) {
+    q1.add(x);
+    int sz = q1.size();
+    while (sz > 1) {
+        q1.add(q1.remove());
+        sz--;
+    }
+}
+```
+
+时间复杂度：$O(n)$
+这个算法需要从`q1`中出队$n$个元素，同时还需要入队$n$个元素到`q1`，其中$n$是栈的大小。这个过程总共产生了$2n + 1$步操作。链表中`插入`操作和`移除`操作的时间复杂度为$O(1)$，因此时间复杂度为$O(n)$。
+
+空间复杂度：$O(1)$
+
+**代码：**
+
+```java
+class ImplementStackUsingQueues   {
+    Queue<Integer> queue;
+
+    /** Initialize your data structure here. */
+    public MyStack() {
+        queue = new ArrayDeque<>();
+    }
+    
+    /** Push element x onto stack. */
+    // 入栈时，将新元素x进入队列后，将新元素x之前的所有元素重新入队，此时元素x处于队头
+    public void push(int x) {
+        queue.offer(x);
+        int size = queue.size();
+        for(int i = 0; i < size - 1; i++)
+            queue.offer(queue.poll());
+    }
+    
+    /** Removes the element on top of the stack and returns that element. */
+    // 出栈pop操作和检查栈顶元素的top操作在调用队列相应方法前，需要检查队列是否为空，否则可能产生空指针异常
+    public int pop() {
+        if(queue.isEmpty())
+            throw new RuntimeException("Empty Stack!");
+        return queue.poll();
+    }
+    
+    /** Get the top element. */
+    public int top() {
+        if(queue.isEmpty())
+            throw new RuntimeException("Empty Stack!");
+        return queue.peek();
+    }
+    
+    /** Returns whether the stack is empty. */
+    public boolean empty() {
+        return queue.isEmpty();
+    }
+}
+
+/**
+ * Your MyStack object will be instantiated and called as such:
+ * MyStack obj = new MyStack();
+ * obj.push(x);
+ * int param_2 = obj.pop();
+ * int param_3 = obj.top();
+ * boolean param_4 = obj.empty();
+ */
+```
+
+## 232. 用栈实现队列(*)
+
+**题目：**
+
+使用栈实现队列的下列操作：
+
+- `push(x)` -- 将一个元素放入队列的尾部。
+- `pop()` -- 从队列首部移除元素。
+- `peek()` -- 返回队列首部的元素。
+- `empty()` -- 返回队列是否为空。
+
+**示例：**
+```
+MyQueue queue = new MyQueue();
+
+queue.push(1);
+queue.push(2);  
+queue.peek();  // 返回 1
+queue.pop();   // 返回 1
+queue.empty(); // 返回 false
+```
+
+说明:
+
+- 你只能使用标准的栈操作 -- 也就是只有`push to top`, `peek/pop from top`, `size`, 和`is empty`操作是合法的。
+- 你所使用的语言也许不支持栈。你可以使用 list 或者 deque（双端队列）来模拟一个栈，只要是标准的栈操作即可。
+- 假设所有操作都是有效的 （例如，一个空的队列不会调用`pop`或者`peek`操作）。
+
+**思路与算法：**
+
+- 队列是一种**先进先出**（first in - first out， FIFO）的数据结构，队列中的元素都从后端（rear）入队（push），从前端（front）出队（pop）。实现队列最直观的方法是用**链表**。
+- 栈是一种**后进先出**（last in - first out， LIFO）的数据结构，栈中元素从栈顶（top）压入（push)，也从栈顶弹出（pop）。
+- 
+为了满足队列的`FIFO`的特性，我们需要用到**两个栈**，用它们其中一个来反转元素的入队顺序，用另一个来存储元素的最终顺序。
+
+
+**入队**（push）：
+
+一个队列是`FIFO`的，但一个栈是`LIFO`的。这就意味着最新压入的元素必须得放在栈底。为了实现这个目的，我们首先需要把`s1`中所有的元素移到`s2`中，接着把新元素压入`s2`。最后把`s2`中所有的元素弹出，再把弹出的元素压入`s1`。
+
+<div align=center><img src=LeetCode\232_1.png></div>
+
+```java
+private int front;
+
+public void push(int x) {
+    if (s1.empty())
+        front = x;
+    while (!s1.isEmpty())
+        s2.push(s1.pop());
+    s2.push(x);
+    while (!s2.isEmpty())
+        s1.push(s2.pop());
+}
+```
+
+时间复杂度：$O(n)$
+对于除了新元素之外的所有元素，它们都会被压入两次，弹出两次。新元素只被压入一次，弹出一次。这个过程产生了$4n + 2$次操作，其中$n$是队列的大小。由于**压入**操作和**弹出**操作的时间复杂度为$O(1)$，所以时间复杂度为$O(n)$。
+
+空间复杂度：$O(n)$
+需要额外的内存来存储队列中的元素。
+
+
+**出队**（pop）：
+
+根据栈`LIFO`的特性，`s1`中第一个压入的元素在栈底。为了弹出`s1`的栈底元素，我们得把`s1`中所有的元素全部弹出，再把它们压入到另一个栈`s2`中，这个操作会让元素的入栈顺序反转过来。通过这样的方式，`s1`中栈底元素就变成了`s2`的栈顶元素，这样就可以直接从`s2`将它弹出了。一旦`s2`变空了，我们只需把`s1`中的元素再一次转移到`s2`就可以了。
+
+<div align=center><img src=LeetCode\232_2.png></div>
+
+```java
+// Removes the element from in front of queue.
+public int pop() {
+    if (s2.isEmpty()) {
+        while (!s1.isEmpty())
+            s2.push(s1.pop());
+    }
+    return s2.pop();    
+}
+```
+
+**代码：**
+
+```java
+class ImplementQueueUsingStacks {
+    Stack<Integer> stackPush;
+    Stack<Integer> stackPop;
+
+    /** Initialize your data structure here. */
+    public MyQueue() {
+        stackPush = new Stack<>();
+        stackPop = new Stack<>();
+    }
+    
+    /** Push element x to the back of queue. */
+    public void push(int x) {
+        stackPush.push(x);
+    }
+    
+    /** Removes the element from in front of queue and returns that element. */
+    public int pop() {
+        if(stackPush.empty() && stackPop.empty())
+            throw new RuntimeException("Stack is empty!");
+        else if(stackPop.empty()){
+            while(!stackPush.empty())
+                stackPop.push(stackPush.pop());
+        }
+
+        return stackPop.pop();
+    }
+    
+    /** Get the front element. */
+    public int peek() {
+        if(stackPush.empty() && stackPop.empty())
+            throw new RuntimeException("Stack is empty!");
+        else if(stackPop.empty()){
+            while(!stackPush.empty())
+                stackPop.push(stackPush.pop());
+        }
+        return stackPop.peek();
+    }
+    
+    /** Returns whether the queue is empty. */
+    public boolean empty() {
+        if(stackPop.empty() && stackPush.empty())
+            return true;
+        return false;
+    }
+}
+
+/**
+ * Your MyQueue object will be instantiated and called as such:
+ * MyQueue obj = new MyQueue();
+ * obj.push(x);
+ * int param_2 = obj.pop();
+ * int param_3 = obj.peek();
+ * boolean param_4 = obj.empty();
+ */
+```
+
+## 496. 下一个更大元素 I(*)
+
+**题目：**
+给定两个没有重复元素的数组`nums1`和`nums2`，其中`nums1`是`nums2`的子集。找到`nums1`中每个元素在`nums2`中的下一个比其大的值。
+
+`nums1`中数字`x`的下一个更大元素是指`x`在`nums2`中对应位置的右边的第一个比`x`大的元素。如果不存在，对应位置输出`-1`。
+
+**示例：**
+
+```
+输入: nums1 = [4,1,2], nums2 = [1,3,4,2].
+输出: [-1,3,-1]
+解释:
+    对于num1中的数字4，你无法在第二个数组中找到下一个更大的数字，因此输出 -1。
+    对于num1中的数字1，第二个数组中数字1右边的下一个较大数字是 3。
+    对于num1中的数字2，第二个数组中没有下一个更大的数字，因此输出 -1。
+
+输入: nums1 = [2,4], nums2 = [1,2,3,4].
+输出: [3,-1]
+解释:
+    对于 num1 中的数字 2 ，第二个数组中的下一个较大数字是 3 。
+    对于 num1 中的数字 4 ，第二个数组中没有下一个更大的数字，因此输出 -1 。
+
+提示：
+
+nums1和nums2中所有元素是唯一的。
+nums1和nums2的数组大小都不超过1000。
+```
+
+**思路与算法：单调栈**
+
+我们可以忽略数组`nums1`，先将`nums2`中的每一个元素，求出其下一个更大的元素。随后将这些答案放入哈希映射（HashMap）中，再遍历数组`nums1`，并直接找出答案。对于`nums2`，我们可以使用**单调栈**来解决这个问题。
+
+我们首先把第一个元素`nums2[1]`放入栈，随后对于第二个元素`nums2[2]`，如果`nums2[2] > nums2[1]`，那么我们就找到了`nums2[1]`的下一个更大元素`nums2[2]`，此时就可以**把`nums2[1]`出栈并把`nums2[2]`入栈**；**如果`nums2[2] <= nums2[1]`，我们就仅把`nums2[2]`入栈**。对于第三个元素`nums2[3]`，此时栈中有若干个元素，那么所有比`nums2[3]`小的元素都找到了下一个更大元素（即`nums2[3]`），因此可以出栈，在这之后，我们将`nums2[3]`入栈，以此类推。
+
+可以发现，我们维护了一个单调栈，栈中的元素从栈顶到栈底是单调不降的。当我们遇到一个新的元素`nums2[i]`时，我们判断栈顶元素是否小于`nums2[i]`，如果是，那么栈顶元素的下一个更大元素即为`nums2[i]`，我们将栈顶元素出栈。重复这一操作，直到栈为空或者栈顶元素大于`nums2[i]`。此时我们将`nums2[i]`入栈，保持栈的单调性，并对接下来的`nums2[i + 1], nums2[i + 2] ...`执行同样的操作。
+
+
+<div align=center><img src=LeetCode\496_1.jpg></div>
+
+<div align=center><img src=LeetCode\496_2.jpg></div>
+
+
+**代码：**
+```java
+class NextGreaterElementI {
+    public int[] nextGreaterElement(int[] nums1, int[] nums2) {
+        Stack<Integer> stack = new Stack<>();
+        HashMap<Integer, Integer> map = new HashMap<>();
+        int[] result = new int[nums1.length];
+
+        for(int i = 0; i < nums2.length; i++){
+            while(!stack.empty() && nums2[i] > stack.peek())  // 此时栈顶是nums2[i]之前的数
+                map.put(stack.pop(), nums2[i]);
+            stack.push(nums2[i]);
+        }
+
+        while(!stack.empty())
+            map.put(stack.pop(),-1);
+
+        for(int i = 0; i < nums1.length; i++)
+            result[i] = map.get(nums1[i]);
+        
+        return result;
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：$O(M+N)$，其中$M$和$N$分别是数组`nums1`和`nums2`的长度。
+
+空间复杂度：$O(N)$。我们在遍历`nums2`时，需要使用栈，以及哈希映射用来临时存储答案。
+
+
+## 682. 棒球比赛（*）
+
+**题目：**
+
+你现在是棒球比赛记录员。
+给定一个字符串列表，每个字符串可以是以下四种类型之一：
+- 整数（一轮的得分）：直接表示您在本轮中获得的积分数。
+- "+"（一轮的得分）：表示本轮获得的得分是前两轮有效回合得分的总和。
+- "D"（一轮的得分）：表示本轮获得的得分是前一轮有效回合得分的两倍。
+- "C"（一个操作，这不是一个回合的分数）：表示您获得的最后一个有效回合的分数是无效的，应该被移除。
+
+每一轮的操作都是永久性的，可能会对前一轮和后一轮产生影响。你需要返回你在所有回合中得分的总和。
+
+
+**示例：**
+```
+输入: ["5","2","C","D","+"]
+输出: 30
+解释: 
+第1轮：你可以得到5分。总和是：5。
+第2轮：你可以得到2分。总和是：7。
+操作1：第2轮的数据无效。总和是：5。
+第3轮：你可以得到10分（第2轮的数据已被删除）。总数是：15。
+第4轮：你可以得到5 + 10 = 15分。总数是：30。
+
+输入: ["5","-2","4","C","D","9","+","+"]
+输出: 27
+解释: 
+第1轮：你可以得到5分。总和是：5。
+第2轮：你可以得到-2分。总数是：3。
+第3轮：你可以得到4分。总和是：7。
+操作1：第3轮的数据无效。总数是：3。
+第4轮：你可以得到-4（-2*2）分（第三轮的数据已被删除）。总和是：-1。
+第5轮：你可以得到9分。总数是：8。
+第6轮：你可以得到-4 + 9 = 5分。总数是13。
+第7轮：你可以得到9 + 5 = 14分。总数是27。
+```
+
+**代码：**
+```java
+class BaseballGame {
+    public int calPoints(String[] ops) {
+        Stack<Integer> stack = new Stack<>();
+
+        for(String op : ops){
+            if(op.equals("+")){
+                int top = stack.pop();
+                int newTop = top + stack.peek();
+                stack.push(top);
+                stack.push(newTop);
+            }
+            else if(op.equals("C"))
+                stack.pop();
+            else if(op.equals("D"))
+                stack.push(2 * stack.peek());
+            else
+                stack.push(Integer.valueOf(op));
+        }
+
+        int ans = 0;
+        for(int score : stack)
+            ans += score;
+        return ans;
+    }
+}
+```
+
+**复杂度分析：**
+复杂度分析：$O(N)$，其中$N$是`ops`的长度。我们解析给定数组中的每个元素，然后每个元素执行$O(1)$的工作。
+
+空间复杂度：$O(N)$，用于存储`stack`的空间。
+
+## 844. 比较含退格的字符串（*）
+
+**题目：**
+给定`S`和`T`两个字符串，当它们分别被输入到空白的文本编辑器后，判断二者是否相等，并返回结果。`#`代表退格字符。
+
+注意：如果对空文本输入退格字符，文本继续为空。
+
+**示例：**
+```
+输入：S = "ab#c", T = "ad#c"
+输出：true
+解释：S 和 T 都会变成 “ac”。
+
+输入：S = "ab##", T = "c#d#"
+输出：true
+解释：S 和 T 都会变成 “”。
+
+输入：S = "a##c", T = "#a#c"
+输出：true
+解释：S 和 T 都会变成 “c”。
+
+输入：S = "a#c", T = "b"
+输出：false
+解释：S 会变成 “c”，但 T 仍然是 “b”。
+```
+
+提示：$1 <= S.length <= 200$；$1 <= T.length <= 200$；`S`和`T`只含有小写字母以及字符 `#`。
+
+**思路与算法：**
+
+使用`build(S)`和`build(T)`，借助栈构造去除了退格符和被删除字符后的字符串，然后比较它们是否相等。
+
+**代码：**
+
+```java
+class BackspaceStringCompare {
+    public boolean backspaceCompare(String S, String T) {
+        return build(S).equals(build(T));
+    }
+
+    public String build(String S){
+        Stack<Character> ans = new Stack<>();
+
+        for(char c : S.toCharArray()){
+            if(c != '#')
+                ans.push(c);
+            else if(! ans.empty())
+                ans.pop();
+        }
+
+        return String.valueOf(ans);
+    } 
+}
+```
+
+**复杂度分析：**
+时间复杂度：$O(M + N)$，其中$M, N$是字符串$S$和$T$的长度。
+
+空间复杂度：$O(M + N)$。
+
+进阶：你可以用$O(N)$的时间复杂度和$O(1)$的空间复杂度解决该问题吗？
+
+## 1021. 删除最外层的括号(*)
+
+**题目：**
+
+
+有效括号字符串为空`("")`、`"(" + A + ")"`或`A + B`，其中`A`和`B`都是有效的括号字符串，`+`代表字符串的连接。例如，`""`，`"()"`，`"(())()"`和`"(()(()))"`都是有效的括号字符串。
+
+如果有效字符串`S`非空，且不存在将其拆分为`S = A+B`的方法，我们称其为原语（primitive），其中`A`和`B`都是非空有效括号字符串。
+
+给出一个非空有效字符串`S`，考虑将其进行原语化分解，使得：`S = P_1 + P_2 + ... + P_k`，其中`P_i`是有效括号字符串原语。
+
+对`S`进行原语化分解，删除分解中每个原语字符串的最外层括号，返回`S`。
+
+**示例：**
+
+```
+输入："(()())(())"
+输出："()()()"
+解释：
+输入字符串为 "(()())(())"，原语化分解得到 "(()())" + "(())"，
+删除每个部分中的最外层括号后得到 "()()" + "()" = "()()()"。
+
+输入："(()())(())(()(()))"
+输出："()()()()(())"
+解释：
+输入字符串为 "(()())(())(()(()))"，原语化分解得到 "(()())" + "(())" + "(()(()))"，
+删除每个部分中的最外层括号后得到 "()()" + "()" + "()(())" = "()()()()(())"。
+
+输入："()()"
+输出：""
+解释：
+输入字符串为 "()()"，原语化分解得到 "()" + "()"，
+删除每个部分中的最外层括号后得到 "" + "" = ""。
+```
+
+**思路与算法：**
+遍历字符串，**遇到左括号就入栈，遇到右括号就出栈**，每次**栈空**的时候，都说明找到了一个原语，记录下每个原语的起始位置和结束位置，取原字符串在原语的**起始位置+1**到原语的结束位置的子串便得到原语删除了最外层括号的字符串，拼接，即可解出答案。
+
+**代码：**
+```java
+class RemoveOutermostParentheses {
+    public String removeOuterParentheses(String string) {
+        StringBuilder ans = new StringBuilder();
+        Stack<Character> stack = new Stack<>();
+
+        int start = 0;  // 初始化原语的起始位置
+        int end = 0;  // 初始化原语的结束位置
+        boolean flag = false;  // 标志每个原语
+
+        for(int i = 0; i <string.length(); i++){
+            char ch = string.charAt(i);
+            // 遇到左括号，入栈
+            if(ch == '('){
+                stack.push(ch);
+                // 遇到的第一个左括号，是原语的开始位置，记录下原语开始位置
+                if(!flag){
+                    start = i;
+                    flag = true;
+                }
+            }
+
+            // 遇到右括号，出栈
+            if(ch == ')'){
+                stack.pop();
+                // 当栈空的时候，找到了一个完整的原语
+                if(stack.empty()){
+                    // 记录下结束位置
+                    end = i;
+                    // 去掉原语的最外层括号，并添加到答案中
+                    ans.append(string.substring(start + 1, end));
+
+                    // 置标志为false，往后接着找下一个原语
+                    flag = false;
+                    start = end;
+                }
+            }
+        }
+
+        return ans.toString();
+    }
+}
+```
+
+
+## 1047. 删除字符串中的所有相邻重复项(*)
+
+**题目：**
+给出由小写字母组成的字符串`S`，重复项删除操作会选择**两个相邻且相同的字母**，并删除它们。
+
+在`S`上反复执行重复项删除操作，直到无法继续删除。
+
+在完成所有重复项删除操作后返回最终的字符串。答案保证唯一。
+
+**示例：**
+
+```
+输入："abbaca"
+输出："ca"
+解释：
+例如，在 "abbaca" 中，我们可以删除 "bb" 由于两字母相邻且相同，这是此时唯一可以执行删除操作的重复项。之后我们得到字符串 "aaca"，其中又只有 "aa" 可以执行重复项删除操作，所以最后的字符串为 "ca"。
+```
+
+**思路与算法：**
+可以用栈来维护没有重复项的字母序列：
+- 若当前的字母和**栈顶**的字母相同，则弹出栈顶的字母；
+- 若当前的字母和**栈顶**的字母不同，则放入当前的字母。
+
+
+**代码：**
+```java
+class RemoveAllAdjacentDuplicatesInString {
+    public String removeDuplicates(String S) {
+        char[] s = S.toCharArray();
+        int len = s.length;
+        Stack<Character> stack = new Stack<>();
+        for (int i = 0; i < len; i++) {
+            /*
+            if(s[i] == stack.peek())
+                stack.pop();
+            else
+                stack.push(s[i]);*/
+            if(stack.empty() || s[i] != stack.peek())
+                stack.push(s[i]);
+            else
+                stack.pop();
+        }
+        /* 数据的展示可以继续优化 */
+        StringBuilder str = new StringBuilder();
+        for (Character c : stack) {
+            str.append(c);
+        }
+        return str.toString();
+    }
+}
+```
+
+## 1441. 用栈操作构建数组(*)
+
+**题目：**
+
+给你一个目标数组`target`和一个整数`n`。每次迭代，需要从`list = {1,2,3..., n}`中依序读取一个数字。
+
+请使用下述操作来构建目标数组`target`：
+- `Push`：从`list`中读取一个新元素，并将其推入数组中。
+- `Pop`：删除数组中的最后一个元素。
+
+如果目标数组构建完成，就停止读取更多元素。
+
+题目数据保证目标数组严格递增，并且只包含`1`到`n`之间的数字。请返回构建目标数组所用的操作序列。题目数据保证答案是唯一的。
+
+**示例：**
+
+```
+输入：target = [1,3], n = 3
+输出：["Push","Push","Pop","Push"]
+解释： 
+读取 1 并自动推入数组 -> [1]
+读取 2 并自动推入数组，然后删除它 -> [1]
+读取 3 并自动推入数组 -> [1,3]
+
+输入：target = [1,2,3], n = 3
+输出：["Push","Push","Push"]
+
+输入：target = [1,2], n = 4
+输出：["Push","Push"]
+解释：只需要读取前 2 个数字就可以停止。
+
+输入：target = [2,3,4], n = 4
+输出：["Push","Pop","Push","Push","Push"]
+```
+
+**代码：**
+
+```java
+class Solution {
+    public List<String> buildArray(int[] target, int n) {
+        List<String> result = new ArrayList<>();
+        int index = 0;
+        for (int i = 1; i <= n; i ++) {
+            // 存在的数字只需要"Push"
+            if (target[index] == i) {
+                result.add("Push");
+                index ++;
+                // 保证索引有效
+                if (index >= target.length) {
+                    break;
+                }
+            }
+            else {
+                result.add("Push");
+                result.add("Pop");
+            }
+        }
+        return result;
+    }
+}
+```
+
 ## 84. 柱状图中最大的矩形(***)
 
 给定`n`个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为1。
