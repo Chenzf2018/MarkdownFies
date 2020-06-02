@@ -226,3 +226,71 @@ public class Main5 {
     }
 }
 ```
+
+# 6.取近似值
+
+写出一个程序，接受一个正浮点数值，输出该数值的近似整数值。如果小数点后数值大于等于5，向上取整；小于5，则向下取整。
+
+```java
+import java.util.Scanner;
+
+/**
+ * # 6.取近似值
+ */
+
+public class Main6 {
+    public static void main(String[] args){
+        Scanner input = new Scanner(System.in);
+        System.out.println("请输入一个浮点数：");
+        double num = input.nextDouble();
+        System.out.println(getReturn(num));
+    }
+
+    private static int getReturn(double num){
+        int temp = (int) num;
+        return (num - temp) >= 0.5 ? temp + 1 : temp;
+    }
+}
+```
+
+# 7.汽水瓶
+
+“某商店规定：三个空汽水瓶可以换一瓶汽水。小张手上有十个空汽水瓶，她最多可以换多少瓶汽水喝？”答案是5瓶，方法如下：先用9个空瓶子换3瓶汽水，喝掉3瓶满的，喝完以后4个空瓶子，用3个再换一瓶，喝掉这瓶满的，**这时候剩2个空瓶子。然后你让老板先借给你一瓶汽水，喝掉这瓶满的，喝完以后用3个空瓶子换一瓶满的还给老板**。如果小张手上有n个空汽水瓶，最多可以换多少瓶汽水喝？
+
+```java
+import java.util.Scanner;
+
+/**
+ * 7.汽水瓶
+ */
+
+public class Main {
+    public static void main(String[] args){
+        Scanner input = new Scanner(System.in);
+        //System.out.println("请输入空汽水瓶数量：");
+        while(input.hasNext()){
+            int num = input.nextInt();
+            System.out.println(getResult(num));
+        }
+    }
+
+    private static int getResult(int num){
+        int result = 0;
+        while(num > 1){
+            if (num == 2)
+                num++;
+            num -= 3;
+            if (num >= 0 ){
+                num++;
+                result++;
+            }
+        }
+        return result;
+    }
+}
+```
+
+# 8.质数因子
+
+输入一个正整数（输入一个`long`型整数），按照从小到大的顺序输出它的所有质因子（重复的也要列举）（如180的质因子为2 2 3 3 5 ）最后一个数后面也要有空格。
+
