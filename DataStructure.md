@@ -2,10 +2,30 @@
 
 数据结构(data structure) 是以某种形式将数据组织在一起的`合集`(collection) 。数据结构不仅存储数据，还支持访问和处理数据的操作。
 
-在面向对象思想里，一种数据结构也被认为是一个`容器`(container) 或者`容器对象`(container object), 它是一个能存储其他对象的对象，这里的其他对象常称为数据或者元素。
+在面向对象思想里，一种数据结构也被认为是一个`容器`(container) 或者`容器对象`(container object)，它是一个能**存储其他对象**的对象，这里的其他对象常称为数据或者元素。
+
+## 为什么需要合集及其与数组的区别
+
+Java是一门面向对象的语言，就免不了**处理对象**；为了方便操作多个对象，那么我们就得把这多个对象存储起来；想要存储多个对象(变量)，很容易就能想到一个**容器**；常用的容器有`StringBuffered`，`数组`(虽然有对象数组，但是数组的长度是不可变的！)；所以，Java就为我们提供了合集(`Collection`)。
+
+数组和合集的区别:
+
+- 长度的区别
+  - 数组的长度固定；
+  - 集合的长度可变。
+
+- 元素的数据类型
+  - 数组可以存储基本数据类型，也可以存储引用类型；
+  - 集合只能存储**引用类型**(你存储的是简单的`int`，它会**自动装箱**成`Integer`)。
+
+
+## Java合集框架
 
 Java合集框架支持以下两种类型的容器：
 - 为了存储**键/值对**，称为**映射表(map)**。
+  - 如果要**保持插入顺序**的，我们可以选择`LinkedHashMap`；
+  - 如果不需要则选择`HashMap`；
+  - 如果要**排序**则选择`TreeMap`。
 - 为了存储**一个元素**合集，简称为**合集(collection)**；
   - `Set`用于存储一组**不重复**的元素。
   - `List`用于存储一个**有序**元素合集。
@@ -24,11 +44,31 @@ Java合集框架支持以下两种类型的容器：
 
 除开`java.util.PriorityQueue`没有实现`Cloneable`接口外， Java合集框架中的其他所有具体类都实现了`java.lang.Cloneable`和`java.io.Seria1izab1e`接口。因此，除开优先队列外，所有`Collection`的实例都是**可克隆**的、**可序列化**的。
 
+**常用的合集类：**
+
+`ArrayList, LinkedList, Vector; TreeSet, HashSet, LinkedHashSet`。
+
 ## 迭代器Iterator
 
 每种合集都是可迭代的(Iterable)。可以获得集合的`Iterator对象`来遍历合集中的所有元素。
 
-**`Collection`接口继承自`Iterable`接口**。`Iterable`接口中定义了`iterator`方法，<font color=red>该方法会返回一个迭代器</font>。`Iterator`接口为遍历各种类型的合集中的元素提供了一种统一的方法。`Iterable`接口中的`iterator()`方法返回一个`Iterator`的实例。
+**`Collection`接口继承自`Iterable`接口**(`public interface Collection<E> extends Iterable<E>`)。
+
+`Iterable`接口中定义了`iterator`方法，<font color=red>该方法会返回一个迭代器</font>。
+`Iterable`接口中的`iterator()`方法返回一个`Iterator`的实例(`Iterator<T> iterator();`)。
+`Iterator`也是一个接口，它有三个方法：`hasNext(); next(); remove()`。
+`Iterator`接口为**遍历各种类型的合集中的元素**提供了一种统一的方法。
+`iterator`是在`ArrayList`以内部类的方式实现的！并且，从源码可知：`Iterator`实际上就是在遍历集合。
+
+```java
+public Iterator<E> iterator() {
+    return new Itr();
+}
+
+private class Itr implements Iterator<E> {...}
+```
+
+遍历合集(Collection)的元素都可以使用`Iterator`，至于它的具体实现是以内部类的方式实现的！
 
 ```java {.line-numbers highlight=23}
 import java.util.*;
@@ -37,12 +77,16 @@ public class TestIterator
 {
     public static void main(String[] args)
     {
+        // 1.创建合集对象
         Collection<String> collection = new ArrayList<>();
+
+        // 2.创建元素对象；并把元素添加到合集
         collection.add("New York");
         collection.add("Atlanta");
         collection.add("Dallas");
         collection.add("Madison");
 
+        // 3.遍历合集
         // iterator()方法返回一个Iterator的实例
         Iterator<String> iterator = collection.iterator();
         while (iterator.hasNext())
@@ -62,17 +106,31 @@ The statement in line 23 uses a `lambda expression` in (a), which is equivalent 
 
 <div align=center><img src=DataStructure\lambda.jpg width=80%></div>
 
+
 # 线性表List
+
+`List`集合常用的子类有三个：
+- ArrayList
+    底层数据结构是**数组**。线程**不安全**。
+
+- LinkedList
+    底层数据结构是**链表**。线程**不安全**。
+
+- Vector
+    底层数据结构是**数组**。线程**安全**。
 
 `Arraylist`和`Linkedlist`定义在`List`接口下。`List`接口继承`Collection`接口，定义了一个**允许重复**的**有序**合集。
 
-<div align=center><img src=DataStructure\List.jpg width=80%></div>
+<div align=center><img src=DataStructure\List.jpg width=90%></div>
+
+`Collection`返回的是`Iterator`迭代器接口，而`List`中又有它自己对应的实现`ListIterator`接口。该接口比普通的Iterator接口多了几个方法：`previous(), add(E e), set(E e)`等。
 
 方法`listIterator()`或`listIterator(startlndex)`都会返回`ListIterator`的一个实例。`ListIterator`接口继承了`Iterator`接口，以增加对线性表的双向遍历能力。
 
 <div align=center><img src=DataStructure\ListIterator.jpg width=70%></div>
 
-## 数组线性表类ArrayList和链表类LinkedList
+
+## 数组线性表类ArrayList
 
 `ArrayList`用数组存储元素，这个数组是**动态创建**的。<font color=red>如果元素个数超过了数组的容量，就创建一个更大的新数组，并将当前数组中的所有元素都复制到新数组中</font>。`LinkedList`在一个链表(linked list)中存储元素。
 
@@ -83,8 +141,60 @@ The statement in line 23 uses a `lambda expression` in (a), which is equivalent 
 `ArrayList`使用**可变大小的数组**实现List接口：
 <div align=center><img src=DataStructure\ArrayList.jpg width=70%></div>
 
-`LinkedList`使用**链表**实现`List`接口。除了实现`List`接口外，这个类还提供**从线性表两端**提取、插入和删除元素的方法：
+```java
+public class ArrayList<E> extends AbstractList<E>
+        implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+{
+    /**
+     * Default initial capacity.
+     */
+    private static final int DEFAULT_CAPACITY = 10;
+
+    /**
+    * 指定该ArrayList容量为0时，返回该空数组。
+    */
+    private static final Object[] EMPTY_ELEMENTDATA = {};
+}
+```
+
+`ArrayList`**底层其实就是一个数组**，`ArrayList`中有**扩容**这么一个概念，正因为它扩容，所以它能够实现“动态”增长。
+
+<div align=center><img src=DataStructure\ArrayList.png></div>
+
+**小结：**
+- `ArrayList`是基于**动态数组**实现的，在增删时候，需要数组的**拷贝复制**(`navite`方法由C/C++实现)。
+- `ArrayList`的默认初始化容量是10，每次扩容时候增加原先容量的一半，也就是变为原来的**1.5倍**。
+- 删除元素时不会减少容量，若希望减少容量则调用`trimToSize()`。
+- 它**不是线程安全的**。它能存放`null`值。
+
+
+## 链表类LinkedList
+
+`LinkedList`使用**双向链表**实现`List`接口。除了实现`List`接口外，这个类还提供**从线性表两端**提取、插入和删除元素的方法：
+
 <div align=center><img src=DataStructure\LinkedList.jpg width=70%></div>
+
+```java
+public class LinkedList<E>
+    extends AbstractSequentialList<E>
+    implements List<E>, Deque<E>, Cloneable, java.io.Serializable
+```
+
+<div align=center><img src=DataStructure\LinkedList.png></div>
+
+`LinkedList`实现了`Deque`接口，因此，我们可以操作`LinkedList`像操作队列和栈一样。
+
+**总结：**
+
+**查询**多用`ArrayList`，**增删**多用`LinkedList`。
+
+`ArrayList`增删慢不是绝对的(在数量大的情况下，已测试)：
+- 如果增加元素一直是使用`add()`(**增加到末尾**)的话，那是`ArrayList`要快；
+- 一直**删除末尾**的元素也是`ArrayList`要快(不用复制移动位置)；
+- 至于如果删除的是**中间的位置**的话，还是`ArrayList`要快！
+    - 如果删除的是中间的位置的话，需要两个步骤：1.遍历找到这个元素；2.进行删除增加操作。大样本时，`ArrayList`的第一步操作会快很多。
+
+但一般来说：增删多还是用`LinkedList`。
 
 ```java
 import java.util.*;
@@ -120,6 +230,30 @@ public class TestArrayAndLinkedList
   }
 }
 ```
+
+## 向量类和栈类
+
+Java合集框架是在Java 2中引入的。Java 2之前的版本也支持一些数据结构，其中就有`向量类Vector`与`栈类Stack`。为了适应Java合集框架，Java 2对这些类进行了重新设计，但是为了向后兼容，保留了它们所有的以前形式的方法。
+
+除了包含用于**访问**和**修改**向量的**同步方法**之外， Vector类与Arraylist是一样的。同步方法用于防止两个或多个线程同时访问和修改某个向量时引起数据损坏。<font color=red>对于许多不需要同步的应用程序来说，使用Arraylist比使用Vector效率更高</font>。
+
+<div align=center><img src=DataStructure\Vector.jpg width=80%></div>
+
+方法`elements()`返回一个`Enumeration`对象（枚举型对象）。`Enumeration`接口是在Java 2之前引入的，已经被`Iterator`接口所取代。
+
+在Java合集框架中，栈类Stack是作为Vector类的扩展来实现的：
+<div align=center><img src=DataStructure\Stack.jpg width=70%></div>
+
+### Vector与ArrayList区别
+
+- `Vector`底层也是数组，与`ArrayLis`t最大的区别就是：同步(**线程安全**)。如果想要`ArrayList`实现同步，可以使用`Collections`的方法：`List list = Collections.synchronizedList(new ArrayList(...));`，就可以实现同步。
+
+- ArrayList在底层数组不够用时在原来的基础上扩展`0.5`倍，Vector是扩展`1`倍。
+
+
+## 总结
+<div align=center><img src=DataStructure\List总结.jpg></div>
+
 
 # Comparator接口
 
@@ -250,18 +384,8 @@ public class SortStringIgnoreCase
 <div align=center><img src=DataStructure\Collections.jpg width=90%></div>
 
 
-# 向量类和栈类
 
-Java合集框架是在Java 2中引入的。Java 2之前的版本也支持一些数据结构，其中就有`向量类Vector`与`栈类Stack`。为了适应Java合集框架，Java 2对这些类进行了重新设计，但是为了向后兼容，保留了它们所有的以前形式的方法。
 
-除了包含用于**访问**和**修改**向量的**同步方法**之外， Vector类与Arraylist是一样的。同步方法用于防止两个或多个线程同时访问和修改某个向量时引起数据损坏。<font color=red>对于许多不需要同步的应用程序来说，使用Arraylist比使用Vector效率更高</font>。
-
-<div align=center><img src=DataStructure\Vector.jpg width=80%></div>
-
-方法`elements()`返回一个`Enumeration`对象（枚举型对象）。`Enumeration`接口是在Java 2之前引入的，已经被`Iterator`接口所取代。
-
-在Java合集框架中，栈类Stack是作为Vector类的扩展来实现的：
-<div align=center><img src=DataStructure\Stack.jpg width=70%></div>
 
 
 # 队列和优先队列
@@ -334,9 +458,236 @@ public class PriorityQueueDemo
 }
 ```
 
+# 映射表Map
+
+映射表(map)类似于目录，提供了使用**键key**快速查询和荻取**值value**的功能。
+
+映射表(map) 是一种依照**键/值对**存储元素的容器。它提供了通过键快速获取、删除和更新键/值对的功能。映射表将值和键一起保存。键很像下标。在`List`中，下标是整数；而在`Map`中，键可以是**任意类型的对象**。映射表中**不能有重复的键**，每个键都对应一个值。一个键和它的对应值构成一个条目并保存在映射表中。
+
+<div align=center><img src=DataStructure\映射表.jpg></div>
+
+
+**链表**和**数组**都可以按照人们的意愿来排列元素的次序，他们可以说是有序的(存储的顺序和取出的顺序是一致的)。但同时，这会带来缺点：想要获取某个元素，就要访问所有的元素，直到找到为止。而**散列表**不在意元素的顺序，能够快速的查找元素的数据。
+
+
+## 散列表工作原理
+
+散列表为每个对象计算出一个整数，称为**散列码**（例如：用`hashCode`函数得出`Lee`的散列码为`76268`）。根据这些计算出来的整数(散列码)保存在对应的位置上！在Java中，**散列表用的是链表+数组实现的**，每个列表称之为桶。
+
+
+## 映射表三种类型
+
+映射表有三种类型：散列映射表`HashMap` 、链式散列映射表`LinkedHashMap`和树形映射表`TreeMap`。这些映射表的通用特性都定义在`Map`接口中：
+
+<div align=center><img src=DataStructure\三种映射表.jpg width=90%></div>
+
+`Map接口`提供了查询、更新和获取合集的值和合集的键的方法：
+
+<div align=center><img src=DataStructure\Map接口.jpg width=80%></div>
+
+`HashMap`、`LinkedHashMap`和`TreeMap`类是`Map`接口的三个具体实现：
+
+<div align=center><img src=DataStructure\三种映射表关系.jpg width=80%></div>
+
+对于**定位**一个值、**插入**一个条目以及**删除**一个条目而言，`HashMap`类是高效的。
+
+- `AbstractMap`类是一个便利抽象类，它实现了Map接口中除了`entrySet()`方法之外的所有方法。
+  
+- `LinkedHashMap`类用链表实现来扩展`HashMap`类，它支持映射表中条目的**排序**。`HashMap`类中的条目是**没有顺序**的，但是在`LinkedHashMap`中，<font color=red>元素既可以按照它们插入映射表的顺序排序（称为插入顺序`insertion order`), 也可以按它们被最后一次访问时的顺序，从最早到最晚（称为访问顺序`access order`) 排序</font>。
+  - **无参构造方法**是以**插入顺序**来创建`LinkedHashMap`对象的。
+  - 要按**访问顺序**创建`LinkedHashMap`对象，应该使用构造方法`LinkedHashMap(initialCapacity,loadFactor, true)`。
+
+- `TreeMap`类在<font color=red>遍历排好顺序的键时是很高效的</font>。
+  - 键可以使用`Comparable`接口或`Comparator`接口来排序。如果使用它的**无参构造方法**创建一个`TreeMap`对象，假定键的类实现了`Comparable`接口，则可以使用`Comparable`接口中的`compareTo`方法来对映射表内的键进行比较。
+  - 要使用**比较器**，必须使用构造方法`TreeMap(Comparator comparator)`来创建一个有序映射表，这样，该映射表中的条目就能使用比较器中的`compare`方法按键进行排序。
+
+- `SortedMap`是`Map`的一个子接口，使用它可确保映射表中的条目是**排好序**的。除此之外，它还提供方法`firstKey()`和`lastKey()`来返回映射表中的第一个和最后一个键，而方法`headMap(toKey)`和`tailMap(fromKey)`分别返回键**小于**`toKey`的那部分映射表和键**大于或等于**`fromKey`的那部分映射表。
+
+- `NavigableMap`继承了`SortedMap`, 以提供导航方法`lowerKey(key)`、`floorKey(key)`、`ceilingKey(key)`和`higherKey(key)`来分别返回**小于**、**小于或等于**、**大于或等于**、**大于**某个给定键的键，如果没有这样的键，它们都会返回`null` 。方法`pollFirstEntry()`和`pollLastEntry()`分别**删除**并**返回**树映射表中的第一个和最后一个条目。
+
+
+## HashMap
+
+<div align=center><img src=DataStructure\HashMap.png></div>
+
+**小结：**
+- 无序，允许为`null`，非同步；
+- 底层由**散列表(哈希表)**实现（Java中散列表的实现是通过**数组+链表**）；
+- 初始容量和装载因子对HashMap影响较大，需适中。
+- **不需要线程安全**的场合可以用`HashMap`，需要线程安全的场合可以用`ConcurrentHashMap`。
+
+在JDK8中HashMap的底层是：**数组+链表(散列表)+红黑树**；
+
+在散列表中有**装载因子**这么一个属性，当`装载因子*初始容量`小于散列表元素时，该散列表会再散列，扩容`2`倍！
+
+装载因子的默认值是`0.75`，无论是初始大了还是初始小了对我们HashMap的性能都不好：
+- 装载因子初始值大了，可以减少散列表再散列(扩容的次数)，但同时会导致散列冲突的可能性变大(散列冲突也是耗性能的一个操作，要得操作链表(红黑树)！
+- 装载因子初始值小了，可以减小散列冲突的可能性，但同时扩容的次数可能就会变多！
+
+初始容量的默认值是`16`，它也一样，无论初始大了还是小了，对我们的HashMap都是有影响的：
+
+- 初始容量过大，那么遍历时速度就会受影响；
+- 初始容量过小，散列表再散列(扩容的次数)可能就变得多，扩容也是一件非常耗费性能的一件事；
+
+从源码上可以发现：**HashMap并不是直接拿key的哈希值来用的，它会将key的哈希值的高16位进行异或操作**，使得我们将元素放入哈希表的时候增加了一定的随机性。
+
+还要值得注意的是：并不是桶子上有8位元素的时候它就能变成红黑树，它得同时满足我们的散列表容量大于64才行。
+
+
+## LinkedHashMap
+
+- 底层是**散列表**和**双向链表**；
+- 允许为`null`，**不同步**；
+- 插入的顺序是有序的(底层链表致使有序)
+- 装载因子和初始容量对LinkedHashMap影响是很大的
+
+
+## TreeMap
+
+- `TreeMap`实现了`NavigableMap`接口，而`NavigableMap`接口继承着`SortedMap`接口，致使我们的`TreeMap`是**有序**的！
+- TreeMap底层是红黑树，它方法的时间复杂度都不会太高$log(n)$；
+- 非同步
+- 使用`Comparator`或者`Comparable`来比较`key`是否相等与排序的问题。
+- key**不能为null**，为null为抛出NullPointException的。
+
+
+## 示例
+
+```java
+import java.util.*;
+
+public class TestMap
+{
+    public static void main(String[] args)
+    {
+        // Create a HashMap
+        Map<String, Integer> hashMap = new HashMap<>();
+        hashMap.put("Smith", 30);
+        hashMap.put("Anderson", 31);
+        hashMap.put("Lewis", 29);
+        hashMap.put("Cook", 29);
+
+        System.out.println("Display entries in HashMap");
+        System.out.println(hashMap + "\n");
+
+        // Create a TreeMap from the preceding HashMap
+        Map<String, Integer> treeMap = new TreeMap<>(hashMap);
+        System.out.println("Display entries in ascending order of key");
+        System.out.println(treeMap);
+
+        // Create a LinkedHashMap
+        Map<String, Integer> linkedHashMap = new LinkedHashMap<>(16, 0.75f, true);
+        linkedHashMap.put("Smith", 30);
+        linkedHashMap.put("Anderson", 31);
+        linkedHashMap.put("Lewis", 29);
+        linkedHashMap.put("Cook", 29);
+
+        // Display the age for Lewis
+        System.out.println("\nThe age for " + "Lewis is " + linkedHashMap.get("Lewis"));
+
+        System.out.println("Display entries in LinkedHashMap");
+        System.out.println(linkedHashMap);
+
+        // Display each entry with name and age
+        System.out.print("\nNames and ages are ");
+        treeMap.forEach((name, age) -> System.out.print(name + ": " + age + " "));
+  }
+}
+/*
+Display entries in HashMap
+{Lewis=29, Smith=30, Cook=29, Anderson=31}
+
+Display entries in ascending order of key
+{Anderson=31, Cook=29, Lewis=29, Smith=30}
+
+The age for Lewis is 29
+Display entries in LinkedHashMap
+{Smith=30, Anderson=31, Cook=29, Lewis=29}
+
+Names and ages are Anderson: 31 Cook: 29 Lewis: 29 Smith: 30 
+ */
+```
+
+输出结果显示：`HashMap`中条目的顺序是**随机**的，而`TreeMap`中的条目是**按键的升序排列**的， `LinkedHashMap`中的条目则是按元素最后一次被访问的时间从早到晚排序的。
+
+实现`Map`接口的所有具体类至少有两种构造方法： 一种是**无参构造方法**，它可用来创建一个**空映射表**，而另一种构造方法是**从Map的一个实例来创建映射表**。所以，语句`new TreeMap <String , Integer>(hashMap)`就是从一个散列映射表来创建一个树形映射表。
+
+- 如果更新映射表时**不需要保持映射表中元素的顺序**，就使用`HashMap`;
+- 如果需要保持映射表中元素的**插入顺序**或**访问顺序**，就使用`LinkedHashMap`; 
+- 如果需要使映射表**按照键排序**，就使用`TreeMap`。
+
+## 单词出现的次数
+
+统计一个文本中单词的出现次数，然后按照单词的宇母顺序显示这些单词以及它们对应的出现次数。
+
+本程序使用一个`TreeMap`来存储包含单词及其次数的条目。对于每一个单词来说，都要判断它是否已经是映射表中的一个键。如果不是，将由这个**单词为键**而**1为值**构成的条目存入该映射表中。否则，将映射表中该单词（键）对应的值加1。假定单词是不区分大小写的。
+
+```java
+import java.util.*;
+
+public class CountOccurrenceOfWords
+{
+    public static void main(String[] args)
+    {
+        // Set text in a string
+        String text = "Good morning. Have a good class. " +
+                "Have a good visit. Have fun!";
+
+        // Create a TreeMap to hold words as key and count as value
+        Map<String, Integer> map = new TreeMap<>();
+
+        String[] words = text.split("[\\s+\\p{P}]");
+        for (int i = 0; i < words.length; i++)
+        {
+            String key = words[i].toLowerCase();
+
+            if (key.length() > 0)
+            {
+                if (!map.containsKey(key))
+                    map.put(key, 1);
+                else
+                    {
+                        int value = map.get(key);
+                        value++;
+                        map.put(key, value);
+                    }
+            }
+        }
+
+        // Display key and value for each entry
+        map.forEach((k, v) -> System.out.println(k + "\t" + v));
+    }
+}
+/*
+a	2
+class	1
+fun	1
+good	3
+have	3
+morning	1
+visit	1
+ */
+```
+
+
+## 总结
+
+<div align=center><img src=DataStructure\Map总结.jpg></div>
+
 # 集合Set
 
 集合(set)是一个用于存储和处理**无重复元素**的高效数据结构。
+
+Set集合常用子类：
+- HashSet集合
+    底层数据结构是**哈希表**(是一个元素为链表的数组)
+
+- TreeSet集合
+    - 底层数据结构是**红黑树**(是一个自平衡的二叉树)
+    - 保证元素的**排序**方式
+
+- LinkedHashSet集合
+    底层数据结构由**哈希表和链表**组成。
 
 `Set`接口扩展了`Collection`合集接口：
 <div align=center><img src=DataStructure\集合类.jpg width=80%></div>
@@ -385,7 +736,9 @@ BEIJING NEW YORK LONDON
 
 ## 链式散列集LinkedHashSet
 
-`LinkedHashSet`用一个**链表**实现来扩展`HashSet`类，它支持对集合内的元素**排序**。`HashSet`中的元素是没有被排序的，而`LinkedHashSet`中的元素可以<font color=red>按照它们插入集合的顺序提取</font>。
+>LinkedHashSet extends HashSet with a linked-list implementation that supports an ordering of the elements in the set.
+
+`HashSet`中的元素是没有被排序的，而`LinkedHashSet`中的元素可以<font color=red>按照它们插入集合的顺序提取</font>。
 
 ```java
 import java.util.LinkedHashSet;
@@ -418,7 +771,7 @@ London Beijing New York
 
 ## 树形集TreeSet
 
-`SortedSet`是`Set`的一个子接口，它可以确保集合中的元素是有序的。另外，它还提供方法`frst()`和`last()`以返回集合中的第一个元素和最后一个元素，以及方法`headSet(toElement)`和`tailSet(fromElement)`以分别返回集合中元素**小于**`toElement`和**大于或等于**`fromElement`的那一部分。
+`SortedSet`是`Set`的一个子接口，它可以确保集合中的元素是**有序**的。另外，它还提供方法`frst()`和`last()`以返回集合中的第一个元素和最后一个元素，以及方法`headSet(toElement)`和`tailSet(fromElement)`以分别返回集合中元素**小于**`toElement`和**大于或等于**`fromElement`的那一部分。
 
 `NavigableSet`扩展了`SortedSet`, 并提供导航方法`lower(e)`、`floor(e)`、`ceiling(e)`和`higher(e)`以分别返回**小于**、**小于或等于**、**大于或等于**以及**大于**一个给定元素的元素。如果没有这样的元素，方法就返回`null`。方法`pollFirst()`和`pollLast()`会分别**删除**和**返回**树形集中的第一个元素和最后一个元素。
 
@@ -773,155 +1126,3 @@ The number of keywords in D:\Learning_Java\Java_Code\Inheritance\src\inheritance
  */
 ```
 
-# 映射表Map
-
-映射表(map)类似于目录，提供了使用**键值key**快速查询和荻取**值value**的功能。
-
-映射表(map) 是一种依照**键/值对**存储元素的容器。它提供了通过键快速获取、删除和更新键／值对的功能。映射表将值和键一起保存。键很像下标。在`List`中，下标是整数；而在`Map`中，键可以是**任意类型的对象**。映射表中**不能有重复的键**，每个键都对应一个值。一个键和它的对应值构成一个条目并保存在映射表中。
-
-<div align=center><img src=DataStructure\映射表.jpg></div>
-
-映射表有三种类型：散列映射表`HashMap` 、链式散列映射表`LinkedHashMap`和树形映射表`TreeMap`。这些映射表的通用特性都定义在`Map`接口中：
-
-<div align=center><img src=DataStructure\三种映射表.jpg width=90%></div>
-
-`Map接口`提供了查询、更新和获取合集的值和合集的键的方法：
-
-<div align=center><img src=DataStructure\Map接口.jpg></div>
-
-`HashMap`、`LinkedHashMap`和`TreeMap`类是`Map`接口的三个具体实现：
-
-<div align=center><img src=DataStructure\三种映射表关系.jpg></div>
-
-对于**定位**一个值、**插入**一个条目以及**删除**一个条目而言，`HashMap`类是高效的。
-
-- `AbstractMap`类是一个便利抽象类，它实现了Map接口中除了`entrySet()`方法之外的所有方法。
-  
-- `LinkedHashMap`类用链表实现来扩展`HashMap`类，它支持映射表中条目的**排序**。`HashMap`类中的条目是**没有顺序**的，但是在`LinkedHashMap`中，<font color=red>元素既可以按照它们插入映射表的顺序排序（称为插入顺序`insertion order`), 也可以按它们被最后一次访问时的顺序，从最早到最晚（称为访问顺序`access order`) 排序</font>。
-  - **无参构造方法**是以**插入顺序**来创建`LinkedHashMap`对象的。
-  - 要按**访问顺序**创建`LinkedHashMap`对象，应该使用构造方法`LinkedHashMap(initialCapacity,loadFactor, true)`。
-
-- `TreeMap`类在<font color=red>遍历排好顺序的键时是很高效的</font>。
-  - 键可以使用`Comparable`接口或`Comparator`接口来排序。如果使用它的**无参构造方法**创建一个`TreeMap`对象，假定键的类实现了`Comparable`接口，则可以使用`Comparable`接口中的`compareTo`方法来对映射表内的键进行比较。
-  - 要使用**比较器**，必须使用构造方法`TreeMap(Comparator comparator)`来创建一个有序映射表，这样，该映射表中的条目就能使用比较器中的`compare`方法按键进行排序。
-
-- `SortedMap`是`Map`的一个子接口，使用它可确保映射表中的条目是**排好序**的。除此之外，它还提供方法`firstKey()`和`lastKey()`来返回映射表中的第一个和最后一个键，而方法`headMap(toKey)`和`tailMap(fromKey)`分别返回键**小于**`toKey`的那部分映射表和键**大于或等于**`fromKey`的那部分映射表。
-
-- `NavigableMap`继承了`SortedMap`, 以提供导航方法`lowerKey(key)`、`floorKey(key)`、`ceilingKey(key)`和`higherKey(key)`来分别返回**小于**、**小于或等于**、**大于或等于**、**大于**某个给定键的键，如果没有这样的键，它们都会返回`null` 。方法`pollFirstEntry()`和`pollLastEntry()`分别**删除**并**返回**树映射表中的第一个和最后一个条目。
-
-
-```java
-import java.util.*;
-
-public class TestMap
-{
-    public static void main(String[] args)
-    {
-        // Create a HashMap
-        Map<String, Integer> hashMap = new HashMap<>();
-        hashMap.put("Smith", 30);
-        hashMap.put("Anderson", 31);
-        hashMap.put("Lewis", 29);
-        hashMap.put("Cook", 29);
-
-        System.out.println("Display entries in HashMap");
-        System.out.println(hashMap + "\n");
-
-        // Create a TreeMap from the preceding HashMap
-        Map<String, Integer> treeMap = new TreeMap<>(hashMap);
-        System.out.println("Display entries in ascending order of key");
-        System.out.println(treeMap);
-
-        // Create a LinkedHashMap
-        Map<String, Integer> linkedHashMap = new LinkedHashMap<>(16, 0.75f, true);
-        linkedHashMap.put("Smith", 30);
-        linkedHashMap.put("Anderson", 31);
-        linkedHashMap.put("Lewis", 29);
-        linkedHashMap.put("Cook", 29);
-
-        // Display the age for Lewis
-        System.out.println("\nThe age for " + "Lewis is " + linkedHashMap.get("Lewis"));
-
-        System.out.println("Display entries in LinkedHashMap");
-        System.out.println(linkedHashMap);
-
-        // Display each entry with name and age
-        System.out.print("\nNames and ages are ");
-        treeMap.forEach((name, age) -> System.out.print(name + ": " + age + " "));
-  }
-}
-/*
-Display entries in HashMap
-{Lewis=29, Smith=30, Cook=29, Anderson=31}
-
-Display entries in ascending order of key
-{Anderson=31, Cook=29, Lewis=29, Smith=30}
-
-The age for Lewis is 29
-Display entries in LinkedHashMap
-{Smith=30, Anderson=31, Cook=29, Lewis=29}
-
-Names and ages are Anderson: 31 Cook: 29 Lewis: 29 Smith: 30 
- */
-```
-
-输出结果显示：`HashMap`中条目的顺序是**随机**的，而`TreeMap`中的条目是**按键的升序排列**的， `LinkedHashMap`中的条目则是按元素最后一次被访问的时间从早到晚排序的。
-
-实现`Map`接口的所有具体类至少有两种构造方法： 一种是**无参构造方法**，它可用来创建一个**空映射表**，而另一种构造方法是**从Map的一个实例来创建映射表**。所以，语句`new TreeMap <String , Integer>(hashMap)`就是从一个散列映射表来创建一个树形映射表。
-
-- 如果更新映射表时**不需要保持映射表中元素的顺序**，就使用`HashMap`;
-- 如果需要保持映射表中元素的**插入顺序**或**访问顺序**，就使用`LinkedHashMap`; 
-- 如果需要使映射表**按照键排序**，就使用`TreeMap`。
-
-## 单词出现的次数
-
-统计一个文本中单词的出现次数，然后按照单词的宇母顺序显示这些单词以及它们对应的出现次数。
-
-本程序使用一个`TreeMap`来存储包含单词及其次数的条目。对于每一个单词来说，都要判断它是否已经是映射表中的一个键。如果不是，将由这个**单词为键**而**1为值**构成的条目存入该映射表中。否则，将映射表中该单词（键）对应的值加1。假定单词是不区分大小写的。
-
-```java
-import java.util.*;
-
-public class CountOccurrenceOfWords
-{
-    public static void main(String[] args)
-    {
-        // Set text in a string
-        String text = "Good morning. Have a good class. " +
-                "Have a good visit. Have fun!";
-
-        // Create a TreeMap to hold words as key and count as value
-        Map<String, Integer> map = new TreeMap<>();
-
-        String[] words = text.split("[\\s+\\p{P}]");
-        for (int i = 0; i < words.length; i++)
-        {
-            String key = words[i].toLowerCase();
-
-            if (key.length() > 0)
-            {
-                if (!map.containsKey(key))
-                    map.put(key, 1);
-                else
-                    {
-                        int value = map.get(key);
-                        value++;
-                        map.put(key, value);
-                    }
-            }
-        }
-
-        // Display key and value for each entry
-        map.forEach((k, v) -> System.out.println(k + "\t" + v));
-    }
-}
-/*
-a	2
-class	1
-fun	1
-good	3
-have	3
-morning	1
-visit	1
- */
-```
