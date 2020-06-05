@@ -8,7 +8,7 @@ int value = 129;
 String aString = "Hello World!";
 ```
 
-如果想把**一块代码**赋给一个Java变量，应该怎么做呢？
+如果想**把一块代码赋给一个Java变量**，应该怎么做呢？
 
 比如，想把右边那块代码，赋给一个叫做`aBlockOfCode`的Java变量：
 <div align=center><img src=Lambda\Lambda1.jpg></div>
@@ -384,6 +384,345 @@ public class Exe1
     public int addTwo(int a)
     {
         return a + 2;
+    }
+}
+```
+
+# Lambda解释三
+
+参考资料：[Lambda表达式详解-HOW2J](https://how2j.cn/k/lambda/lambda-lamdba-tutorials/697.html)
+
+## Hello Lambda
+
+假设一个情景：找出满足条件的Hero。
+
+### 普通方法
+
+使用一个普通方法，在`for`循环遍历中进行条件判断(`hp>100 && damage<50`)，筛选出满足条件的数据：
+
+`// Hero.java`
+
+```java
+package Basic.charactor;
+
+public class Hero implements Comparable<Hero>
+{
+    public String name;
+    public float hp;
+    public int damage;
+
+    public Hero(){
+
+    }
+
+    public Hero(String name){
+        this.name = name;
+    }
+
+    public Hero(String name, float hp, int damage){
+        this.name = name;
+        this.hp = hp;
+        this.damage = damage;
+    }
+
+    /**
+     * public interface Comparable<T> {
+     *  public int compareTo(T o);
+     * }
+     */
+    @Override
+    public int compareTo(Hero anotherHero){
+        if (damage < anotherHero.damage)
+            return 1;
+        else
+            return -1;
+    }
+
+    @Override
+    public String toString(){
+        return "Hero [name=" + name + ", hp=" + hp + ", damage=" + damage + "]\n";
+    }
+}
+```
+
+`TestLambda`
+
+```java
+package Basic.lambda;
+
+import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
+
+import Basic.charactor.Hero;
+
+public class TestLambda {
+    public static void main(String[] args){
+        Random random = new Random();
+        List<Hero> heroes = new ArrayList<>();
+        for (int i = 0; i < 10; i++)
+            heroes.add(new Hero("hero " + i, random.nextInt(1000), random.nextInt(1000)));
+
+        System.out.println("初始化后的集合：");
+        System.out.println(heroes);
+        System.out.println("筛选出 hp>100 && damange<50的英雄");
+        filter(heroes);
+    }
+
+    private static void filter(List<Hero> heroes){
+        for (Hero hero : heroes){
+            if (hero.hp > 100 && hero.damage < 50)
+                System.out.print(hero);
+        }
+    }
+}
+```
+
+`输出：`
+
+```
+初始化后的集合：
+[Hero [name=hero 0, hp=540.0, damage=664]
+, Hero [name=hero 1, hp=877.0, damage=754]
+, Hero [name=hero 2, hp=155.0, damage=515]
+, Hero [name=hero 3, hp=171.0, damage=332]
+, Hero [name=hero 4, hp=954.0, damage=222]
+, Hero [name=hero 5, hp=337.0, damage=698]
+, Hero [name=hero 6, hp=885.0, damage=81]
+, Hero [name=hero 7, hp=950.0, damage=28]
+, Hero [name=hero 8, hp=577.0, damage=140]
+, Hero [name=hero 9, hp=489.0, damage=460]
+]
+筛选出 hp>100 && damange<50的英雄
+Hero [name=hero 7, hp=950.0, damage=28]
+
+Process finished with exit code 0
+```
+
+### 匿名类方式
+
+首先准备一个接口`HeroChecker`，提供一个`test(Hero)`方法：
+```java
+package Basic.lambda;
+
+import Basic.charactor.Hero;
+
+public interface HeroChecker {
+    public boolean test(Hero hero);
+}
+```
+
+然后通过匿名类的方式，实现这个接口：
+```java
+HeroChecker checker = new HeroChecker() {
+	public boolean test(Hero h) {
+		return (h.hp>100 && h.damage<50);
+	}
+};
+```
+
+接着调用`filter`，传递这个`checker`进去进行判断，这种方式就很像通过`Collections.sort`在对一个`Hero`集合排序，需要传一个`Comparator`的匿名类对象进去一样。
+
+```java
+package Basic.lambda;
+
+import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
+
+import Basic.charactor.Hero;
+
+public class TestLambda {
+    public static void main(String[] args){
+        Random random = new Random();
+        List<Hero> heroes = new ArrayList<>();
+        for (int i = 0; i < 5; i++)
+            heroes.add(new Hero("hero " + i, random.nextInt(1000), random.nextInt(1000)));
+
+        System.out.println("初始化后的集合：");
+        System.out.println(heroes);
+        System.out.println("筛选出 hp>100 && damange<50的英雄");
+
+        HeroChecker checker = new HeroChecker() {
+            @Override
+            public boolean test(Hero hero) {
+                return (hero.hp > 100 && hero.damage < 50);
+            }
+        };
+
+        filter(heroes, checker);
+    }
+
+    private static void filter(List<Hero> heroes, HeroChecker checker){
+        for (Hero hero : heroes){
+            if (checker.test(hero))
+                System.out.print(hero);
+        }
+    }
+}
+
+/*
+初始化后的集合：
+[Hero [name=hero 0, hp=965.0, damage=14]
+, Hero [name=hero 1, hp=618.0, damage=284]
+, Hero [name=hero 2, hp=519.0, damage=164]
+, Hero [name=hero 3, hp=599.0, damage=447]
+, Hero [name=hero 4, hp=603.0, damage=568]
+]
+筛选出 hp>100 && damange<50的英雄
+Hero [name=hero 0, hp=965.0, damage=14]
+*/
+```
+
+### Lambda方式
+
+```java {.line-numbers highlight=20}
+package Basic.lambda;
+
+import Basic.charactor.Hero;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class TestLambda1 {
+    public static void main(String[] args){
+        Random random = new Random();
+        List<Hero> heroes = new ArrayList<>();
+        for (int i = 0; i < 5; i++)
+            heroes.add(new Hero("hero " + i, random.nextInt(1000), random.nextInt(1000)));
+
+        System.out.println("初始化后的集合：");
+        System.out.println(heroes);
+        System.out.println("筛选出 hp>100 && damange<50的英雄");
+
+        filter(heroes, hero -> hero.hp > 100 && hero.damage < 50);
+    }
+
+    private static void filter(List<Hero> heroes, HeroChecker checker){
+        for (Hero hero : heroes){
+            if (checker.test(hero))
+                System.out.print(hero);
+        }
+    }
+}
+```
+
+Lambda其实就是匿名方法，这是一种**把方法作为参数进行传递**的编程思想。Java会在背后，悄悄的，把这些都还原成匿名类方式。引入Lambda表达式，会使得代码更加紧凑，而不是各种接口和匿名类到处飞。
+
+
+## Lambda方法引用
+
+### 引用静态方法
+
+```java {.line-numbers highlight=44}
+package Basic.lambda;
+
+import Basic.charactor.Hero;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class TestLambda2 {
+    public static void main(String[] args){
+        Random random = new Random();
+        List<Hero> heroes = new ArrayList<>();
+        for (int i = 0; i < 5; i++)
+            heroes.add(new Hero("hero " + i, random.nextInt(1000), random.nextInt(1000)));
+
+        System.out.println("初始化后的集合：");
+        System.out.println(heroes);
+        System.out.println("筛选出 hp>100 && damange<50的英雄");
+
+        // 匿名类
+        /*
+        import Basic.charactor.Hero;
+        public interface HeroChecker {
+        public boolean test(Hero hero);
+        }
+         */
+        HeroChecker checker = new HeroChecker() {
+            @Override
+            public boolean test(Hero hero) {
+                return (hero.hp > 100 && hero.damage < 50);
+            }
+        };
+
+        System.out.println("使用匿名类过滤");
+        filter(heroes, checker);
+
+        System.out.println("使用Lambda表达式");
+        filter(heroes, hero -> hero.hp > 100 && hero.damage < 50);
+
+        System.out.println("在Lambda表达式中使用静态方法");
+        filter(heroes, hero -> TestLambda2.testHero(hero));
+
+        System.out.println("直接引用静态方法");
+        filter(heroes, TestLambda2::testHero);
+    }
+
+    public static boolean testHero(Hero hero){
+        return hero.hp > 100 && hero.damage < 50;
+    }
+
+    private static void filter(List<Hero> heroes, HeroChecker checker){
+        for (Hero hero : heroes){
+            if (checker.test(hero))
+                System.out.print(hero);
+        }
+    }
+}
+```
+
+### 引用对象方法
+
+与引用静态方法很类似，只是传递方法的时候，需要一个对象的存在：
+
+```java
+System.out.println("使用引用对象方法  的过滤结果：");
+//使用类的对象方法
+TestLambda testLambda = new TestLambda();
+filter(heros, testLambda::testHero);
+```
+
+## 聚合操作
+
+传统方式与聚合操作方式遍历数据：
+
+```java {.line-numbers highlight=29}
+package Basic.lambda;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import Basic.charactor.Hero;
+
+public class TestAggregate {
+
+    public static void main(String[] args) {
+        Random random = new Random();
+        List<Hero> heroes = new ArrayList<Hero>();
+        for (int i = 0; i < 5; i++) {
+            heroes.add(new Hero("hero " + i, random.nextInt(1000), random.nextInt(100)));
+        }
+
+        System.out.println("初始化后的集合：");
+        System.out.println(heroes);
+        System.out.println("查询条件：hp>100 && damage<50");
+        System.out.println("通过传统操作方式找出满足条件的数据：");
+
+        for (Hero hero : heroes) {
+            if (hero.hp > 100 && hero.damage < 50)
+                System.out.println(hero.name);
+        }
+
+        System.out.println("通过聚合操作方式找出满足条件的数据：");
+        heroes
+                .stream()
+                .filter(hero -> hero.hp > 100 && hero.damage < 50)
+                .forEach(h -> System.out.println(h.name));
     }
 }
 ```

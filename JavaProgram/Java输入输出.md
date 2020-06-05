@@ -47,6 +47,11 @@ System.out.println(x);
 System.out.printf("%8.2f", x);  // 用8个字符的宽度和小数点后两个字符的精度打印x 
 333.3333333333333
   333.33
+
+public void attack(){
+  damage = 10;
+  System.out.printf("进攻，造成了%d点伤害！", damage);
+}
 ```
 
 <div align=center><img src=Basic\格式化输出.png></div>
