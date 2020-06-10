@@ -1399,6 +1399,10 @@ public class SleepThread implements Runnable
     public static void main(String[] args)
     {
         SleepThread sleepThread = new SleepThread();
+        /*
+        public Thread(Runnable target, String name) {
+            init(null, target, name, 0);
+        }*/
         new Thread(sleepThread, "chen").start();
         new Thread(sleepThread, "zu").start();
     }
@@ -1470,7 +1474,7 @@ public class SleepThread1
 ```
 
 ## 线程礼让
-* 礼让线程，让当前正在执行的线程暂停，但不阻塞；
+* 礼让线程，**让当前正在执行的线程暂停**，但不阻塞；
 * 将线程从运行状态转为就绪状态；
 * 让CPU重新调度，**礼让不一定成功**。
 ```java
@@ -1512,8 +1516,8 @@ class MyYield implements Runnable
 ```
 
 ## 线程强制执行
-* `join`合并线程，待此线程执行完成后，再执行其他线程，其他线程阻塞；
-* 可以理解为插队。
+* `join`合并线程，**待此线程执行完成后，再执行其他线程，其他线程阻塞**；
+* 可以理解为**插队**。
 
 <div align=center><img src=Thread/join.png width=90%></div>
 
@@ -1559,7 +1563,7 @@ Output:
 线程VIP来插队了 305
 此时主线程执行到 197
 此时主线程执行到 198
-此时主线程执行到 199  // 主线程暂停
+此时主线程执行到 199  // 主线程暂停，主线程被线程VIP插队
 线程VIP来插队了 306
 线程VIP来插队了 307
 ...
@@ -1787,7 +1791,7 @@ Thread-2 的优先级是 4
  */
 ```
 
-Java中的优先级来说不是特别的可靠，Java程序中对线程所设置的优先级只是给操作系统一个**建议**，操作系统不一定会采纳。而真正的调用顺序，是由操作系统的线程调度算法决定的。
+Java中的优先级不是特别的可靠，Java程序中对线程所设置的优先级只是给操作系统一个**建议**，操作系统不一定会采纳。而真正的调用顺序，是由操作系统的线程调度算法决定的。
 
 ```java
 package Thread;
@@ -1833,9 +1837,9 @@ public class Demo
 Java提供一个**线程调度器**来监视和控制处于`RUNNABLE`状态的线程。线程的调度策略采用**抢占式**，优先级高的线程比优先级低的线程会有**更大的几率**优先执行。在优先级相同的情况下，按照“先到先得”的原则。每个Java程序都有一个默认的**主线程**，就是通过JVM启动的第一个线程**main线程**。
 
 ## 守护线程
-* 线程分为用户线程和守护(daemon)线程；
-* 虚拟机必须确保用户线程(main线程)执行完毕；
-* 虚拟机不用等待守护线程(垃圾回收线程)执行完毕；
+* 线程分为**用户线程**和**守护(daemon)线程**；
+* 虚拟机必须**确保用户线程(main线程)执行完毕**；
+* 虚拟机**不用等待守护线程(垃圾回收线程)执行完毕**；
 * 守护线程应用：后台记录操作日志、监控内存、垃圾回收等。
 ```java
 package Thread;
