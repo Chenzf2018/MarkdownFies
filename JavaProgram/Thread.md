@@ -64,11 +64,13 @@ Java程序运行时，最开始运行的只能是**主线程**。所以，必须
 package Thread;
 
 /*
-创建线程方法一：继承Thread类；重写run方法；创建实列，调用start开启线程
+创建线程方法一：继承Thread类；重写run方法；创建实例，调用start开启线程
  */
 
+// 1.继承Thread类
 public class CreateThread extends Thread
 {
+    // 2.重写run方法
     @Override
     public void run()
     {
@@ -79,7 +81,10 @@ public class CreateThread extends Thread
 
     public static void main(String[] args)
     {
+        // 3.创建实例
         CreateThread thread = new CreateThread();
+
+        // 4.调用start开启线程
         thread.start();  // 等价于new CreateThread().start();
         // thread.run();
 
@@ -113,7 +118,7 @@ In main() method! 2
 In main() method! 3
  */
 ```
-`main, start`方法是交替进行的；而`main, run`方法则有先后之分。
+`main, start`方法是**交替进行**的；而`main, run`方法则**有先后之分**。
 
 <div align=center><img src=Thread/普通方法调用和多线程.png width=60%></div>
 
@@ -140,6 +145,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+// 1.继承Thread
 public class ThreadWebDownloader extends Thread
 {
     private String url;  // 图片地址
@@ -151,6 +157,7 @@ public class ThreadWebDownloader extends Thread
         this.name = name;
     }
 
+    // 2.重写run方法
     @Override
     public void run()
     {
@@ -162,7 +169,7 @@ public class ThreadWebDownloader extends Thread
 
     public static void main(String[] args)
     {
-        // 创建线程实例
+        // 3.创建线程实例
         ThreadWebDownloader threadWebDownloader1 = new ThreadWebDownloader(
                 "http://5b0988e595225.cdn.sohucs.com/images/20180927/f245ec2141d84315ae98b0038f044eab.jpeg", "扬州1.jpeg"
         );
@@ -173,7 +180,7 @@ public class ThreadWebDownloader extends Thread
                 "http://photocdn.sohu.com/20160227/mp60782450_1456509627780_16.jpeg", "扬州3.jpeg"
         );
 
-        // 启动线程
+        // 4.启动线程
         threadWebDownloader1.start();
         threadWebDownloader2.start();
         threadWebDownloader3.start();
@@ -234,7 +241,7 @@ public class TaskThreadDemo
 {
     public static void main(String[] args)
     {
-        // 1.创建任务
+        // 1.创建实例
         Runnable printA = new PrintChar('a', 10);
         Runnable printB = new PrintChar('b', 10);
 
@@ -282,7 +289,7 @@ Thread-0 a
  */
 ```
 
-任务中的`run()`方法指明如何完成这个任务。Java虚拟机会自动调用该方法，无需特意调用它。直接调用`run()`只是在同一个线程中执行该方法，而没有新线程被启动。
+任务中的`run()`方法指明如何完成这个任务。Java虚拟机会自动调用该方法，无需特意调用它。**直接调用`run()`只是在同一个线程中执行该方法，而没有新线程被启动**。
 
 
 ```java
@@ -292,8 +299,10 @@ package Thread;
 创建线程方法二：实现Runnable接口；重写run方法；执行线程需要丢入Runnable接口，调用start开启线程
  */
 
+// 1.实现Runnable
 public class CreateThread2 implements Runnable
 {
+    // 2.重写run方法
     @Override
     public void run()
     {
@@ -303,6 +312,7 @@ public class CreateThread2 implements Runnable
 
     public static void main(String[] args)
     {
+        // 3.创建实例
         // 创建实现Runnable接口的类对象
         CreateThread2 createThread = new CreateThread2();
 
@@ -314,6 +324,7 @@ public class CreateThread2 implements Runnable
         thread.start();
         */
 
+        // 4.创建线程；5.启动线程
         new Thread(createThread).start();
 
         for (int i = 0; i < 200; i++)
@@ -1291,7 +1302,7 @@ testThread线程名字：Thread-0
 
 * 不推荐使用`JDK`提供的`stop(), destroy()`方法（已废弃）。
 * 推荐线程自己停下来；
-* 建议使用一个标志位进行终止变量：当`flag == false`，则终止线程。
+* 建议**使用一个标志位**进行终止变量：当`flag == false`，则终止线程。
   
 ```java
 package Thread;
@@ -1461,7 +1472,7 @@ public class SleepThread1
 ## 线程礼让
 * 礼让线程，让当前正在执行的线程暂停，但不阻塞；
 * 将线程从运行状态转为就绪状态；
-* 让CPU重新调度，礼让不一定成功。
+* 让CPU重新调度，**礼让不一定成功**。
 ```java
 package Thread;
 
