@@ -2432,7 +2432,7 @@ synchronized (someObject){
 
 释放同步对象的方式：`synchronized`块自然结束，或者有异常抛出。
 
-```java
+```java {.line-numbers highlight=21}
 package HowJThread;
 
 import java.text.SimpleDateFormat;
@@ -2534,7 +2534,7 @@ public void run(){
 
 **既然任意对象都可以用来作为同步对象，而所有的线程访问的都是同一个`hero`对象，索性就使用`gareen`来作为同步对象**。
 
-进一步的，对于`Hero`的`hurt`方法，加上：`synchronized (this) {}`，表示当前对象为同步对象，即也是`gareen`为同步对象。
+进一步的，对于`Hero`的`hurt`方法，加上：`synchronized (this) {}`，表示**当前对象为同步对象**，即也是`gareen`为同步对象。
 
 注意第15行；66行；86行！
 
@@ -2940,6 +2940,469 @@ public class TestThread {
     }       
 }
 ```
+
+### 关于锁的8个问题
+
+如何判断锁的是谁！永远的知道什么锁，锁到底锁的是谁！
+
+一个同步方法在执行之前需要加锁。锁是一种实现资源排他使用的机制。对于**实例方法**，要给**调用该方法的对象加锁**。对于**静态方法**，要给这个**类**加锁。
+
+**synchronized锁的对象是方法的调用者（一个对象）**：**先调用先执行**！不看延时情况！
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 关于锁的8个问题
+ * 1、标准情况下(sendSms不延迟)，两个线程先打印”发短信“还是”打电话“？
+ * 输出：1/发短信  2/打电话
+ * 2、sendSms延迟4秒，两个线程先打印”发短信“还是”打电话“？
+ * 输出：1/发短信  2/打电话
+ */
+
+
+public class Test1
+{
+    public static void main(String[] args)
+    {
+        Phone phone = new Phone();
+
+        //锁的存在
+        new Thread(() -> { phone.sendSms(); },"A").start();  // 先调用并不一定先执行
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(6);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(() -> { phone.call(); },"B").start();
+    }
+}
+
+class Phone
+{
+    // synchronized锁的对象是方法的调用者Phone！
+    // 两个方法用的是同一个锁，谁先拿到谁执行！
+    public synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);  // sendSms延迟4s
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+/*
+// TimeUnit.SECONDS.sleep(2);
+// 两个方法不加synchronized；TimeUnit.SECONDS.sleep(4);  // sendSms延迟4s
+// 2秒等待：由于两个线程中间的TimeUnit.SECONDS.sleep(2);小于两个方法间4秒的延时
+打电话
+发短信
+
+// 加synchronized，永远发短信在前：phone.sendSms();先调用
+
+// 两个线程中间TimeUnit.SECONDS.sleep(2);
+// // 两个方法加synchronized；TimeUnit.SECONDS.sleep(4);  // sendSms延迟4s
+// 4秒等待：由于两个方法间的TimeUnit.SECONDS.sleep(4);
+发短信
+打电话
+
+// 如果两个线程中间TimeUnit.SECONDS.sleep(6);
+// 4秒等待：由于两个方法间的TimeUnit.SECONDS.sleep(4);
+发短信
+// 2秒等待（6-4）
+打电话
+ */
+```
+
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 3、增加了一个普通方法后！先执行”发短信：还是“Hello”？
+ * 看线程间和方法间的相对延时大小
+ */
+public class Test2
+{
+    public static void main(String[] args)
+    {
+        Phone2 phone = new Phone2();
+        /*
+        // 两个对象，两个调用者，两把锁！
+        Phone2 phone1 = new Phone2();
+        Phone2 phone2 = new Phone2();*/
+
+        //锁的存在
+        new Thread(()->{ phone.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(2);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone.hello(); },"B").start();
+    }
+}
+
+
+class Phone2
+{
+    // synchronized锁的对象是方法的调用者！
+    public synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+
+    // 这里没有锁！不是同步方法，不受锁的影响
+    public void hello(){ System.out.println("hello"); }
+}
+
+/*
+// 等2秒：由于两线程之间 TimeUnit.SECONDS.sleep(2);
+hello
+// 等2秒：由于两方法之间 TimeUnit.SECONDS.sleep(4);
+发短信
+ */
+```
+
+两个对象，两个调用者，两把锁：
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 4、两个对象，两个同步方法， “发短信”还是“打电话”？
+ * 看线程间和方法间的相对延时大小
+ */
+public class Test3
+{
+    public static void main(String[] args)
+    {
+        // 两个对象，两个调用者，两把锁！所以按时间调用！
+        Phone3 phone1 = new Phone3();
+        Phone3 phone2 = new Phone3();
+
+        //锁的存在
+        new Thread(()->{ phone1.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone2.call(); },"B").start();
+    }
+}
+
+
+class Phone3
+{
+    // synchronized 锁的对象是方法的调用者！
+    public synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+**锁的是Class**：**先调用先执行**！不看延时情况！
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 5、增加两个静态的同步方法，只有一个对象，先打印“发短信”还是“打电话”？
+ * 输出：永远是发短信在前
+ */
+public class Test4  
+{
+    public static void main(String[] args)
+    {
+        // 两个对象的Class类模板只有一个，static，锁的是Class
+        Phone4 phone = new Phone4();
+
+        //锁的存在
+        new Thread(()->{ phone.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone.call(); },"B").start();
+    }
+}
+
+// Phone4唯一的一个 Class 对象
+class Phone4
+{
+    // synchronized 锁的对象是方法的调用者！
+    // static 静态方法
+    // 只要类一加载就有了！锁的是Class
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public static synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 6、两个对象！增加两个静态的同步方法，先打印“发短信”还是“打电话”？
+ * 输出：永远发短信在前
+ */
+public class Test5
+{
+    public static void main(String[] args)
+    {
+        // 两个对象的Class类模板只有一个，static，锁的是Class
+        Phone5 phone1 = new Phone5();
+        Phone5 phone2 = new Phone5();
+
+        //锁的存在
+        new Thread(()->{ phone1.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone2.call(); },"B").start();
+    }
+}
+
+// Phone5唯一的一个 Class 对象
+class Phone5
+{
+    // synchronized 锁的对象是方法的调用者！
+    // static 静态方法 只要类一加载就有了！锁的是Class
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    public static synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
+**锁调用者与锁class**
+
+```java
+package Lock;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 7、1个静态的同步方法，1个普通的同步方法，一个对象，先打印“发短信”还是“打电话”？
+ * 看线程间和方法间的相对延时大小
+ */
+public class Test6
+{
+    public static void main(String[] args)
+    {
+        // 两个对象的Class类模板只有一个，static，锁的是Class
+        Phone6 phone = new Phone6();
+
+        //锁的存在
+        new Thread(()->{ phone.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(2);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone.call(); },"B").start();
+    }
+}
+
+// Phone6唯一的一个 Class 对象
+class Phone6
+{
+    // 静态的同步方法 锁的是 Class 类模板
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    // 普通的同步方法  锁的调用者
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+/*
+// 等2秒：线程间延时2秒
+打电话
+// 等2秒；方法间延时4秒，线程间延时2秒
+发短信
+*/
+```
+
+```java
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 8、1个静态的同步方法，1个普通的同步方法，两个对象，先打印“发短信”还是“打电话”？
+ * 输出：看线程间和方法间的相对延时大小
+ */
+
+public class Test7
+{
+    public static void main(String[] args)
+    {
+        Phone7 phone1 = new Phone7();
+        Phone7 phone2 = new Phone7();
+
+        //锁的存在
+        new Thread(()->{ phone1.sendSms(); },"A").start();
+
+        // 捕获
+        try
+        {
+            TimeUnit.SECONDS.sleep(2);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        new Thread(()->{ phone2.call(); },"B").start();
+    }
+}
+
+// Phone7唯一的一个 Class 对象
+class Phone7
+{
+    // 静态的同步方法 锁的是 Class 类模板
+    public static synchronized void sendSms()
+    {
+        try
+        {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        System.out.println("发短信");
+    }
+
+    // 普通的同步方法  锁的调用者
+    public synchronized void call()
+    {
+        System.out.println("打电话");
+    }
+}
+```
+
 
 
 ### 死锁
@@ -4835,24 +5298,21 @@ B=>BBBBBBBBB
 <div align=center><img src=Thread\线程池设计思路.png></div>
 
 
-## 自定义线程池
-
-
-
-
 ## 使用线程池
 
-&emsp;&emsp;实现`java.lang.Runnable`来定义一个任务类，以及如何创建一个线程来运行一个任务`Runnable task = new TaskClass(task); new Thread(task).start();`该方法对单一任务的执行是很方便的，但是由于必须为每个任务创建一个线程，因此对大量的任务而言是不够高效的。为每个任务开始一个新线程可能会限制吞吐最并且造成性能降低。线程池是管理并发执行任务个数的理想方法。Java提供`Executor`接口来执行线程池中的任务，提供`ExecutorService`接口来管理和控制任务。`ExecutorService`是`Executor`的子接口。
+&emsp;&emsp;实现`java.lang.Runnable`来定义一个任务类，以及如何创建一个线程来运行一个任务`Runnable task = new TaskClass(task); new Thread(task).start();`该方法对单一任务的执行是很方便的，但是由于必须为每个任务创建一个线程，因此对大量的任务而言是不够高效的。为每个任务开始一个新线程可能会限制吞吐最并且造成性能降低。线程池是管理并发执行任务个数的理想方法。
+
+Java提供`Executor`**接口**来执行线程池中的任务，提供`ExecutorService`**接口**来管理和控制任务。`ExecutorService`是`Executor`的子接口。
 
 
 * `JDK5.0`起提供了线程池相关`API`：`ExecutorService`和`Executors`；
-* `ExecutorService`：真正的线程池接口。常见子类`ThreadPoolExecutor`：
-    1.`void execute(Runnable command)`：**执行任务/命令，没有返回值**，一般用来执行`Runnable`；
-    2.`<T>Future<T> submit(Callable<T> task)`：**执行任务，有返回值**，一般用来执行`Callable`；
-    3.`void shutdown()`：关闭连接池。
+* `ExecutorService`：真正的**线程池接口**。常见子类`ThreadPoolExecutor`：
+    1. `void execute(Runnable command)`：**执行任务/命令，没有返回值**，一般用来执行`Runnable`；
+    2. `<T>Future<T> submit(Callable<T> task)`：**执行任务，有返回值**，一般用来执行`Callable`；
+    3. `void shutdown()`：关闭连接池。
 * `Executors`：工具类、线程池的工厂类，用于创建并返回不同类型的线程池。
 
-`Executor`接口（`Execute方法`）执行线程，而子接口`ExecutorService`管理线程：
+`Executor`接口（`Execute方法`）**执行线程**，而子接口`ExecutorService`**管理线程**：
 <div align=center><img src=Thread/Executor.png width=90%></div>
 
 `Executors`类提供创建`Executor`对象的静态方法：
@@ -4923,6 +5383,12 @@ pool-1-thread-2
 3、方便管理。
 
 ### 三大方法
+
+```java
+ExecutorService threadPool = Executors.newSingleThreadExecutor();// 单个线程
+ExecutorService threadPool = Executors.newFixedThreadPool(5); // 创建一个固定的线程池的大小
+ExecutorService threadPool = Executors.newCachedThreadPool(); // 可伸缩的，遇强则强，遇弱则弱
+```
 
 ```java
 import java.util.concurrent.ExecutorService;
@@ -5010,14 +5476,14 @@ public static ExecutorService newCachedThreadPool() {
 
 本质都是调用`ThreadPoolExecutor`：
 ```java
-public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小
-                            int maximumPoolSize,  // 2.最大核心线程池大小
-                            long keepAliveTime,  // 3.超时了没有人调用就会释放
-                            TimeUnit unit,  // 4.超时单位
-                            BlockingQueue<Runnable> workQueue,  // 5.阻塞队列
-                            ThreadFactory threadFactory,  // 6.线程工厂：创建线程的，一般不用动
+public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小；线程池初始化线程的个数
+                          int maximumPoolSize,  // 2.最大核心线程池大小
+                          long keepAliveTime,  // 3.超时了没有人调用多出的线程就会释放，最后保持池子里就corePoolSize个线程
+                          TimeUnit unit,  // 4.超时单位
+                          BlockingQueue<Runnable> workQueue,  // 5.阻塞队列，用来放任务的集合
+                          ThreadFactory threadFactory,  // 6.线程工厂：创建线程的，一般不用动
                             // 7.拒绝策略
-                            RejectedExecutionHandler handler) {
+                          RejectedExecutionHandler handler) {
         if (corePoolSize < 0 ||
             maximumPoolSize <= 0 ||
             maximumPoolSize < corePoolSize ||
@@ -5039,6 +5505,223 @@ public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小
 《阿里巴巴Java手册》建议：线程池不允许使用`Executors`去创建，而是通过`ThreadPoolExecutor`的方式，可以更明确线程池的运行规则，规避资源耗尽的风险。
 
 <div align=center><img src=Thread\线程池七大参数.jpg width=70%></div>
+
+Core and maximum pool sizes
+A ThreadPoolExecutor will automatically adjust the pool size (see getPoolSize()) according to the bounds set by `corePoolSize` (see getCorePoolSize()) and `maximumPoolSize` (see getMaximumPoolSize()). 
+
+When a new task is submitted in method `execute(Runnable)`, and **fewer than `corePoolSize` threads are running, a new thread is created to handle the request**, even if other worker threads are idle. 
+
+If there are **more than `corePoolSize` but less than `maximumPoolSize` threads running, a new thread will be created only if the queue is full**. 
+
+By setting corePoolSize and maximumPoolSize the same, you create a fixed-size thread pool. By setting maximumPoolSize to an essentially unbounded value such as Integer.MAX_VALUE, you allow the pool to accommodate an arbitrary number of concurrent tasks. Most typically, core and maximum pool sizes are set only upon construction, but they may also be changed dynamically using setCorePoolSize(int) and setMaximumPoolSize(int).
+
+https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html
+
+1. 当池中正在运行的线程数（一个）（包括空闲线程数）小于`corePoolSize`时，新建线程执行任务：
+   `If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.`
+
+```java
+package HowJThread.ThreadPools;
+
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class TestThreadPoolExecutor {
+    public static void main(String[] args) {
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(2, 3, 60L,
+                TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
+
+        // 任务1
+        pool.execute(() -> {
+            try {
+                Thread.sleep(1000);
+                System.out.println("任务一：" + Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        //任务2
+        pool.execute(() -> System.out.println("任务二：" + Thread.currentThread().getName()));
+        
+        pool.shutdown();
+    }
+}
+/*
+任务二：pool-1-thread-2
+任务一：pool-1-thread-1
+
+ */
+```
+线程1结束后没有继续线程1，而是启动线程2。
+
+2. 当池中正在运行的线程数（包括空闲线程数）大于等于`corePoolSize`时，**新插入的任务进入`workQueue`排队**(如果`workQueue`长度允许)，等待空闲线程来执行。
+   `If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.`
+
+```java
+package HowJThread.ThreadPools;
+
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class TestThreadPoolExecutor {
+    public static void main(String[] args) {
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(2, 3, 60L,
+                TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
+
+        // 任务1
+        pool.execute(() -> {
+            try {
+                Thread.sleep(3000);
+                System.out.println("任务一：" + Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // 任务2
+        pool.execute(() -> {
+            try {
+                Thread.sleep(4000);
+                System.out.println("任务二：" + Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // 任务3
+        pool.execute(() -> System.out.println("任务三：" + Thread.currentThread().getName()));
+
+        pool.shutdown();
+    }
+}
+/*
+任务一：pool-1-thread-1
+任务三：pool-1-thread-1
+任务二：pool-1-thread-2
+
+ */
+```
+任务二在运行过程中，任务三启动不会新建线程，因为**有一个空的队列**，`maximumPoolSize=3`这个参数不起作用。
+
+3. **当队列里的任务达到上限**，并且池中正在进行的线程小于`maxinumPoolSize`，对于新加入的任务，新建线程。
+
+```java
+package HowJThread.ThreadPools;
+
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class TestThreadPoolExecutor {
+    public static void main(String[] args) {
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(2, 3, 60L,
+                TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
+
+        // 任务1
+        pool.execute(() -> {
+            try {
+                Thread.sleep(1000);
+                System.out.println("任务一：" + Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // 任务2
+        pool.execute(() -> {
+            try {
+                Thread.sleep(2000);
+                System.out.println("任务二：" + Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // 任务3
+        pool.execute(() -> System.out.println("任务三：" + Thread.currentThread().getName()));
+
+        // 任务4
+        pool.execute(() -> System.out.println("任务四：" + Thread.currentThread().getName()));
+
+        pool.shutdown();
+    }
+}
+/*
+任务四：pool-1-thread-3
+任务三：pool-1-thread-3
+任务一：pool-1-thread-1
+任务二：pool-1-thread-2
+
+ */
+```
+
+任务一、二启动后，**任务三在队列，队列就满了**，由于正在进行的线程数是`2<maximumPoolSize`，只能**新建一个线程**了。然后任务四就进了新线程`thread-3`，任务四结束，队列里的任务四在线程`thread-3`进行处理。
+
+4. 队列里的任务达到上限，并且池中正在运行的线程等于`maximumPoolSize`，对于新加入的任务，执行拒绝策略（线程池默认的策略是抛异常）。
+
+```java
+package HowJThread.ThreadPools;
+
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class TestThreadPoolExecutor {
+    public static void main(String[] args) {
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(2, 3, 60L,
+                TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
+
+        // 任务1
+        pool.execute(() -> {
+            try {
+                Thread.sleep(3000);
+                System.out.println("任务一：" + Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // 任务2
+        pool.execute(() -> {
+            try {
+                Thread.sleep(5000);
+                System.out.println("任务二：" + Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // 任务3
+        pool.execute(() -> System.out.println("任务三：" + Thread.currentThread().getName()));
+
+        // 任务4
+        pool.execute(() -> {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("任务四：" + Thread.currentThread().getName());
+        });
+
+        // 任务5
+        pool.execute(() -> System.out.println("任务五：" + Thread.currentThread().getName()));
+
+        pool.shutdown();
+    }
+}
+/*
+Exception in thread "main" java.util.concurrent.RejectedExecutionException...
+任务四：pool-1-thread-3
+任务三：pool-1-thread-3
+任务一：pool-1-thread-1
+任务二：pool-1-thread-2
+ */
+```
+队列达到上限，线程池达到最大值，故抛出异常。
 
 ### 四种拒绝策略
 
@@ -5107,431 +5790,6 @@ public class Pool
 ```
 
 
-
-# 关于锁的8个问题
-
-如何判断锁的是谁！永远的知道什么锁，锁到底锁的是谁！
-
-一个同步方法在执行之前需要加锁。锁是一种实现资源排他使用的机制。对于**实例方法**，要给**调用该方法的对象加锁**。对于**静态方法**，要给这个**类**加锁。
-
-**synchronized锁的对象是方法的调用者**
-```java
-package Lock;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- * 关于锁的8个问题
- * 1、标准情况下(sendSms不延迟)，两个线程先打印”发短信“还是”打电话“？
- * 输出：1/发短信  2/打电话
- * 2、sendSms延迟4秒，两个线程先打印”发短信“还是”打电话“？
- * 输出：1/发短信  2/打电话
- */
-public class Test1
-{
-    public static void main(String[] args)
-    {
-        Phone phone = new Phone();
-
-        //锁的存在
-        new Thread(() -> { phone.sendSms(); },"A").start();  // 先调用并不一定先执行
-
-        // 捕获
-        try
-        {
-            TimeUnit.SECONDS.sleep(1);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        new Thread(() -> { phone.call(); },"B").start();
-    }
-}
-
-class Phone
-{
-    // synchronized锁的对象是方法的调用者Phone！
-    // 两个方法用的是同一个锁，谁先拿到谁执行！
-    public synchronized void sendSms()
-    {
-        try
-        {
-            TimeUnit.SECONDS.sleep(0);  // sendSms延迟4s
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println("发短信");
-    }
-
-    public synchronized void call()
-    {
-        System.out.println("打电话");
-    }
-}
-```
-
-```java
-package Lock;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- *
- * 3、增加了一个普通方法后！先执行”发短信：还是“Hello”？
- * sendSms有延迟2s，输出：普通方法
- */
-public class Test2
-{
-    public static void main(String[] args)
-    {
-        Phone2 phone = new Phone2();
-        /*
-        // 两个对象，两个调用者，两把锁！
-        Phone2 phone1 = new Phone2();
-        Phone2 phone2 = new Phone2();*/
-
-        //锁的存在
-        new Thread(()->{ phone.sendSms(); },"A").start();
-
-        // 捕获
-        try
-        {
-            TimeUnit.SECONDS.sleep(1);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        new Thread(()->{ phone.hello(); },"B").start();
-    }
-}
-
-
-class Phone2
-{
-    // synchronized锁的对象是方法的调用者！
-    public synchronized void sendSms()
-    {
-        try
-        {
-            TimeUnit.SECONDS.sleep(2);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println("发短信");
-    }
-
-    public synchronized void call()
-    {
-        System.out.println("打电话");
-    }
-
-    // 这里没有锁！不是同步方法，不受锁的影响
-    public void hello(){ System.out.println("hello"); }
-}
-```
-
-```java
-package Lock;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- * 4、两个对象，两个同步方法， “发短信”还是“打电话”？
- * sendSms有延迟，输出：打电话
- */
-public class Test3
-{
-    public static void main(String[] args)
-    {
-        // 两个对象，两个调用者，两把锁！
-        Phone3 phone1 = new Phone3();
-        Phone3 phone2 = new Phone3();
-
-        //锁的存在
-        new Thread(()->{ phone1.sendSms(); },"A").start();
-
-        // 捕获
-        try
-        {
-            TimeUnit.SECONDS.sleep(1);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        new Thread(()->{ phone2.call(); },"B").start();
-    }
-}
-
-
-class Phone3
-{
-    // synchronized 锁的对象是方法的调用者！
-    public synchronized void sendSms()
-    {
-        try
-        {
-            TimeUnit.SECONDS.sleep(4);
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println("发短信");
-    }
-
-    public synchronized void call()
-    {
-        System.out.println("打电话");
-    }
-}
-```
-
-**锁的是Class**
-
-```java
-package Lock;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- * 5、增加两个静态的同步方法，只有一个对象，先打印“发短信”还是“打电话”？
- * 输出：发短信
- */
-public class Test4  
-{
-    public static void main(String[] args)
-    {
-        // 两个对象的Class类模板只有一个，static，锁的是Class
-        Phone4 phone = new Phone4();
-
-        //锁的存在
-        new Thread(()->{ phone.sendSms(); },"A").start();
-
-        // 捕获
-        try
-        {
-            TimeUnit.SECONDS.sleep(1);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        new Thread(()->{ phone.call(); },"B").start();
-    }
-}
-
-// Phone4唯一的一个 Class 对象
-class Phone4
-{
-    // synchronized 锁的对象是方法的调用者！
-    // static 静态方法
-    // 只要类一加载就有了！锁的是Class
-    public static synchronized void sendSms()
-    {
-        try
-        {
-            TimeUnit.SECONDS.sleep(4);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println("发短信");
-    }
-
-    public static synchronized void call()
-    {
-        System.out.println("打电话");
-    }
-}
-```
-
-```java
-package Lock;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- * 6、两个对象！增加两个静态的同步方法，先打印“发短信”还是“打电话”？
- * 输出：发短信
- */
-public class Test5
-{
-    public static void main(String[] args)
-    {
-        // 两个对象的Class类模板只有一个，static，锁的是Class
-        Phone5 phone1 = new Phone5();
-        Phone5 phone2 = new Phone5();
-
-        //锁的存在
-        new Thread(()->{ phone1.sendSms(); },"A").start();
-
-        // 捕获
-        try
-        {
-            TimeUnit.SECONDS.sleep(1);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        new Thread(()->{ phone2.call(); },"B").start();
-    }
-}
-
-// Phone5唯一的一个 Class 对象
-class Phone5
-{
-    // synchronized 锁的对象是方法的调用者！
-    // static 静态方法 只要类一加载就有了！锁的是Class
-    public static synchronized void sendSms()
-    {
-        try
-        {
-            TimeUnit.SECONDS.sleep(4);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println("发短信");
-    }
-
-    public static synchronized void call()
-    {
-        System.out.println("打电话");
-    }
-}
-```
-
-**锁调用者与锁class**
-
-```java
-package Lock;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- * 7、1个静态的同步方法，1个普通的同步方法，一个对象，先打印“发短信”还是“打电话”？
- * 输出：打电话
- */
-public class Test6
-{
-    public static void main(String[] args)
-    {
-        // 两个对象的Class类模板只有一个，static，锁的是Class
-        Phone6 phone = new Phone6();
-
-        //锁的存在
-        new Thread(()->{ phone.sendSms(); },"A").start();
-
-        // 捕获
-        try
-        {
-            TimeUnit.SECONDS.sleep(1);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        new Thread(()->{ phone.call(); },"B").start();
-    }
-}
-
-// Phone6唯一的一个 Class 对象
-class Phone6
-{
-    // 静态的同步方法 锁的是 Class 类模板
-    public static synchronized void sendSms()
-    {
-        try
-        {
-            TimeUnit.SECONDS.sleep(4);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println("发短信");
-    }
-
-    // 普通的同步方法  锁的调用者
-    public synchronized void call()
-    {
-        System.out.println("打电话");
-    }
-}
-```
-
-```java
-package Lock;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- * 7、1个静态的同步方法，1个普通的同步方法 ，一个对象，先打印“发短信”还是“打电话”？
- * 输出：打电话
- */
-public class Test6
-{
-    public static void main(String[] args)
-    {
-        // 两个对象的Class类模板只有一个，static，锁的是Class
-        Phone6 phone = new Phone6();
-
-        //锁的存在
-        new Thread(()->{ phone.sendSms(); },"A").start();
-
-        // 捕获
-        try
-        {
-            TimeUnit.SECONDS.sleep(1);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-        new Thread(()->{ phone.call(); },"B").start();
-    }
-}
-
-// Phone6唯一的一个 Class 对象
-class Phone6
-{
-    // 静态的同步方法 锁的是 Class 类模板
-    public static synchronized void sendSms()
-    {
-        try
-        {
-            TimeUnit.SECONDS.sleep(4);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-        System.out.println("发短信");
-    }
-
-    // 普通的同步方法  锁的调用者
-    public synchronized void call()
-    {
-        System.out.println("打电话");
-    }
-}
-```
 
 # 集合类不安全
 
