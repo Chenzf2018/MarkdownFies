@@ -1,15 +1,20 @@
 # Maven介绍
 
-&emsp;&emsp;在了解Maven之前，我们先来看看一个Java项目需要的东西。
+在了解Maven之前，我们先来看看一个Java项目需要的东西。
 
-首先，我们需要确定引入哪些依赖包。
+**首先，我们需要确定引入哪些依赖包**。
+
 例如，如果我们需要用到`commons logging`，我们就必须把`commons logging`的jar包放入`classpath`。如果我们还需要`log4j`，就需要把`log4j`相关的jar包都放到`classpath`中。
+
 我们需要引用各种jar包，尤其是比较大的工程，引用的jar包往往有几十个乃至上百个， 每用到一种jar包，都需要手动引入工程目录，而且经常遇到各种让人抓狂的jar包冲突，版本冲突。
+
 这些就是<font color=red>依赖包的管理</font>。
 
-其次，我们要确定项目的<font color=red>目录结构</font>。例如，`src`目录存放Java源码，`resources`目录存放配置文件，`bin`目录存放编译生成的`.class`文件。
+**其次，我们要确定项目的<font color=red>目录结构</font>**。
 
-此外，我们还需要<font color=red>配置环境</font>，例如JDK的版本，编译打包的流程，当前代码的版本号。
+例如，`src`目录存放Java源码，`resources`目录存放配置文件，`bin`目录存放编译生成的`.class`文件。
+
+此外，我们还**需要<font color=red>配置环境</font>**，例如JDK的版本，编译打包的流程，当前代码的版本号。
 
 最后，除了使用Eclipse这样的IDE进行<font color=red>编译</font>外，我们还必须能通过命令行工具进行编译，才能够让项目在一个独立的服务器上编译、测试、部署。
 
@@ -20,7 +25,7 @@ Maven就是是专门为Java项目打造的<font color=red>管理和构建工具<
 * 提供了一套标准化的构建流程（编译，测试，打包，发布……）；
 * 提供了一套依赖管理机制。
 
-&emsp;&emsp;Maven是一个项目管理工具，它包含了一个项目对象模型 (POM: Project Object Model)，一组标准集合，一个项目生命周期(Project Lifecycle)，一个依赖管理系统(Dependency Management System)，和用来运行定义在生命周期阶段(phase)中插件(plugin)目标(goal)的逻辑。
+Maven是一个**项目管理工具**，它包含了一个项目对象模型 (POM: Project Object Model)，一组标准集合，一个项目生命周期(Project Lifecycle)，一个依赖管理系统(Dependency Management System)，和用来运行定义在生命周期阶段(phase)中插件(plugin)目标(goal)的逻辑。
 <div align=center><img src=MavenImages/maven概念模型图.png></div>
 
 * 项目对象模型(Project Object Model)
@@ -39,20 +44,50 @@ Maven将整个项目管理过程定义一组标准，比如：通过Maven构建�
 Maven管理项目生命周期过程都是基于插件完成的。
 
 ## Mven的两个经典作用
-&emsp;&emsp;Maven的一个核心特性就是<font color=red>依赖管理</font>。当我们涉及到多模块的项目（包含成百个模块或者子项目），管理依赖就变成一项困难的任务。传统的Web项目中，我们必须将工程所依赖的jar包复制到工程中，导致了工程的变得很大。
+
+Maven的一个核心特性就是<font color=red>依赖管理</font>。
+
+当我们涉及到多模块的项目（包含成百个模块或者子项目），管理依赖就变成一项困难的任务。传统的Web项目中，我们必须将工程所依赖的jar包复制到工程中，导致了工程的变得很大。
 
 <font color=red>Maven工程中不直接将jar包导入到工程中</font>，而是通过在`pom.xml`文件中添加所需jar包的<font color=red>坐标</font>，这样就很好的避免了jar直接引入进来。在需要用到jar包的时候，只要查找`pom.xml`文件，再通过`pom.xml`文件中的坐标，到一个专门用于“存放jar包的仓库”(Maven仓库)”中根据坐标从而找到这些jar包，再把这些jar包拿去运行。
 
-&emsp;&emsp;项目从编译、测试、运行、打包、安装 ，部署整个过程都交给Maven进行管理，这个过程称为<font color=red>构建</font>。整个构建过程，使用Maven一个命令可以轻松完成整个工作。
+
+项目从编译、测试、运行、打包、安装 ，部署整个过程都交给Maven进行管理，这个过程称为<font color=red>构建</font>。整个构建过程，使用Maven一个命令可以轻松完成整个工作。
 
 Maven规范化构建流程如下：
 <div align=center><img src=MavenImages/Maven构建流程.png width=70% height=40%></div>
 
-## Maven项目结构
-&emsp;&emsp;一个使用Maven管理的普通的Java项目，它的目录结构默认如下：
-<div align=left><img src=MavenImages/Maven目录结构.png width=20%></div>
+使用Maven管理的Java项目都有着**相同的项目结构**，它可以**统一维护`jar`包**。
 
-项目的根目录`a-maven-project`是<font color=red>项目名</font>，它有一个<font color=red>项目描述文件`pom.xml`</font>，存放<font color=red>Java源码</font>的目录是`src/main/java`，存放<font color=red>资源文件</font>的目录是`src/main/resources`，存放<font color=red>测试源码</font>的目录是`src/test/java`，存放<font color=red>测试资源</font>的目录是`src/test/resources`，最后，<font color=red>所有编译、打包生成的文件都放在`target`目录里</font>。这些就是一个Maven项目的标准目录结构。
+比如说有3个Java项目，这些项目都不是maven风格。那么这3个项目，就会**各自维护一套`jar`包**。而**其中有些`jar`包是相同的**。
+
+而maven风格的项目，首先**把所有的jar包都放在“仓库”里**，然后哪个项目需要用到这个jar包，只需要给出jar包的名称和版本号就行了。这样**jar包就实现了共享**。
+
+## Maven项目结构
+
+使用Maven管理的Java项目都有着相同的项目结构：
+1. 有一个`pom.xml`用于维护当前项目都用了哪些`jar`包
+2. 所有的java**源代码**都放在`src/main/java`下面
+3. 所有的**测试代码**都放在`src/test/java`下面
+
+一个使用Maven管理的普通的Java项目，它的目录结构默认如下：
+<div align=left><img src=MavenImages/Maven目录结构.png width=40%></div>
+
+项目的根目录`a-maven-project`是<font color=red>项目名</font>
+
+- 有一个<font color=red>项目描述文件`pom.xml`</font>
+
+- 存放<font color=red>Java源码</font>的目录是`src/main/java`
+
+- 存放<font color=red>资源文件</font>的目录是`src/main/resources`
+
+- 存放<font color=red>测试源码</font>的目录是`src/test/java`
+
+- 存放<font color=red>测试资源</font>的目录是`src/test/resources`
+
+- <font color=red>所有编译、打包生成的文件都放在`target`目录里</font>
+
+这些就是一个Maven项目的标准目录结构。
 
 <font color=red>所有的目录结构都是约定好的标准结构</font>，我们千万不要随意修改目录结构。使用标准结构不需要做任何配置，Maven就可以正常使用。
 
@@ -128,7 +163,7 @@ Maven规范化构建流程如下：
 ```
 使用<dependency>声明一个依赖后，Maven就会自动下载这个依赖包并把它放到classpath中。
 
-&emsp;&emsp;`pom.xml`的基本配置如下：
+`pom.xml`的基本配置如下：
 * \<project>: 文件的根节点；
 * \<modelVersion>: `pom.xml`使用的对象模型版本；
 * \<groupId>：项目名称，一般写项目的域名；
@@ -211,7 +246,10 @@ Maven规范化构建流程如下：
 ```
 
 ## 安装Maven
-&emsp;&emsp;要安装Maven，可以从Maven官网下载最新的Maven 3.6.x(建议使用3.3.9)，然后在本地解压，安装Maven的前提是完成Java环境安装，Maven依赖于Java环境。Maven为绿色软件解压后即可使用。解压后需要设置环境变量：
+
+要安装Maven，可以从Maven官网下载最新的Maven 3.6.x(建议使用3.3.9)，然后在本地解压，安装Maven的前提是完成Java环境安装，**Maven依赖于Java环境**。
+
+Maven为绿色软件解压后即可使用。解压后需要设置环境变量：
 <div align=center><img src = MavenImages/设置环境变量.png width = 70%></div>
 
 然后，打开命令行窗口，输入mvn -version，应该看到Maven的版本信息：
@@ -221,7 +259,10 @@ Maven规范化构建流程如下：
 <div align=center><img src=MavenImages/验证Maven是否安装正确.png></div>
 
 ### settings.xml 设置
-&emsp;&emsp;Maven解压后目录下会有一个`settings.xml`文件，位置`/conf/settings.xml`，用来<font color=red>配置Maven的仓库和本地Jar包存储地址</font>。Maven仓库地址代表从哪里去下载项目中的依赖包Jar包；Maven会将所有的Jar包统一存储到一个地址下，方便各个项目复用。默认本地仓库位置在`C:\Users\Chenzf\.m2\repository`。
+
+&emsp;&emsp;Maven解压后目录下会有一个`settings.xml`文件，位置`/conf/settings.xml`，用来<font color=red>配置Maven的仓库和本地Jar包存储地址</font>。
+
+Maven仓库地址代表从哪里去下载项目中的依赖包Jar包；**Maven会将所有的Jar包统一存储到一个地址下，方便各个项目复用**。默认本地仓库位置在`C:\Users\Chenzf\.m2\repository`。
 
 <font color=red>*localRepository* 设置本地存放Jar包地址</font>，可以根据自己的情况改动：
 ```xml
@@ -393,6 +434,8 @@ clean`[^2]`, post-clean`。
 * `mvn compile`：编译
 * `mvn test`：运行测试
 * `mvn package`：打包
+
+`package`做了很多事情，编译，测试，打包，最后生成了一个jar包，里面放了类。
 
 ## Goal
 &emsp;&emsp;执行一个phase又会触发一个或多个goal(goal的命名总是`abc:xyz`这种形式)：
