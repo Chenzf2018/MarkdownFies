@@ -351,7 +351,82 @@ In main() method! 144
  */
 ``` 
 
- ### 初识并发问题
+
+### 使用Lambda创建线程
+
+**原始方法**：
+
+```java
+public class LambdaThread implements Runnable{
+    @Override
+    public void run(){
+        for (int i = 0; i < 10; i++){
+            System.out.println(Thread.currentThread().getName() + " 在听歌。。。");
+        }
+    }
+
+    public static void main(String[] args) {
+        Runnable lambdaThread = new LambdaThread();
+        // LambdaThread lambdaThread = new LambdaThread();
+        Thread thread = new Thread(lambdaThread);
+        thread.start();
+        
+        for (int i = 0; i < 10; i++){
+            System.out.println(Thread.currentThread().getName() + " 在敲代码。。。");
+        }
+    }
+}
+```
+
+**使用匿名内部类**：
+
+```java
+public class LambdaThread {
+    public static void main(String[] args) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 10; i++){
+                    System.out.println(Thread.currentThread().getName() + " 在听歌。。。");
+                }
+            }
+        }).start();
+
+        for (int i = 0; i < 10; i++){
+            System.out.println(Thread.currentThread().getName() + " 在敲代码。。。");
+        }
+    }
+}
+```
+
+**使用Lambda**：
+
+我们可以对比一下Lambda表达式和传统的Java对同一个**接口的实现**：
+<div align=center><img src=Lambda\Lambda7.jpg></div>
+
+这两种写法本质上是等价的。但是显然，Java 8中的写法更加优雅简洁。
+
+并且，由于Lambda可以**直接赋值给一个变量**，我们就可以**直接把Lambda作为参数传给函数**, 而传统的Java必须有明确的接口实现的定义，初始化才行：
+<div align=center><img src=Lambda\Lambda8.jpg></div>
+
+```java
+public class LambdaThread {
+    public static void main(String[] args) {
+        new Thread(() -> {
+            for (int i = 0; i < 10; i++){
+                System.out.println(Thread.currentThread().getName() + " 在听歌。。。");
+            }
+        }).start();
+
+        for (int i = 0; i < 10; i++){
+            System.out.println(Thread.currentThread().getName() + " 在敲代码。。。");
+        }
+    }
+}
+```
+
+
+### 初识并发问题
 
 ```java
  package Thread;
