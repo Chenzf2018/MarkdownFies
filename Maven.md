@@ -484,3 +484,83 @@ Maven已经内置了一些常用的标准插件：
 </configuration>
 ```
 Maven通过自定义插件可以执行项目构建时需要的额外功能，<font color=red>使用自定义插件必须在`pom.xml`中声明插件及配置；插件会在某个phase被执行时执行</font>；插件的配置和用法需参考插件的官方文档。
+
+
+# IDEA与Maven
+
+## IDEA设置
+
+`File->Settings->Build, Execute, Deployment->Build Tools->Maven`：
+
+- 修改`Maven home directory`: `D:/WinSoftware/Maven/apache-maven-3.3.9`
+- 修改`User settings file`: `D:\WinSoftware\Maven\apache-maven-3.3.9\conf\settings.xml`
+- `Local repository`会被自动识别为`D:\WinSoftware\Maven\repository`
+
+如此这般，IDEA中的maven就准备好了，并且是使用本地库。
+
+
+## 创建项目
+
+1. 左边选择`Maven`
+2. 勾选`Create from archetype`
+3. 选择`org.apache.maven.archetypes:maven-archetype-quickstart`：如果一直显示`loading archetype list`，则进行如下设置：`Seetings->Build...->Maven->Importing->VM options for importer:-Xmx1024m`
+4. `Next`
+
+<div align=center><img src=MavenImages\maven项目设置.png></div>
+
+<div align=center><img src=MavenImages\maven项目设置2.png></div>
+
+Maven项目创建后，IDEA还会做一些初始化的工作，那么需要点击右下角的`Import Changes`。
+
+```
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 01:07 min
+[INFO] Finished at: 2020-06-15T13:31:39+08:00
+[INFO] Final Memory: 11M/27M
+[INFO] ------------------------------------------------------------------------
+[INFO] Maven execution finished
+```
+
+Maven Import之后，就会得到一个经典的Maven项目，并且有一个附送的`App.java`类。
+
+
+## Maven添加jar
+
+修改`App.java`，使其**初始化mysql驱动**，只有导入了相关jar的前提下，才会执行成功，否则会抛出异常。
+
+```java
+package sjtu;
+
+public class App 
+{
+    public static void main( String[] args )
+    {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            System.out.println("驱动初始化成功！");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+/*
+java.lang.ClassNotFoundException: com.mysql.jdbc.Driver
+*/
+```
+
+### 修改pom.xml
+
+添加依赖：
+```xml
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>5.1.20</version>
+</dependency>
+```
+
+在修改了pom.xml之后，IDEA上会弹出这么一个`Maven projects need to be imported`，点击`Import Changes`。
+
+再次执行可以观察到导入的jar包生效了：`驱动初始化成功！`
+
