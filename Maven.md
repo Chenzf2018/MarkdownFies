@@ -305,22 +305,9 @@ Maven仓库地址代表从哪里去下载项目中的依赖包Jar包；**Maven�
         <id>alimaven</id>
         <mirrorOf>central</mirrorOf>
         <name>aliyun maven</name>
-        <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+        <url>http://maven.aliyun.com/nexus/content/repositories/central/</url>
     </mirror>
 
-    <mirror>
-        <id>repo2</id>
-        <mirrorOf>central</mirrorOf>
-        <name>spring2.0 for this Mirror.</name>
-        <url>https://repo.spring.io/libs-milestone</url>
-    </mirror>
-
-    <mirror>
-        <id>jboss-public-repository-group</id>
-        <mirrorOf>central</mirrorOf>
-        <name>JBoss Public Repository Group</name>
-        <url>http://repository.jboss.org/nexus/content/groups/public</url>
-    </mirror>
 
 </mirrors>
 ```
