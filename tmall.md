@@ -72,8 +72,6 @@ CREATE DATABASE tmall DEFAULT CHARACTER SET utf8;
 
 ## 创建表
 
-### 建表的顺序
-
 **主键与外键：**
 
 **学生表**(学号，姓名，性别，班级) 
