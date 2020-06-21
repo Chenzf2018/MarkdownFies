@@ -10,9 +10,16 @@
 
 批处理操作系统的瓶颈在于内存中只存在一个程序，那么内存中能不能存在多个程序呢？
 
-进程就是应用程序在内存中分配的空间，也就是正在运行的程序，各个进程之间互不干扰。此时，CPU采用**时间片轮转**的方式运行进程：CPU为每个进程分配一个时间段，称作它的时间片。如果在时间片结束时进程还在运行，则暂停这个进程的运行，并且CPU分配给另一个进程（这个过程叫做上下文切换）。如果进程在时间片结束前阻塞或结束，则CPU立即进行切换，不用等待时间片用完。
+进程就是应用程序在内存中分配的空间，也就是正在运行的程序，各个进程之间互不干扰。此时，CPU采用**时间片轮转**的方式运行进程：CPU为每个进程分配一个时间段，称作它的时间片。如果在时间片结束时进程还在运行，则暂停这个进程的运行，并且CPU分配给另一个进程（这个过程叫做**上下文切换**）。如果进程在时间片结束前阻塞或结束，则CPU立即进行切换，不用等待时间片用完。
 
 对于单核CPU来说，任意具体时刻都只有一个任务在占用CPU资源。
+
+即使是单核处理器也支持多线程执行代码，CPU通过给每个线程分配**CPU时间片**来实现这个机制。时间片是CPU分配给各个线程的时间，**因为时间片非常短，所以CPU通过不停地切换线程执行，让我们感觉多个线程是同时执行的**，时间片一般是几十毫秒（ms）。
+
+CPU通过时间片分配算法来循环执行任务，**当前任务执行一个时间片后会切换到下一个任务**。但是，**在切换前会保存上一个任务的状态，以便下次切换回这个任务时，可以再加载这个任务的状态**。所以**任务从保存到再加载**的过程就是一次**上下文切换**。
+
+**并发执行的速度可能会比串行慢**！这是因为**线程有创建和上下文切换的开销**。
+
 
 **线程的提出**：
 如果**一个进程有多个子任务**时，只能逐个得执行这些子任务，很影响效率。
@@ -39,13 +46,38 @@
 * 进程是程序的一次执行过程；真正的多线程是指有多个CPU（线程是CPU调度和执行的单位）。在一个CPU情况下，在一个时间点，CPU只能执行一个代码，模拟出来的多线程是因为切换得很快，产生同时执行的假象；
 * 对一份资源，会存在资源抢夺的问题，需要加入并发控制。
 
+
+## 如何减少上下文切换
+
+减少上下文切换的方法有**无锁并发编程、CAS算法、使用最少线程和使用协程**（在单线程里实现多任务的调度，并在单线程里维持多个任务间的切换）。
+
+
 # 线程的实现(重点)
+
+在Java中，当我们启动`main函数`时其实就启动了一个JVM的进程，而main函数所在的线程就是这个进程中的一个线程，也称主线程。一个进程中有多个线程，多个线程**共享进程的堆和方法区资源**，但是每个线程有自己的**程序计数器**和**栈区域**。
+
+- 程序计数器是一块内存区域，用来记录**线程**当前要执行的指令**地址**。
+  - 线程是占用CPU执行的基本单位，而CPU一般是使用**时间片轮转**方式让线程轮询占用的，所以当前线程CPU时间片用完后，要让出CPU，等下次轮到自己的时候再执行。
+  - 程序计数器就是为了**记录该线程让出CPU时的执行地址**的，待再次分配到时间片时线程就可以从自己私有的计数器指定地址继续执行。
+- 每个线程都有自己的栈资源，用于**存储该线程的局部变量**，这些局部变量是该线程私有的。
+- 堆是一个进程中最大的一块内存，**堆是被进程中的所有线程共享的**，是进程创建时分配的，堆里面主要存放使用new操作创建的对象实例。
+- 方法区则用来存放JVM加载的类、常量及静态变量等信息，也是线程共享的。
 
 Java程序运行时，最开始运行的只能是**主线程**。所以，必须在程序中**启动新线程**，这才能算是多线程程序。
 
-* 继承`Thread类`
-* 实现`Runnable接口`
-* 实现`Callable接口`
+`Thread.java`中`run`方法：
+```java
+@Override
+public void run() {
+    // 如果构造Thread时传递了Runnbale，则会执行runnable的run方法
+    if (target != null) {
+        target.run();
+    }
+    // 否则需要重写Thread类的run方法
+}
+```
+
+从中可以知道：**创建线程只有一种方式那就是构造`Thread`类**，而**实现线程的执行单元**则有两种方式，第一种是重写`Thread`的`run`方法；第二种是实现`Runnable`接口的`run`方法，并且**将`Runnable`实例用作构造`Thread`的参数**。
 
 ## 继承`Thread类`
 * 将一个类声明为`Thread`的子类；
@@ -128,7 +160,7 @@ In main() method! 3
 > 
 > 注意不可多次调用`start()`方法。在第一次调用`start()`方法后，再次调用`start()`方法会抛出异常。
 
-
+其实调用`start`方法后线程并没有马上执行而是处于**就绪状态**，这个就绪状态是指该线程已经获取了**除CPU资源**外的其他资源，等待获取CPU资源后才会真正处于运行状态。一旦run方法执行完毕，该线程就处于终止状态。
 
 ### 案例：下载图片
 下载`Commons IO`，复制到工程目录下，按`Add as Library`。
@@ -212,6 +244,8 @@ Output:
 将下载的图片命名为 扬州1.jpeg
  */
 ```
+
+使用继承方式的好处是，**在`run()`方法内获取当前线程直接使用`this`**就可以了，无须使用`Thread.currentThread()方法`；不好的地方是**Java不支持多继承**，如果继承了Thread类，那么就不能再继承其他类。另外**任务与代码没有分离**，当多个线程执行一样的任务时需要多份任务代码。
 
 ## 实现`Runnable`
 
@@ -426,56 +460,7 @@ public class LambdaThread {
 ```
 
 
-### 初识并发问题
 
-```java
- package Thread;
-
-/*
-实现Runnable接口
- */
-
-public class BuyTicket implements Runnable
-{
-    private int numberOfTickets = 10;
-
-    @Override
-    public void run()
-    {
-        while (true)
-        {
-            if (numberOfTickets <= 0)
-                break;
-
-            System.out.println(Thread.currentThread().getName() + " 获得第 " + numberOfTickets-- + " 票！");
-        }
-    }
-
-    public static void main(String[] args)
-    {
-        BuyTicket buyTicket = new BuyTicket();
-
-        new Thread(buyTicket, "chen").start();
-        new Thread(buyTicket, "zu").start();
-        new Thread(buyTicket, "feng").start();
-    }
-}
-/*
-Output:
-feng 获得第 10 票！
-zu 获得第 9 票！
-chen 获得第 10 票！
-zu 获得第 7 票！
-feng 获得第 8 票！
-zu 获得第 5 票！
-chen 获得第 6 票！
-zu 获得第 3 票！
-feng 获得第 4 票！
-zu 获得第 1 票！
-chen 获得第 2 票！
- */
-```
- 结果显示多个线程获得同一张票：`feng 获得第 10 票！...chen 获得第 10 票！`。即<font color=red>多个线程操作同一个资源情况下，线程不安全！</font>
 
 ### 案例：龟兔赛跑
 
@@ -675,6 +660,8 @@ ticket: 1, Thread-1
 ```
 
 运行发现：**每个线程独立执行了卖票的任务**，每个线程中票数依次减1。
+
+虽然可以对`ticket`用`static`进行修饰，做到多线程下共享资源的唯一性，但一方面数字很大则会出现线程安全问题，另一方面，如果共享资源很多，不可能都用`static`进行修饰，而且`static`修饰的变量生命周期很长。
 
 Runnable接口实现一个卖票的类：
 ```java
@@ -1376,7 +1363,7 @@ interface FunctionInterface
 `Lambda`表达式只能在只有一行代码的情况下进行简化，如果有多行，必须得用代码块包裹；接口必须是函数式接口；多个参数也可以简化参数类型，但需要加括号。
 
 
-## 线程组(ThreadGroup)
+# 线程组(ThreadGroup)
 
 Java中用ThreadGroup来表示线程组，我们可以**使用线程组对线程进行批量控制**。
 
@@ -2025,6 +2012,7 @@ God blesses you !  // 随后守护线程也结束了
 
 
 # 线程的同步(重点)
+
 &emsp;&emsp;<font color=red>多个线程操作同一个资源——并发</font>。处理多线程问题时，多个线程**访问**同一个对象，并且某些线程还想**修改**这个对象，这时需要线程同步。<font color=red>线程同步其实就是一个**等待机制**，多个需要同时访问此对象的线程进入这个对象的**等待池**形成队列(排队)，等待前面线程使用完毕，下一个线程再使用</font>。
 
 &emsp;&emsp;**队列与锁**：排队去厕所，第一个人进入隔间锁上门独享资源。每个对象都有一把锁来保证线程安全。
@@ -2036,12 +2024,84 @@ God blesses you !  // 随后守护线程也结束了
 * 在多线程竞争下，加锁、释放锁会导致比较多的上下文切换和调度延时，引起性能问题；
 * 如果一个优先级高的线程等待一个优先级低的线程释放锁，会导致<font color=red>优先级倒置</font>，引起性能问题。
 
-## 线程不安全案例
+
+## 初识并发问题
+
+并发是指同**一个时间段内**多个任务同时都在执行，并且都没有执行结束，而并行是说在**单位时间内**多个任务同时在执行。并发任务强调在一个时间段内同时执行，而**一个时间段由多个单位时间累积而成**，所以说**并发的多个任务在单位时间内不一定同时在执行**。
+
+**在单CPU的时代多个任务都是并发执行的**，这是因为**单个CPU同时只能执行一个任务**。在单CPU时代多任务是共享一个CPU的，当一个任务占用CPU运行时，其他任务就会被挂起，当**占用CPU的任务时间片**用完后，会把CPU让给其他任务来使用，所以在单CPU时代多线程编程是没有太大意义的，并且线程间频繁的**上下文切换**还会带来额外开销。
+
+在多线程编程实践中，线程的个数往往多于CPU的个数，所以一般都称多线程并发编程而不是多线程并行编程。
+
+如果多个线程都只是读取共享资源，而不去修改，那么就不会存在线程安全问题；只有当至少一个线程**修改共享资源**时才会存在线程安全问题。
+
+最典型的就是计数器类的实现，计数变量count本身是一个共享变量，多个线程可以对其进行递增操作，如果不使用同步措施，由于递增操作是`获取一计算一保存`三步操作， 因此可能导致计数不准确：
+
+|   | t1 |  t2  |  t3  |  t4 |
+|:-:|:-:|:-:|:-:|:-:|
+| 线程A  | 从内存读取count=0  | 递增本线程count=1  | 写回主内存count=1  |   |
+| 线程B |   | 从内存读取count=0  | 递增本线程count=1  | 写回主内存count=1  |
+
+t2时刻线程B从内存中读取的count值为0，因为此时线程A尚未将改变后的count值写回主内存。故明明两次计数，最终的count值却仍为1。
+
+
+
+```java
+ package Thread;
+
+/*
+实现Runnable接口
+ */
+
+public class BuyTicket implements Runnable
+{
+    private int numberOfTickets = 10;
+
+    @Override
+    public void run()
+    {
+        while (true)
+        {
+            if (numberOfTickets <= 0)
+                break;
+
+            System.out.println(Thread.currentThread().getName() + " 获得第 " + numberOfTickets-- + " 票！");
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        BuyTicket buyTicket = new BuyTicket();
+
+        new Thread(buyTicket, "chen").start();
+        new Thread(buyTicket, "zu").start();
+        new Thread(buyTicket, "feng").start();
+    }
+}
+/*
+Output:
+feng 获得第 10 票！
+zu 获得第 9 票！
+chen 获得第 10 票！
+zu 获得第 7 票！
+feng 获得第 8 票！
+zu 获得第 5 票！
+chen 获得第 6 票！
+zu 获得第 3 票！
+feng 获得第 4 票！
+zu 获得第 1 票！
+chen 获得第 2 票！
+ */
+```
+ 结果显示多个线程获得同一张票：`feng 获得第 10 票！...chen 获得第 10 票！`。即<font color=red>多个线程操作同一个资源情况下，线程不安全！</font>
+
+
+### 线程不安全案例
 
 
 每个线程都在自己的工作内存交互，内存控制不当会造成数据不一致。
 
-### 不安全地买票
+#### 不安全地买票
 `chen 买到了第-1票！`：当票还剩一张时，由于没有排队，每个人都买了，于是变成-1了。
 ```java
 package Thread;
@@ -2114,7 +2174,7 @@ zu 买到了第 0 票！
  */
 ```
 
-### 不安全地取钱
+#### 不安全地取钱
 ```java
 package Thread;
 
@@ -2202,7 +2262,7 @@ Output:
  */
 ```
 
-### 线程不安全的集合
+#### 线程不安全的集合
 ```java
 package Thread;
 
@@ -2238,7 +2298,7 @@ Output:9997
  */
 ```
 
-### 线程不安全案例四
+#### 线程不安全案例四
 &emsp;&emsp;假设创建并启动100个线程，每个线程都往同一个账户中添一个便士。定义一个名为`Account`的类模拟账户，一个名为`AddAPennyTask`的类用来向账户里添加一便士，以及一个用于创建和启动线程的主类。
 <div align=center><img src=Thread/线程不安全案例4.png width=90%></div>
 
@@ -2327,7 +2387,7 @@ step | balance | newBalance | Task1                     | Task2 |
 
 问题是任务1和任务2以一种会引起冲突的方式访问一个公共资源。这是多线程程序中的一个普遍问题，称为竞争状态(`race condition`) 。如果一个类的对象在多线程程序中没有导致竞争状态，则称这样的类为线程安全的(`thread-safe`) 。
 
-### 英雄回血掉血
+#### 英雄回血掉血
 
 使用`匿名类`，继承Thread，重写run方法，直接在run方法中写业务代码。匿名类的一个好处是可以很方便的访问外部的局部变量。前提是外部的局部变量需要被声明为`final`。(JDK7以后就不需要了)
 
@@ -2470,7 +2530,7 @@ hp，最后的值就是10001。
 
 <div align=center><img src=Thread\英雄掉血回血不同步.png></div>
 
-## 同步的方法
+## synchronized
 
 为避免竞争状态，应该防止多个线程同时进入程序的某一特定部分，程序中的这部分称为临界区(`critical region`) 。可以使用关键字`synchronized`来同步方法，以便<font color=red>一次只有一个线程可以访问这个方法</font>。
 `public synchronized void deposit(int amount)`
@@ -2492,7 +2552,7 @@ hp，最后的值就是10001。
 * 同步监视器得执行过程：1.第一个线程访问，锁定同步监视器，执行其中代码；2.第二个线程访问，发现同步监视器被锁定，无法访问；3.第一个线程访问完毕，解锁同步监视器；4.第二个线程访问，发现同步监视器没有锁，然后锁定并访问。
 
 
-### synchronized 同步对象概念
+### synchronized同步对象概念
 
 ```
 Object someObject = new Object();
@@ -2611,7 +2671,7 @@ public void run(){
 
 进一步的，对于`Hero`的`hurt`方法，加上：`synchronized (this) {}`，表示**当前对象为同步对象**，即也是`gareen`为同步对象。
 
-注意第15行；66行；86行！
+**注意第15行；66行；86行！**
 
 ```java {.line-numbers}
 package HowJThread;
@@ -3016,7 +3076,7 @@ public class TestThread {
 }
 ```
 
-### 关于锁的8个问题
+### 关于synchronized的8个问题
 
 如何判断锁的是谁！永远的知道什么锁，锁到底锁的是谁！
 
@@ -3479,160 +3539,427 @@ class Phone7
 ```
 
 
+## 死锁
 
-### 死锁
-&emsp;&emsp;多个线程各自占用一些共享资源，并且互相等待其他线程占有的资源才能运行，而导致两个或多个线程都在等对方释放资源，都停止执行的情形。某一个同步块同时拥有“两个以上对象的锁”时，就可能会发生“死锁”的问题。
+&emsp;&emsp;**多个线程各自占用一些共享资源，并且互相等待其他线程占有的资源才能运行，而导致两个或多个线程都在等对方释放资源，都停止执行的情形**。某一个同步块同时拥有“两个以上对象的锁”时，就可能会发生“死锁”的问题。
 
 **多个线程互相抱着对方需要的资源**，然后形成僵持。
 
+### 产生死锁的四个必要条件
+
+* **互斥**条件：指线程对己经获取到的资源进行**排它性使用**，即该资源同时只由一个线程占用。如果此时还有其他线程请求获取该资源，则请求者只能等待，直至占有资源的线程释放该资源；
+* **请求并持有**条件：一个线程己经持有了至少一个资源，但又提出了新的资源请求，而新资源己被其他线程占有，所以当前线程会被阻塞，但阻塞的同时并不释放自己己经获取的资源；
+* **不可剥夺条件**：指线程获取到的资源在自己使用完之前不能被其他线程抢占，只有在自己使用完毕后才由自己释放该资源；
+* **环路等待**条件：若干线程之间形成一种**头尾相接的循环等待资源关系**。
+
+### 死锁示例
+
 ```java
-package Thread;
+public class DeadLock {
+    // 创建资源
+    private static Object resourceA = new Object();
+    private static Object resourceB = new Object();
 
-public class DeadLock
-{
-    public static void main(String[] args)
-    {
-        Makeup girl1 = new Makeup(0, "Girl1");
-        Makeup girl2 = new Makeup(1, "Girl2");
-        girl1.start();
-        girl2.start();
-    }
+    public static void main(String[] args) {
+        // 创建线程A
+        Thread threadA = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (resourceA) {
+                    System.out.println(Thread.currentThread().getName() + " gets resourceA.");
 
-}
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
-class Lipstick
-{
+                    System.out.println(Thread.currentThread().getName() + " is waiting for resourceB...");
 
-}
-
-class Mirror
-{
-
-}
-
-class Makeup extends Thread
-{
-    // 需要的资源只有一份，可由static保证
-    static Lipstick lipstick = new Lipstick();
-    static Mirror mirror = new Mirror();
-
-    int choice;  // 选择
-    String girlName;  // 使用化妆品的人
-
-    Makeup(int choice, String girlName)
-    {
-        this.choice = choice;
-        this.girlName = girlName;
-    }
-
-    // 化妆
-    @Override
-    public void run()
-    {
-        try
-        {
-            makeup();
-        }catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    // 化妆：互相持有对方的锁，就是需要拿到对方的资源
-    private void makeup() throws InterruptedException
-    {
-        if (choice == 0)
-        {
-            synchronized (lipstick)
-            {
-                System.out.println(this.girlName + " 拥有口红的使用权！想得到镜子的使用权！");
-                Thread.sleep(1000);
-
-                synchronized (mirror)
-                {
-                    System.out.println(this.girlName + " 获得了镜子的使用权！");
+                    synchronized (resourceB) {
+                        System.out.println(Thread.currentThread().getName() + " gets resourceB.");
+                    }
                 }
             }
-        }
-        else
-        {
-            synchronized (mirror)
-            {
-                System.out.println(this.girlName + " 拥有镜子的使用权！想得到口红的使用权！");
-                Thread.sleep(4000);
+        });
 
-                synchronized (lipstick)
-                {
-                    System.out.println(this.girlName + " 获得了口红的使用权！");
+        // 创建线程B
+        Thread threadB = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (resourceB) {
+                    System.out.println(Thread.currentThread().getName() + " gets resourceB.");
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println(Thread.currentThread().getName() + " is waiting for resourceA...");
+
+                    synchronized (resourceA) {
+                        System.out.println(Thread.currentThread().getName() + " gets resourceA.");
+                    }
                 }
             }
-        }
+        });
+
+        // 启动线程
+        threadA.start();
+        threadB.start();
     }
 }
 /*
-Output:
-Girl2 拥有镜子的使用权！想得到口红的使用权！
-Girl1 拥有口红的使用权！想得到镜子的使用权！
-
-Process finished with exit code -1
+Thread-0 gets resourceA.
+Thread-1 gets resourceB.
+Thread-1 is waiting for resourceA...
+Thread-0 is waiting for resourceB...
  */
 ```
 
-避免死锁：
+线程调度器先调度了线程A，也就是把CPU资源分配给了线程A，**线程A使用`synchronized( resourceA)`方法获取到了resourceA的`监视器锁`**，然后调用`sleep函数`休眠1s，**休眠ls是为了保证线程A在获取resourceB对应的锁前，让线程B抢占到CPU，获取到资源resourceB上的锁**。线程A调用`sleep`方法后线程B会执行`synchronized(resource B)`方法，这代表线程B获取到了resourceB对象的监视器锁资源，然后调用sleep函数休眠1s。到了这里线程A获取到了resourceA资源，线程B获取到了resourceB资源。
+
+线程A休眠结束后会企图获取resourceB资源，而resourceB资源被线程B所持有，所以线程A会被阻塞而等待。而同时线程B休眠结束后会企图获取resourceA资源，而resourceA资源己经被线程A持有，所以线程A和线程B就陷入了相互等待的状态，也就产生了死锁。
+
+### 避免线程死锁
+
+要想避免死锁，只需要破坏掉至少一个构造死锁的必要条件即可。但是根据操作系统的知识，目前只有**请求并持有**和**环路等待条件**是可以被破坏的。
+
+造成死锁的原因其实和**申请资源的顺序**有很大关系，**使用资源申请的有序性原则**就可以避免死锁。
+
+让在线程B中获取资源的顺序和在线程A 中获取资源的顺序保持一致：
 ```java
- private void makeup() throws InterruptedException
-    {
-        if (choice == 0)
-        {
-            synchronized (lipstick)
-            {
-                System.out.println(this.girlName + " 拥有口红的使用权！想得到镜子的使用权！");
+// 创建线程B
+Thread threadB = new Thread(new Runnable() {
+    @Override
+    public void run() {
+        synchronized (resourceA) {
+            System.out.println(Thread.currentThread().getName() + " gets resourceA.");
+
+            try {
                 Thread.sleep(1000);
-
-                /* 死锁
-                synchronized (mirror)
-                {
-                    System.out.println(this.girlName + " 获得了镜子的使用权！");
-                }*/
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
 
-            synchronized (mirror)
-            {
-                System.out.println(this.girlName + " 获得了镜子的使用权！");
-            }
-        }
-        else
-        {
-            synchronized (mirror)
-            {
-                System.out.println(this.girlName + " 拥有镜子的使用权！想得到口红的使用权！");
-                Thread.sleep(4000);
+            System.out.println(Thread.currentThread().getName() + " is waiting for resourceB...");
 
-                /* 死锁
-                synchronized (lipstick)
-                {
-                    System.out.println(this.girlName + " 获得了口红的使用权！");
-                }*/
-            }
-
-            synchronized (lipstick)
-            {
-                System.out.println(this.girlName + " 获得了口红的使用权！");
+            synchronized (resourceB) {
+                System.out.println(Thread.currentThread().getName() + " gets resourceB.");
             }
         }
     }
+});
 ```
 
-#### 死锁避免方法
+线程A和线程B同时执行到了`synchronized(resourceA)`，**只有一个线程可以获取到resourceA上的监视器锁**，假如线程A获取到了，那么线程B就会被阻塞而不会再去获取资源A，线程A获取到resourceA的监视器锁后会去申请resourceB的监视器锁资源，这时候线程A是可以获取到的，线程A获取到resourceB资源并使用后会放弃对资源resourceB的持有，然后再释放对resourceA的持有，**释放resourceA后线程B才会被从阻塞状态变为激活状态**。
 
-产生死锁的四个必要条件：
-* 一个资源每次只能被一个进程使用；
-* 一个进程因请求资源而阻塞时，对已获得的资源保持不放；
-* 进程已获得的资源，在未使用完之前，不能强行剥夺；
-* 若干进程之间形成一种头尾相接的循环等待资源关系。
+所以**获取资源的有序性**破坏了资源的请求并持有条件和环路等待条件，因此避免了死锁。
 
 
-### `Lock`锁
+## ThreadLocal
+
+多线程访问同**一个共享变量**时特别容易出现并发问题，特别是在多个线程需要对一个共享变量进行写入时。为了保证线程安全，一般使用者在访问共享变量时需要进行适当的同步。
+
+同步的措施一般是**加锁**，这就需要使用者对锁有一定的了解，这显然加重了使用者的负担。那么有没有一种方式可以做到，**当创建一个变量后，每个线程对其进行访问的时候访问的是自己线程的变量**呢？
+
+`ThreadLocal`是`JDK包`提供的，它提供了**线程本地变量**，也就是**如果你创建了一个`ThreadLocal`变量，那么访问这个变量的每个线程都会有这个变量的一个本地副本**。当多个线程操作这个变量时，实际操作的是自己本地内存里面的变量，从而避免了线程安全问题。**创建一个`ThreadLocal`变量后，每个线程都会复制一个变量到自己的本地内存**。
+
+```java
+public class ThreadLocalTest {
+    // 创建ThreadLocal变量
+    private static ThreadLocal<String> localVariable = new ThreadLocal<>();
+
+    // print函数
+    public static void print(String string) {
+        // 打印当前线程本地内存中localVariable变量的值
+        System.out.println(string + " : " + localVariable.get());
+
+        // 清除当前线程本地内存中的localVariable变量
+        // localVariable.remove();
+    }
+
+    public static void main(String[] args) {
+        // 创建线程threadOne
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 设置threadOne中本地变量localVariable的值
+                localVariable.set("threadOne local variable");
+                print("threadOne");
+                // 打印本地变量值
+                System.out.println("threadOne 不使用 localVariable.remove() : " + localVariable.get());
+            }
+        });
+
+        // 创建线程threadTwo
+        Thread threadTwo = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 设置threadTwo中本地变量localVariable的值
+                localVariable.set("threadTwo local variable");
+                print("threadTwo");
+                // 打印本地变量值
+                System.out.println("threadTwo 不使用 localVariable.remove() : " + localVariable.get());
+            }
+        });
+
+        threadOne.start();
+        threadTwo.start();
+    }
+
+}
+/*
+threadOne : threadOne local variable
+threadTwo : threadTwo local variable
+threadOne 不使用 localVariable.remove() : threadOne local variable
+threadTwo 不使用 localVariable.remove() : threadTwo local variable
+*/
+```
+
+线程threadOne中的代码`localVariable.set("threadOne local variable");`通过`set方法`设置了`localVariable`的值，这其实**设置的是线程threadOne本地内存中的一个副本，这个副本线程threadTwo是访问不了的**。
+
+
+### ThreadLocal实现原理
+
+<div align=center><img src=Thread\threadLocal.png></div>
+
+Thread类中有一个`threadLocals`(`ThreadLocal.ThreadLocalMap threadLocals = null;`)和一个`inheritableThreadLocals`(`ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;`)，它们都**是`ThreadLocalMap`类型的变量**，而`ThreadLocalMap`是一个定制化的`Hashmap`。
+
+**在默认情况下，每个线程中的这两个变量都为null，只有当前线程第一次调用`ThreadLocal`的`set`或者`get`方法时才会创建它们**。
+
+其实**每个线程的本地变量不是存放在`ThreadLocal`实例里面，而是存放在调用线程的`threadLocals`变量里面**。也就是说，**`ThreadLocal`类型的本地变量存放在具体的线程内存空间中**。`ThreadLocal`就是一个工具壳，它**通过set方法把value值放入调用线程的`threadLocals`里面并存放起来**，当调用线程调用它的get方法时，再从**当前线程的`threadLocals`变量**里面将其拿出来使用。如果调用线程一直不终止，那么这个本地变量会一直存放在调用线程的`threadLocals`变量里面，所以当不需要使用本地变量时可以通过调用`ThreadLocal`变量的remove方法，从**当前线程的`threadLocals`**里面删除该本地变量。
+
+Thread里面的threadLocals为何被设计为map结构？
+
+很明显是因为**每个线程可以关联多个ThreadLocal变量**。
+
+
+### ThreadLocal方法码源分析
+
+```java
+public void set(T value) {
+    // 获取当前线程
+    Thread t = Thread.currentThread();
+
+    // 将当前线程作为key，去查找对应的线程变量，找到则设置
+    ThreadLocalMap map = getMap(t);
+    if (map != null)
+        map.set(this, value);
+    else
+        // 如果是第一次调用，就创建当前线程对应的HashMap
+        createMap(t, value);
+}
+```
+
+```java
+ThreadLocalMap getMap(Thread t) {
+    return t.threadLocals;
+}
+```
+`getMap(t`的作用是**获取线程自己的变量`threadLocals`**。
+
+```java
+void createMap(Thread t, T firstValue) {
+    t.threadLocals = new ThreadLocalMap(this, firstValue);
+}
+```
+
+```java
+public T get() {
+    // 获取当前线程
+    Thread t = Thread.currentThread();
+
+    // 获取当前线程的threadlocals变量
+    ThreadLocalMap map = getMap(t);
+
+    // 如果threadLocals不为null，则返回对应本地变量的值
+    if (map != null) {
+        ThreadLocalMap.Entry e = map.getEntry(this);
+        if (e != null) {
+            @SuppressWarnings("unchecked")
+            T result = (T)e.value;
+            return result;
+        }
+    }
+    // threadLocals为空则初始化当前线程的threadLocals成员变量
+    return setInitialValue();
+}
+```
+
+```java
+private T setInitialValue() {
+    // 初始化为null
+    T value = initialValue();
+    Thread t = Thread.currentThread();
+    ThreadLocalMap map = getMap(t);
+    if (map != null)
+        map.set(this, value);
+    else
+        createMap(t, value);
+    return value;
+}
+
+protected T initialValue() {
+    return null;
+}
+```
+
+```java
+public void remove() {
+    ThreadLocalMap m = getMap(Thread.currentThread());
+    if (m != null)
+        m.remove(this);
+}
+```
+
+总结：
+
+在每个线程内部都有一个名为`threadLocals`的成员变量，该变量的类型为`HashMap`，其中`key`为我们定义的`ThreadLocal变量`的`this引用`，`value`则为我们使用set方法设置的值。
+
+每个线程的本地变量存放在线程自己的内存变量`threadLocals`中，如果当前线程一直不消亡，那么这些本地变量会一直存在，所以**可能会造成内存溢出**，因此使用完毕后要记得调用ThreadLocal 的remove方法删除对应线程的threadLocals中的本地变量。
+
+
+### InheritableThreadLocal类
+
+`ThreadLocal`不支持继承性：
+
+```java
+public class ThreadLocalTest1 {
+    // 创建线程变量
+    public static ThreadLocal<String> threadLocal = new ThreadLocal<>();
+
+    public static void main(String[] args) {
+        // 设置main线程变量
+        threadLocal.set("main线程");
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 子线程输出线程变量的值
+                System.out.println("thread线程：" + threadLocal.get());
+            }
+        });
+
+        thread.start();
+
+        // 主线程输出线程变量的值
+        System.out.println("main线程：" + threadLocal.get());
+    }
+}
+/*
+main线程：main线程
+thread线程：null
+ */
+```
+
+同一个ThreadLocal变量在父线程中被设置值后，在子线程中是获取不到的。因为在子线程thread里面调用get方法时当前线程为thread线程，而这里调用set方法设置线程变量的是main线程，两者是不同的线程，自然子线程访问时返回null。
+
+那么有没有办法让子线程能访问到父线程中的值？答案是有。
+
+`InheritableThreadLocal`继承自`ThreadLocal`，其提供了一个特性，就是**让子线程可以访问在父线程中设置的本地变量**。
+
+```java
+public class InheritableThreadLocal<T> extends ThreadLocal<T> {
+    /**
+     * @param parentValue the parent thread's value
+     * @return the child thread's initial value
+     */
+     // (1)
+    protected T childValue(T parentValue) {
+        return parentValue;
+    }
+
+    /**
+     * Get the map associated with a ThreadLocal.
+     *
+     * @param t the current thread
+     */
+     // (2)
+    ThreadLocalMap getMap(Thread t) {
+       return t.inheritableThreadLocals;
+    }
+
+    /**
+     * Create the map associated with a ThreadLocal.
+     *
+     * @param t the current thread
+     * @param firstValue value for the initial entry of the table.
+     */
+     // (3)
+    void createMap(Thread t, T firstValue) {
+        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
+    }
+}
+```
+
+下面我们看一下重写的代码(1)何时执行，以及如何让子线程可以访问父线程的本地变量。这要从创建Thread的代码说起，打开Thread类的默认构造函数，代码如下：
+
+```java
+public Thread(Runnable target) {
+    init(null, target, "Thread-" + nextThreadNum(), 0);
+}
+...
+
+private void init(ThreadGroup g, Runnable target, String name,
+                      long stackSize, AccessControlContext acc) {
+    // (4)获取当前线程
+    Thread parent = currentThread();
+    ...
+    // (5)如果父线程的inheritableThreadLocals变量不为null
+    if (parent.inheritableThreadLocals != null)
+        // (6)设置子线程中的InheritableThreadLocals变量
+        this.inheritableThreadLocals =
+            ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+}
+```
+
+在创建线程时，在构造函数里面会调用`init`方法。代码(4)获取了当前线程（这里是指**main函数所在的线程**，也就是父线程），然后代码(5)判断main函数所在线程里面的`inheritableThreadLocals`属性是否为null。
+
+```java
+static ThreadLocalMap createInheritedMap(ThreadLocalMap parentMap) {
+    return new ThreadLocalMap(parentMap);
+}
+```
+
+在`createInheritedMap`内部使用父线程的`inheritableThreadLocals`变量作为构造函数创建了一个新的`ThreadLocalMap`变量， 然后赋值给了子线程的`inheritableThreadLocals`变量。
+
+**总结：**
+
+`InheritableThreadLocal`类通过重写代码(2)和(3)让本地变量保存到了具体线程的`inheritableThreadLocals`变量里面，那么线程在通过`InheritableThreadLocal`类实例的set或者get方法设置变量时，就会创建当前线程的`inheritableThreadLocals`变量。当父线程创建子线程时，构造函数会把父线程中`inheritableThreadLocals`变量里面的本地变量复制一份保存到子线程的`inheritableThreadLocals`变量里面。
+
+```java
+public class ThreadLocalTest1 {
+    // 创建线程变量
+    public static ThreadLocal<String> threadLocal = new InheritableThreadLocal<>();
+
+    public static void main(String[] args) {
+        // 设置main线程变量
+        threadLocal.set("main线程");
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 子线程输出线程变量的值
+                System.out.println("thread线程：" + threadLocal.get());
+            }
+        });
+
+        thread.start();
+
+        // 主线程输出线程变量的值
+        System.out.println("main线程：" + threadLocal.get());
+    }
+}
+/*
+main线程：main线程
+thread线程：main线程
+ */
+```
+
+
+## `Lock`锁
 
 &emsp;&emsp;Java可以显式地加锁，这给协调线程带来了更多的控制功能。一个锁是一个`Lock`接口的实例，它定义了加锁和释放锁的方法。
 
@@ -3656,6 +3983,8 @@ public ReentrantLock(boolean fair)
     sync = fair ? new FairSync() : new NonfairSync();
 }
 ```
+
+### 加锁示例
 
 #### 加锁线程安全1
 
@@ -3914,7 +4243,7 @@ zu 获得了第 2363 张票！
  */
 ```
 
-#### tryLock
+### tryLock
 
 `synchronized`是**不占用到手不罢休**的，会一直试图占用下去。与`synchronized`的钻牛角尖不一样，`Lock`接口还提供了一个`tryLock`方法。`tryLock`会在指定时间范围内试图占用。如果时间到了，还占用不成功，就不会一直等下去。
 
@@ -4216,6 +4545,130 @@ class Ticket2
 * 优先使用顺序：`Lock` > 同步代码块 > 同步方法
 
 
+## volatile
+
+在多线程下，处理共享变量时Java的内存模型：Java内存模型规定，将所有的变量都存放在**主内存**中，当线程使用变量时，会把主内存里面的变量复制到自己的工作空间或者叫作工作内存，**线程读写变量时操作的是自己工作内存中的变量**，处理完后将变量值更新到主内存。
+
+### JMM
+
+假设CPU执行一条普通指令需要一天，那么CPU读写内存就得等待一年的时间。在CPU眼里，程序的整体性能都被内存的办事效率拉低了，为了解决这个短板，缓存Cache应运而生。
+
+**CPU增加了缓存均衡了与内存的速度差异**，这一增加还是好几层：
+<div align=center><img src=Thread\缓存.jpg></div>
+
+此时内存的短板不再那么明显，CPU甚喜。
+
+但随之却带来很多问题：
+<div align=center><img src=Thread\缓存1.jpg></div>
+
+每个核都有自己的一级缓存(L1 Cache)，有的架构里面还有所有核共用的二级缓存(L2 Cache)。**使用缓存之后，当线程要访问共享变量时，如果L1中存在该共享变量，就不会再逐级访问直至主内存了**。所以，通过这种方式，就补上了**访问内存慢**的短板。
+
+具体来说，线程**读/写共享变量**的步骤是这样：
+
+- 从主内存复制共享变量到自己的工作内存
+- 在工作内存中对变量进行处理
+- 处理完后，将变量值更新回主内存
+
+
+假设现在主内存中有共享变量X，其初始值为0。线程1先访问变量X：
+
+- L1和L2中都没有发现变量X，直到在主内存中找到
+- 拷贝变量X到L1和L2中
+- 在L1中将X的值修改为1，并逐层写回到主内存中
+  
+此时，在线程1眼中，X的值是这样的：
+<div align=center><img src=Thread\缓存2.jpg width=60%></div>
+
+接下来，线程2同样按照上面的步骤访问变量X：
+
+- L1中没有发现变量X
+- **L2中发现了变量X**
+- 从L2中拷贝变量到L1中
+- 在L1中将X的值修改为2，并逐层写回到主内存中
+  
+此时，线程2眼中，X的值是这样的：
+<div align=center><img src=Thread\缓存3.jpg width=60%></div>
+
+结合刚刚的两次操作，当线程1再访问变量x，就会出现问题：
+<div align=center><img src=Thread\缓存4.jpg width=80%></div>
+
+此刻，如果线程1再次将`x=1`回写，就会覆盖线程2`x=2`的结果，**同样的共享变量，线程拿到的结果却不一样**（线程1眼中`x=1`；线程2眼中`x=2`），这就是**共享变量内存不可见**的问题。
+
+
+**`synchronized`关键字是怎么解决上面提到的共享变量内存不可见性问题的呢？**
+
+- 【进入】synchronized块的内存语义是**把在synchronized块内使用的变量从线程的工作内存中清除，从主内存中读取**
+- 【退出】synchronized块的内存语义事把在synchronized块内对共享变量的修改**刷新到主内存中**
+
+
+### 使用volatile消除共享内存不可见问题
+
+当一个变量被声明为volatile时：
+
+- 线程在【读取】共享变量时，会**先清空本地内存变量值，再从主内存获取最新值**；
+- 线程在【写入】共享变量时，不会把值缓存在寄存器或其他地方（就是刚刚说的所谓的「工作内存」），而是会**把值刷新回主内存**。
+
+<div align=center><img src=Thread\volatile.jpg width=50%></div>
+
+两者处理方式换汤不换药！
+
+所以，当使用`synchronized`或`volatile`后，多线程操作共享变量的步骤就变成了这样：
+<div align=center><img src=Thread\volatile1.jpg width=70%></div>
+
+简单点来说就是不再参考L1和L2中共享变量的值，而是**直接访问主内存**！
+
+注意第22，26行和第35行！
+```java {.line-numbers}
+public class ThreadNotSafeInteger {
+    /**
+    * 共享变量 value
+    */
+    private int value;
+    
+    public int getValue() {
+        return value;
+    }
+    
+    public void setValue(int value) {
+        this.value = value;
+    }
+}
+
+public class ThreadSafeInteger {
+    /**
+    * 共享变量 value
+    */
+    private int value;
+    
+    public synchronized int getValue() {
+        return value;
+    }
+    
+    public synchronized void setValue(int value) {
+        this.value = value;
+    }
+}
+
+public class ThreadSafeInteger {
+    /**
+    * 共享变量 value
+    */
+    private volatile int value;
+    
+    public int getValue() {
+        return value;
+    }
+    
+    public void setValue(int value) {
+        this.value = value;
+    }
+}
+```
+这两个结果是完全相同，在解决【当前】共享变量数据可见性的问题上，二者算是等同的！
+
+如果说`synchronized`和`volatile`是完全等同的，那是不是就没必要设计两个关键字了？继续看个例子
+
+https://dayarch.top/p/difference-between-volatile-and-synchronized-keyword.html
 # 线程通信
 
 ## 监视器
@@ -5549,7 +6002,7 @@ public static ExecutorService newCachedThreadPool() {
 }
 ```
 
-本质都是调用`ThreadPoolExecutor`：
+三大方法本质都是调用`ThreadPoolExecutor`：
 ```java
 public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小；线程池初始化线程的个数
                           int maximumPoolSize,  // 2.最大核心线程池大小
@@ -5577,7 +6030,7 @@ public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小；线程
 
 ### ThreadPoolExecutor
 
-《阿里巴巴Java手册》建议：线程池不允许使用`Executors`去创建，而是通过`ThreadPoolExecutor`的方式，可以更明确线程池的运行规则，规避资源耗尽的风险。
+《阿里巴巴Java手册》建议：**线程池不允许使用`Executors`去创建，而是通过`ThreadPoolExecutor`的方式**，可以更明确线程池的运行规则，规避资源耗尽的风险。
 
 <div align=center><img src=Thread\线程池七大参数.jpg width=70%></div>
 
@@ -5797,6 +6250,8 @@ Exception in thread "main" java.util.concurrent.RejectedExecutionException...
  */
 ```
 队列达到上限，线程池达到最大值，故抛出异常。
+
+<div align=center><img src=Thread\ThreadPoolExecutor任务调度流程图.png></div>
 
 ### 四种拒绝策略
 
