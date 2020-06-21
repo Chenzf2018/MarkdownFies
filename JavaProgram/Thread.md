@@ -51,6 +51,144 @@ CPU通过时间片分配算法来循环执行任务，**当前任务执行一个
 
 减少上下文切换的方法有**无锁并发编程、CAS算法、使用最少线程和使用协程**（在单线程里实现多任务的调度，并在单线程里维持多个任务间的切换）。
 
+## 并发编程三个核心
+
+并发编程可以抽象成三个核心: **分工、同步/协作、互斥**！
+
+- 分工：合适的线程才能更好的完成整块工作，当然一个线程可以轻松搞定的就没必要 多线程；主线程应该做的事交给子线程显然是解决不了问题的，每个线程做正确的事才能发挥作用。常见的**Executor，生产者-消费者模式，Fork/Join**等，都是分工思想的体现。
+
+- 同步/协作：任务拆分完毕，我要等张三的任务，张三要等李四的任务，也就是说**任务之间存在依赖关系**，前面的任务执行完毕，后面的任务才可以执行面对程序。我们需要了解程序的沟通方式，**一个线程执行完任务，如何通知后续线程执行**。Java SDK中`CountDownLatch`和`CyclicBarrier`就是用来解决**线程协作**问题的。
+
+- 互斥：**同一时刻，只允许一个线程访问共享变量**。**分工和同步强调的是性能，但是互斥是强调正确性**，就是我们常常提到的「线程安全」。当多个线程同时访问一个共享变量/成员变量时，就可能发生不确定性。造成不确定性主要是有**可见性、原子性、有序性**这三大问题，而解决这些问题的核心就是互斥。**synchronized关键字，Lock，ThreadLocal**等就是互斥的解决方案。
+
+<div align=center><img src=Thread\并发编程三大核心.png></div>
+
+
+## 造成线程不安全的三大问题
+
+### 可见性
+
+**一个线程对共享变量的修改，另外一个线程能够立刻看到**，我们称为可见性。
+
+谈到可见性，要先引出**JMM(Java Memory Model)**概念，即**Java内存模型**，Java内存模型规定：
+- 将所有的变量都存放在`主内存`中
+- 当线程使用变量时，会把主内存里面的变量`复制`到自己的工作空间或者叫作`私有内存`，**线程读写变量时操作的是自己工作内存中的变量**。
+
+用Git的工作流程理解上面的描述就很简单了，**Git远程仓库就是主内存，Git本地仓库就是自己的工作内存**：
+
+<div align=center><img src=Thread\可见性.png width=50%></div>
+
+**线程可见性问题**：
+
+- 主内存中有变量x，初始值为0；
+- 线程A要将x加1：先将x=0拷贝到自己的私有内存中，然后更新x的值；
+- 线程A将更新后的x值回刷到主内存的**时间是不固定的**；
+- 刚好在线程A没有回刷x到主内存时，线程B同样从主内存中读取x，此时为0。和线程A一样的操作，最后期盼的x=2就会变成x=1。
+
+在Java中，所有的**实例域，静态域和数组元素都存储在堆内存**中，堆内存在线程之间共享，称之为「共享变量」。局部变量，方法定义参数和异常处理器参数不会在线程之间共享，所以他们不会有内存可见性的问题，也就不受内存模型的影响。
+
+
+### 原子性
+
+所谓原子操作是指不会被线程调度机制打断的操作；**这种操作一旦开始，就一直运行到结束，中间不会有任何context switch**。
+
+```java
+package Thread;
+
+public class UnsafeCounter {
+    private long count;
+
+    private void counter() {
+        long start = 0;
+        while (start++ < 10000)
+            count++;
+    }
+
+    private long getCount() {
+        return count;
+    }
+
+    public static void main(String[] args) {
+        try {
+            UnsafeCounter unsafeCounter = new UnsafeCounter();
+
+            Thread thread1 = new Thread(unsafeCounter::counter, "线程thread1");
+            Thread thread2 = new Thread(unsafeCounter::counter, "线程thread2");
+
+            thread1.start();
+            thread2.start();
+
+            thread1.join();
+            thread2.join();
+
+            System.out.println(unsafeCounter.getCount());  // 13572
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+不能用高级语言思维来理解CPU的处理方式，**`count++`转换成CPU`指令需要三步**，不是单一操作，所以不是原子性的！
+
+<div align=center><img src=Thread\原子性.png width=80%></div>
+
+多线程计数器，如何保证多个操作的原子性呢？最粗暴的方式是在方法上加 `synchronized`关键字：
+
+```java
+private synchronized void counter() {
+    long start = 0;
+    while (start++ < 10000)
+        count++;
+}
+
+private synchronized long getCount() {
+    return count;
+}
+```
+
+问题是解决了，如果synchronized是万能良方，那么也许并发就没那么多事了，可以靠一个synchronized走天下了，事实并不是这样。
+
+synchronized是**独占锁** (同一时间只能有一个线程可以调用)，没有获取锁的线程会被**阻塞**；另外也会带来很多线程切换的**上下文开销**（*你(CPU)在看两本书(两个线程)，看第一本书很短时间后要去看第二本书，看第二本书很短时间后又回看第一本书，并要精确的记得看到第几行，当初看到了什么(CPU 记住线程级别的信息)，当让你 “同时” 看 10 本甚至更多，切换的开销就很大了*）。
+
+所以JDK中就有了**非阻塞CAS(Compare and Swap)算法**实现的原子操作类 `AtomicLong`等工具类。
+
+所有原子类中都有下面这样一段代码:`private static final Unsafe unsafe = Unsafe.getUnsafe();`，这个类是JDK的`rt.jar`包中的`Unsafe`类提供了`硬件级别`的原子性操作，类中的方法都是`native`修饰的。
+
+
+### 有序性
+
+什么是**指令重排**：你写的程序，计算机并不是按照你写的那样去执行的。
+
+源代码-->编译器优化的重排--> 指令并行也可能会重排--> 内存系统也会重排---> 执行
+
+处理器在进行指令重排的时候，考虑：**数据之间的依赖性**！
+
+```
+int x = 1; // 1
+int y = 2; // 2
+x = x + 5; // 3
+y = x * x; // 4
+我们所期望的：1234 但是可能执行的时候回变成 2134 1324，不可能是 4123！
+```
+
+可能造成影响的结果： a b x y 这四个值默认都是 0：
+线程A | 线程B | 
+:-: | :-: | 
+x = a | y = b | 
+b = 1 | a = 2 | 
+
+正常的结果： x = 0；y = 0；但是可能由于指令重排
+线程A | 线程B | 
+:-: | :-: | 
+b = 1 | a = 2 | 
+x = a | y = b | 
+
+指令重排导致的诡异结果： x = 2；y = 1；
+
+你所看到的程序并不一定是**编译器优化/编译后的CPU指令**！**大象装冰箱是是个程序，但其隐含三个步骤**。学习并发编程，你要按照CPU的思维考虑问题，所以你需要深刻理解**可见性/原子性/有序性** ，这是产生并发Bug的源头。
+
 
 # 线程的实现(重点)
 
@@ -4547,6 +4685,11 @@ class Ticket2
 
 ## volatile
 
+`Volatile`是Java虚拟机提供的**轻量级的同步机制**
+- 保证可见性
+- 不保证原子性
+- 禁止指令重排
+
 在多线程下，处理共享变量时Java的内存模型：Java内存模型规定，将所有的变量都存放在**主内存**中，当线程使用变量时，会把主内存里面的变量复制到自己的工作空间或者叫作工作内存，**线程读写变量时操作的是自己工作内存中的变量**，处理完后将变量值更新到主内存。
 
 ### JMM
@@ -4666,9 +4809,101 @@ public class ThreadSafeInteger {
 ```
 这两个结果是完全相同，在解决【当前】共享变量数据可见性的问题上，二者算是等同的！
 
-如果说`synchronized`和`volatile`是完全等同的，那是不是就没必要设计两个关键字了？继续看个例子
+如果说`synchronized`和`volatile`是完全等同的，那是不是就没必要设计两个关键字了？
 
-https://dayarch.top/p/difference-between-volatile-and-synchronized-keyword.html
+继续看个例子：
+
+```java
+package Thread;
+
+public class VisibilityIssue {
+    private static final int TOTAL = 10000;
+
+    // 即便像下面这样加了volatile关键字修饰不会解决问题，因为并没有解决原子性问题
+    private volatile int count;
+
+    public static void main(String[] args) {
+        VisibilityIssue visibilityIssue = new VisibilityIssue();
+
+        Thread thread1 = new Thread(() -> visibilityIssue.add10KCount());
+        Thread thread2 = new Thread(() -> visibilityIssue.add10KCount());
+
+        thread1.start();
+        thread2.start();
+
+        try {
+            thread1.join();
+            thread2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("count的值为：" + visibilityIssue.count);
+    }
+
+    private void add10KCount() {
+        int start = 0;
+        while (start++ < TOTAL)
+            this.count++;
+    }
+}
+/*
+count的值为：15259
+ */
+```
+
+其实就是将上面`setValue`简单赋值操作`this.value = value;`变成了`this.count++;`形式。count的值始终是处于1w和2w之间。
+
+将上面方法再以`synchronized`的形式做改动：
+
+```java
+private int count;
+...
+private synchronized void add10KCount() {
+    int start = 0;
+    while (start++ < TOTAL)
+        this.count++;
+}
+
+/*
+20000
+*/
+```
+
+### synchronized与volatile区别
+
+**`count++`程序代码是一行，但是翻译成CPU指令却是三行**(可以用`javap -c`命令查看)。
+
+`synchronized`是**独占锁/排他锁**（**有你没我**），同时只能有一个线程调用 `add10KCount`方法，其他调用线程会被阻塞。所以三行CPU指令都是同一个线程执行完之后别的线程才能继续执行，这就是通常说说的**原子性**（**线程执行多条指令不被中断**）
+
+但`volatile`是**非阻塞算法**（**不排他**），**当遇到三行CPU指令自然就不能保证别的线程不插足了**，这就是通常所说的：**`volatile`能保证内存可见性，但是不能保证原子性**。
+
+那什么时候才能用volatile关键字呢？
+
+**如果写入变量值不依赖变量当前值，那么就可以用volatile**！
+
+比如上面`count++`，是`获取-计算-写入`三步操作，也就是依赖当前值的，所以不能靠volatile解决问题。
+
+
+就好像：如果让你同一段时间内【写几行代码】就要去【数钱】，数几下钱就要去【唱歌】，唱完歌又要去【写代码】，反复频繁这样操作，还要接上上一次的操作（代码接着写，钱累加着数，歌接着唱）还需要保证不出错，你累不累？
+
+synchronized是排他的，**线程排队就要有切换**，这个切换就好比上面的例子，**要完成切换，还得记准线程上一次的操作**，很累CPU大脑，这就是通常说的**上下文切换会带来很大开销**。
+
+volatile就不一样了，它是非阻塞的方式，所以在**解决共享变量可见性问题**的时候，volatile就是synchronized的弱同步体现了。
+
+
+### Happens-before解决有序性和可见性
+
+可见性/原子性/有序性三个问题导致了很多并发Bug：
+
+- 为了解决CPU、内存、IO的短板，增加了**缓存**，但这导致了**可见性**问题；
+- 编译器/处理器擅自**优化** (Java代码在编译后会变成**Java字节码**，**字节码被类加载器加载到JVM里**，JVM执行字节码，最终需要转化为**汇编指令**在CPU上执行) ，导致原子性，有序性问题。
+
+既然不能完全禁止缓存和编译优化，那就**按需禁用缓存和编译优化**，按需就是要加一些约束，约束中就包括了**volatile，synchronized，final**三个关键字，同时还有**Happens-Before**原则(包含可见性和有序性的约束)。
+
+- 对于会改变程序执行结果的重排序，JMM要求编译器和处理器必须禁止这种重排序。
+- 对于不会改变程序执行结果的重排序，JMM对编译器和处理器不做要求 (JMM允许这种重排序)。
+
 # 线程通信
 
 ## 监视器
