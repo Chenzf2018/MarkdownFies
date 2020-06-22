@@ -1535,13 +1535,161 @@ testThread线程名字：Thread-0
 
 `ThreadGroup`管理着它下面的`Thread`，`ThreadGroup`是一个标准的向下引用的树状结构，这样设计的原因是防止"上级"线程被"下级"线程引用而无法有效地被GC回收。
 
-# 线程状态
+# 线程状态与方法
 
-<div align=center><img src=Thread/线程五大状态.png width=80%></div>
-<div align=center><img src=Thread/线程五大状态2.png width=80%></div>
+## 线程生命周期的状态
 
-线程方法：
-<div align=center><img src=Thread/线程方法.png width=60%></div>
+**1.操作系统通用线程状态**：
+
+<div align=center><img src=Thread\操作系统通用线程状态.png width=60%></div>
+
+除去**生**【初始状态】**死**【终止状态】，其实只是三种状态的各种转换。
+
+**初始状态**：线程已被创建，但是**还不被允许分配CPU执行**。注意，这个被创建其实是属于**编程语言层面**的(比如Java语言中的new Thread())，**实际在操作系统里，真正的线程还没被创建**。
+
+**可运行状态**：线程可以分配CPU执行，这时，操作系统中线程已经被创建成功了。
+
+**运行状态**：操作系统会为处在可运行状态的线程**分配CPU时间片**，处在可运行状态的线程就会变为运行状态。
+
+**休眠状态**：如果处在运行状态的线程**调用某个阻塞的API**或**等待某个事件条件可用**，那么线程就会转换到休眠状态。注意：此时线程会释放CPU使用权，只有当**等待事件出现**后，线程会从休眠状态转换到可运行状态。
+
+**终止状态**：线程执行完或者出现异常(被interrupt那种不算)就会进入终止状态，正式走到生命的尽头，没有起死回生的机会。
+
+
+**2.Java语言线程状态**：
+
+在Thread的源码中，定义了一个枚举类State，里面清晰明了的写了Java语言中线程的6种状态：
+```
+NEW
+RUNNABLE
+BLOCKED
+WAITING
+TIMED_WAITING
+TERMINATED
+```
+
+在给定的时间点上，线程只能处于一种状态。这些状态是虚拟机状态，不反映任何操作系统线程状态。
+
+<div align=center><img src=Thread\Java语言中的线程状态.png></div>
+
+Java语言中：
+- 将通用线程状态的可运行状态和运行状态合并为Runnable；
+- 将休眠状态细分为三种`BLOCKED/WAITING/TIMED_WAITING`
+    反过来理解这句话，就是这三种状态在操作系统的眼中都是休眠状态，同样不会获得CPU使用权。
+
+除去线程生死，我们只要玩转**`RUNNABLE`和`休眠状态`的转换**就可以了，编写并发程序也多数是这两种状态的转换。所以我们需要了解，有哪些时机，会触发这些状态转换。
+
+<div align=center><img src=Thread\线程状态转换.png></div>
+
+- **RUNNABLE与BLOCKED状态转换**：
+    **当且仅有（just only）一种情况**会从RUNNABLE状态进入到BLOCKED状态，就是**线程在等待synchronized内置隐式锁**！
+    如果等待的线程获取到了synchronized内置隐式锁，也就会从BLOCKED状态变为RUNNABLE状态了。
+
+- **RUNNABLE与WAITING状态转换**：
+    调用**不带时间参数的等待API**，就会从RUNNABLE状态进入到WAITING状态；当**被唤醒**就会从WAITING进入RUNNABLE状态
+
+- **RUNNABLE与TIMED-WAITING状态转换**：
+    调用**带时间参数的等待API**，自然就从RUNNABLE状态进入TIMED-WAITING状态；当**被唤醒或超时、时间到了**就会从TIMED_WAITING进入RUNNABLE状态。
+
+
+**NEW**：
+通过继承Thread或实现Runnable接口定义线程后，这时的状态都是NEW
+```java
+Thread thread = new Thread(() -> {});
+System.out.println(thread.getState());
+```
+
+**RUNNABLE**：
+**调用start()方法之后**，线程就处在RUNNABLE状态了
+```java
+Thread thread = new Thread(() -> {});
+thread.start();
+System.out.println(thread.getState());
+```
+
+**BLOCKED**：
+等待synchronized内置锁，就会处在BLOCKED状态
+```java
+public class ThreadStateTest {
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread t1 = new Thread(new DemoThreadB());
+        Thread t2 = new Thread(new DemoThreadB());
+
+        t1.start();
+        t2.start();
+
+        Thread.sleep(1000);
+
+        System.out.println((t2.getState()));
+    }
+}
+
+class DemoThreadB implements Runnable {
+    @Override
+    public void run() {
+        commonResource();
+    }
+
+    public static synchronized void commonResource() {
+        while(true) {
+
+        }
+    }
+}
+```
+
+**WAITING**：
+调用线程的join()等方法，从RUNNABLE变为WAITING状态
+```java
+public static void main(String[] args) throws InterruptedException {
+    Thread main = Thread.currentThread();
+
+    Thread thread2 = new Thread(() -> {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            e.printStackTrace();
+        }
+        System.out.println(main.getState());
+    });
+
+    thread2.start();
+    thread2.join();
+}
+```
+
+**TIMED-WAITING**：
+调用了`sleep(long)`等方法，线程从RUNNABLE变为TIMED-WAITING状态
+```java
+public static void main(String[] args) throws InterruptedException {
+    Thread thread3 = new Thread(() -> {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            // 为什么要调用interrupt方法？
+            Thread.currentThread().interrupt();
+            e.printStackTrace();
+        }
+    });
+    
+    thread3.start();
+
+    Thread.sleep(1000);
+    System.out.println(thread3.getState());
+}
+```
+
+**TERMINATED**：
+线程执行完自然就到了TERMINATED状态了
+```java
+Thread thread = new Thread(() -> {});
+thread.start();
+Thread.sleep(1000);
+System.out.println(thread.getState());
+```
+
 
 ## 停止线程
 
@@ -2667,6 +2815,309 @@ public class TestThread {
 hp，最后的值就是10001。
 
 <div align=center><img src=Thread\英雄掉血回血不同步.png></div>
+
+
+## ThreadLocal
+
+多线程访问同**一个共享变量**时特别容易出现并发问题，特别是在多个线程需要对一个共享变量进行写入时。为了保证线程安全，一般使用者在访问共享变量时需要进行适当的同步。
+
+同步的措施一般是**加锁**，这就需要使用者对锁有一定的了解，这显然加重了使用者的负担。那么有没有一种方式可以做到，**当创建一个变量后，每个线程对其进行访问的时候访问的是自己线程的变量**呢？
+
+`ThreadLocal`是`JDK包`提供的，它提供了**线程本地变量**，也就是**如果你创建了一个`ThreadLocal`变量，那么访问这个变量的每个线程都会有这个变量的一个本地副本**。当多个线程操作这个变量时，实际操作的是自己本地内存里面的变量，从而避免了线程安全问题。**创建一个`ThreadLocal`变量后，每个线程都会复制一个变量到自己的本地内存**。
+
+```java
+public class ThreadLocalTest {
+    // 创建ThreadLocal变量
+    private static ThreadLocal<String> localVariable = new ThreadLocal<>();
+
+    // print函数
+    public static void print(String string) {
+        // 打印当前线程本地内存中localVariable变量的值
+        System.out.println(string + " : " + localVariable.get());
+
+        // 清除当前线程本地内存中的localVariable变量
+        // localVariable.remove();
+    }
+
+    public static void main(String[] args) {
+        // 创建线程threadOne
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 设置threadOne中本地变量localVariable的值
+                localVariable.set("threadOne local variable");
+                print("threadOne");
+                // 打印本地变量值
+                System.out.println("threadOne 不使用 localVariable.remove() : " + localVariable.get());
+            }
+        });
+
+        // 创建线程threadTwo
+        Thread threadTwo = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 设置threadTwo中本地变量localVariable的值
+                localVariable.set("threadTwo local variable");
+                print("threadTwo");
+                // 打印本地变量值
+                System.out.println("threadTwo 不使用 localVariable.remove() : " + localVariable.get());
+            }
+        });
+
+        threadOne.start();
+        threadTwo.start();
+    }
+
+}
+/*
+threadOne : threadOne local variable
+threadTwo : threadTwo local variable
+threadOne 不使用 localVariable.remove() : threadOne local variable
+threadTwo 不使用 localVariable.remove() : threadTwo local variable
+*/
+```
+
+线程threadOne中的代码`localVariable.set("threadOne local variable");`通过`set方法`设置了`localVariable`的值，这其实**设置的是线程threadOne本地内存中的一个副本，这个副本线程threadTwo是访问不了的**。
+
+
+### ThreadLocal实现原理
+
+<div align=center><img src=Thread\threadLocal.png></div>
+
+Thread类中有一个`threadLocals`(`ThreadLocal.ThreadLocalMap threadLocals = null;`)和一个`inheritableThreadLocals`(`ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;`)，它们都**是`ThreadLocalMap`类型的变量**，而`ThreadLocalMap`是一个定制化的`Hashmap`。
+
+**在默认情况下，每个线程中的这两个变量都为null，只有当前线程第一次调用`ThreadLocal`的`set`或者`get`方法时才会创建它们**。
+
+其实**每个线程的本地变量不是存放在`ThreadLocal`实例里面，而是存放在调用线程的`threadLocals`变量里面**。也就是说，**`ThreadLocal`类型的本地变量存放在具体的线程内存空间中**。`ThreadLocal`就是一个工具壳，它**通过set方法把value值放入调用线程的`threadLocals`里面并存放起来**，当调用线程调用它的get方法时，再从**当前线程的`threadLocals`变量**里面将其拿出来使用。如果调用线程一直不终止，那么这个本地变量会一直存放在调用线程的`threadLocals`变量里面，所以当不需要使用本地变量时可以通过调用`ThreadLocal`变量的remove方法，从**当前线程的`threadLocals`**里面删除该本地变量。
+
+Thread里面的threadLocals为何被设计为map结构？
+
+很明显是因为**每个线程可以关联多个ThreadLocal变量**。
+
+
+### ThreadLocal方法码源分析
+
+```java
+public void set(T value) {
+    // 获取当前线程
+    Thread t = Thread.currentThread();
+
+    // 将当前线程作为key，去查找对应的线程变量，找到则设置
+    ThreadLocalMap map = getMap(t);
+    if (map != null)
+        map.set(this, value);
+    else
+        // 如果是第一次调用，就创建当前线程对应的HashMap
+        createMap(t, value);
+}
+```
+
+```java
+ThreadLocalMap getMap(Thread t) {
+    return t.threadLocals;
+}
+```
+`getMap(t`的作用是**获取线程自己的变量`threadLocals`**。
+
+```java
+void createMap(Thread t, T firstValue) {
+    t.threadLocals = new ThreadLocalMap(this, firstValue);
+}
+```
+
+```java
+public T get() {
+    // 获取当前线程
+    Thread t = Thread.currentThread();
+
+    // 获取当前线程的threadlocals变量
+    ThreadLocalMap map = getMap(t);
+
+    // 如果threadLocals不为null，则返回对应本地变量的值
+    if (map != null) {
+        ThreadLocalMap.Entry e = map.getEntry(this);
+        if (e != null) {
+            @SuppressWarnings("unchecked")
+            T result = (T)e.value;
+            return result;
+        }
+    }
+    // threadLocals为空则初始化当前线程的threadLocals成员变量
+    return setInitialValue();
+}
+```
+
+```java
+private T setInitialValue() {
+    // 初始化为null
+    T value = initialValue();
+    Thread t = Thread.currentThread();
+    ThreadLocalMap map = getMap(t);
+    if (map != null)
+        map.set(this, value);
+    else
+        createMap(t, value);
+    return value;
+}
+
+protected T initialValue() {
+    return null;
+}
+```
+
+```java
+public void remove() {
+    ThreadLocalMap m = getMap(Thread.currentThread());
+    if (m != null)
+        m.remove(this);
+}
+```
+
+总结：
+
+在每个线程内部都有一个名为`threadLocals`的成员变量，该变量的类型为`HashMap`，其中`key`为我们定义的`ThreadLocal变量`的`this引用`，`value`则为我们使用set方法设置的值。
+
+每个线程的本地变量存放在线程自己的内存变量`threadLocals`中，如果当前线程一直不消亡，那么这些本地变量会一直存在，所以**可能会造成内存溢出**，因此使用完毕后要记得调用ThreadLocal 的remove方法删除对应线程的threadLocals中的本地变量。
+
+
+### InheritableThreadLocal类
+
+`ThreadLocal`不支持继承性：
+
+```java
+public class ThreadLocalTest1 {
+    // 创建线程变量
+    public static ThreadLocal<String> threadLocal = new ThreadLocal<>();
+
+    public static void main(String[] args) {
+        // 设置main线程变量
+        threadLocal.set("main线程");
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 子线程输出线程变量的值
+                System.out.println("thread线程：" + threadLocal.get());
+            }
+        });
+
+        thread.start();
+
+        // 主线程输出线程变量的值
+        System.out.println("main线程：" + threadLocal.get());
+    }
+}
+/*
+main线程：main线程
+thread线程：null
+ */
+```
+
+同一个ThreadLocal变量在父线程中被设置值后，在子线程中是获取不到的。因为在子线程thread里面调用get方法时当前线程为thread线程，而这里调用set方法设置线程变量的是main线程，两者是不同的线程，自然子线程访问时返回null。
+
+那么有没有办法让子线程能访问到父线程中的值？答案是有。
+
+`InheritableThreadLocal`继承自`ThreadLocal`，其提供了一个特性，就是**让子线程可以访问在父线程中设置的本地变量**。
+
+```java
+public class InheritableThreadLocal<T> extends ThreadLocal<T> {
+    /**
+     * @param parentValue the parent thread's value
+     * @return the child thread's initial value
+     */
+     // (1)
+    protected T childValue(T parentValue) {
+        return parentValue;
+    }
+
+    /**
+     * Get the map associated with a ThreadLocal.
+     *
+     * @param t the current thread
+     */
+     // (2)
+    ThreadLocalMap getMap(Thread t) {
+       return t.inheritableThreadLocals;
+    }
+
+    /**
+     * Create the map associated with a ThreadLocal.
+     *
+     * @param t the current thread
+     * @param firstValue value for the initial entry of the table.
+     */
+     // (3)
+    void createMap(Thread t, T firstValue) {
+        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
+    }
+}
+```
+
+下面我们看一下重写的代码(1)何时执行，以及如何让子线程可以访问父线程的本地变量。这要从创建Thread的代码说起，打开Thread类的默认构造函数，代码如下：
+
+```java
+public Thread(Runnable target) {
+    init(null, target, "Thread-" + nextThreadNum(), 0);
+}
+...
+
+private void init(ThreadGroup g, Runnable target, String name,
+                      long stackSize, AccessControlContext acc) {
+    // (4)获取当前线程
+    Thread parent = currentThread();
+    ...
+    // (5)如果父线程的inheritableThreadLocals变量不为null
+    if (parent.inheritableThreadLocals != null)
+        // (6)设置子线程中的InheritableThreadLocals变量
+        this.inheritableThreadLocals =
+            ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+}
+```
+
+在创建线程时，在构造函数里面会调用`init`方法。代码(4)获取了当前线程（这里是指**main函数所在的线程**，也就是父线程），然后代码(5)判断main函数所在线程里面的`inheritableThreadLocals`属性是否为null。
+
+```java
+static ThreadLocalMap createInheritedMap(ThreadLocalMap parentMap) {
+    return new ThreadLocalMap(parentMap);
+}
+```
+
+在`createInheritedMap`内部使用父线程的`inheritableThreadLocals`变量作为构造函数创建了一个新的`ThreadLocalMap`变量， 然后赋值给了子线程的`inheritableThreadLocals`变量。
+
+**总结：**
+
+`InheritableThreadLocal`类通过重写代码(2)和(3)让本地变量保存到了具体线程的`inheritableThreadLocals`变量里面，那么线程在通过`InheritableThreadLocal`类实例的set或者get方法设置变量时，就会创建当前线程的`inheritableThreadLocals`变量。当父线程创建子线程时，构造函数会把父线程中`inheritableThreadLocals`变量里面的本地变量复制一份保存到子线程的`inheritableThreadLocals`变量里面。
+
+```java
+public class ThreadLocalTest1 {
+    // 创建线程变量
+    public static ThreadLocal<String> threadLocal = new InheritableThreadLocal<>();
+
+    public static void main(String[] args) {
+        // 设置main线程变量
+        threadLocal.set("main线程");
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 子线程输出线程变量的值
+                System.out.println("thread线程：" + threadLocal.get());
+            }
+        });
+
+        thread.start();
+
+        // 主线程输出线程变量的值
+        System.out.println("main线程：" + threadLocal.get());
+    }
+}
+/*
+main线程：main线程
+thread线程：main线程
+ */
+```
+
+
 
 ## synchronized
 
@@ -4154,305 +4605,7 @@ class Account {
 
 **当smaller被占用时，其他线程就会被阻塞**，也就不会存在死锁了。
 
-## ThreadLocal
 
-多线程访问同**一个共享变量**时特别容易出现并发问题，特别是在多个线程需要对一个共享变量进行写入时。为了保证线程安全，一般使用者在访问共享变量时需要进行适当的同步。
-
-同步的措施一般是**加锁**，这就需要使用者对锁有一定的了解，这显然加重了使用者的负担。那么有没有一种方式可以做到，**当创建一个变量后，每个线程对其进行访问的时候访问的是自己线程的变量**呢？
-
-`ThreadLocal`是`JDK包`提供的，它提供了**线程本地变量**，也就是**如果你创建了一个`ThreadLocal`变量，那么访问这个变量的每个线程都会有这个变量的一个本地副本**。当多个线程操作这个变量时，实际操作的是自己本地内存里面的变量，从而避免了线程安全问题。**创建一个`ThreadLocal`变量后，每个线程都会复制一个变量到自己的本地内存**。
-
-```java
-public class ThreadLocalTest {
-    // 创建ThreadLocal变量
-    private static ThreadLocal<String> localVariable = new ThreadLocal<>();
-
-    // print函数
-    public static void print(String string) {
-        // 打印当前线程本地内存中localVariable变量的值
-        System.out.println(string + " : " + localVariable.get());
-
-        // 清除当前线程本地内存中的localVariable变量
-        // localVariable.remove();
-    }
-
-    public static void main(String[] args) {
-        // 创建线程threadOne
-        Thread threadOne = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // 设置threadOne中本地变量localVariable的值
-                localVariable.set("threadOne local variable");
-                print("threadOne");
-                // 打印本地变量值
-                System.out.println("threadOne 不使用 localVariable.remove() : " + localVariable.get());
-            }
-        });
-
-        // 创建线程threadTwo
-        Thread threadTwo = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // 设置threadTwo中本地变量localVariable的值
-                localVariable.set("threadTwo local variable");
-                print("threadTwo");
-                // 打印本地变量值
-                System.out.println("threadTwo 不使用 localVariable.remove() : " + localVariable.get());
-            }
-        });
-
-        threadOne.start();
-        threadTwo.start();
-    }
-
-}
-/*
-threadOne : threadOne local variable
-threadTwo : threadTwo local variable
-threadOne 不使用 localVariable.remove() : threadOne local variable
-threadTwo 不使用 localVariable.remove() : threadTwo local variable
-*/
-```
-
-线程threadOne中的代码`localVariable.set("threadOne local variable");`通过`set方法`设置了`localVariable`的值，这其实**设置的是线程threadOne本地内存中的一个副本，这个副本线程threadTwo是访问不了的**。
-
-
-### ThreadLocal实现原理
-
-<div align=center><img src=Thread\threadLocal.png></div>
-
-Thread类中有一个`threadLocals`(`ThreadLocal.ThreadLocalMap threadLocals = null;`)和一个`inheritableThreadLocals`(`ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;`)，它们都**是`ThreadLocalMap`类型的变量**，而`ThreadLocalMap`是一个定制化的`Hashmap`。
-
-**在默认情况下，每个线程中的这两个变量都为null，只有当前线程第一次调用`ThreadLocal`的`set`或者`get`方法时才会创建它们**。
-
-其实**每个线程的本地变量不是存放在`ThreadLocal`实例里面，而是存放在调用线程的`threadLocals`变量里面**。也就是说，**`ThreadLocal`类型的本地变量存放在具体的线程内存空间中**。`ThreadLocal`就是一个工具壳，它**通过set方法把value值放入调用线程的`threadLocals`里面并存放起来**，当调用线程调用它的get方法时，再从**当前线程的`threadLocals`变量**里面将其拿出来使用。如果调用线程一直不终止，那么这个本地变量会一直存放在调用线程的`threadLocals`变量里面，所以当不需要使用本地变量时可以通过调用`ThreadLocal`变量的remove方法，从**当前线程的`threadLocals`**里面删除该本地变量。
-
-Thread里面的threadLocals为何被设计为map结构？
-
-很明显是因为**每个线程可以关联多个ThreadLocal变量**。
-
-
-### ThreadLocal方法码源分析
-
-```java
-public void set(T value) {
-    // 获取当前线程
-    Thread t = Thread.currentThread();
-
-    // 将当前线程作为key，去查找对应的线程变量，找到则设置
-    ThreadLocalMap map = getMap(t);
-    if (map != null)
-        map.set(this, value);
-    else
-        // 如果是第一次调用，就创建当前线程对应的HashMap
-        createMap(t, value);
-}
-```
-
-```java
-ThreadLocalMap getMap(Thread t) {
-    return t.threadLocals;
-}
-```
-`getMap(t`的作用是**获取线程自己的变量`threadLocals`**。
-
-```java
-void createMap(Thread t, T firstValue) {
-    t.threadLocals = new ThreadLocalMap(this, firstValue);
-}
-```
-
-```java
-public T get() {
-    // 获取当前线程
-    Thread t = Thread.currentThread();
-
-    // 获取当前线程的threadlocals变量
-    ThreadLocalMap map = getMap(t);
-
-    // 如果threadLocals不为null，则返回对应本地变量的值
-    if (map != null) {
-        ThreadLocalMap.Entry e = map.getEntry(this);
-        if (e != null) {
-            @SuppressWarnings("unchecked")
-            T result = (T)e.value;
-            return result;
-        }
-    }
-    // threadLocals为空则初始化当前线程的threadLocals成员变量
-    return setInitialValue();
-}
-```
-
-```java
-private T setInitialValue() {
-    // 初始化为null
-    T value = initialValue();
-    Thread t = Thread.currentThread();
-    ThreadLocalMap map = getMap(t);
-    if (map != null)
-        map.set(this, value);
-    else
-        createMap(t, value);
-    return value;
-}
-
-protected T initialValue() {
-    return null;
-}
-```
-
-```java
-public void remove() {
-    ThreadLocalMap m = getMap(Thread.currentThread());
-    if (m != null)
-        m.remove(this);
-}
-```
-
-总结：
-
-在每个线程内部都有一个名为`threadLocals`的成员变量，该变量的类型为`HashMap`，其中`key`为我们定义的`ThreadLocal变量`的`this引用`，`value`则为我们使用set方法设置的值。
-
-每个线程的本地变量存放在线程自己的内存变量`threadLocals`中，如果当前线程一直不消亡，那么这些本地变量会一直存在，所以**可能会造成内存溢出**，因此使用完毕后要记得调用ThreadLocal 的remove方法删除对应线程的threadLocals中的本地变量。
-
-
-### InheritableThreadLocal类
-
-`ThreadLocal`不支持继承性：
-
-```java
-public class ThreadLocalTest1 {
-    // 创建线程变量
-    public static ThreadLocal<String> threadLocal = new ThreadLocal<>();
-
-    public static void main(String[] args) {
-        // 设置main线程变量
-        threadLocal.set("main线程");
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // 子线程输出线程变量的值
-                System.out.println("thread线程：" + threadLocal.get());
-            }
-        });
-
-        thread.start();
-
-        // 主线程输出线程变量的值
-        System.out.println("main线程：" + threadLocal.get());
-    }
-}
-/*
-main线程：main线程
-thread线程：null
- */
-```
-
-同一个ThreadLocal变量在父线程中被设置值后，在子线程中是获取不到的。因为在子线程thread里面调用get方法时当前线程为thread线程，而这里调用set方法设置线程变量的是main线程，两者是不同的线程，自然子线程访问时返回null。
-
-那么有没有办法让子线程能访问到父线程中的值？答案是有。
-
-`InheritableThreadLocal`继承自`ThreadLocal`，其提供了一个特性，就是**让子线程可以访问在父线程中设置的本地变量**。
-
-```java
-public class InheritableThreadLocal<T> extends ThreadLocal<T> {
-    /**
-     * @param parentValue the parent thread's value
-     * @return the child thread's initial value
-     */
-     // (1)
-    protected T childValue(T parentValue) {
-        return parentValue;
-    }
-
-    /**
-     * Get the map associated with a ThreadLocal.
-     *
-     * @param t the current thread
-     */
-     // (2)
-    ThreadLocalMap getMap(Thread t) {
-       return t.inheritableThreadLocals;
-    }
-
-    /**
-     * Create the map associated with a ThreadLocal.
-     *
-     * @param t the current thread
-     * @param firstValue value for the initial entry of the table.
-     */
-     // (3)
-    void createMap(Thread t, T firstValue) {
-        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
-    }
-}
-```
-
-下面我们看一下重写的代码(1)何时执行，以及如何让子线程可以访问父线程的本地变量。这要从创建Thread的代码说起，打开Thread类的默认构造函数，代码如下：
-
-```java
-public Thread(Runnable target) {
-    init(null, target, "Thread-" + nextThreadNum(), 0);
-}
-...
-
-private void init(ThreadGroup g, Runnable target, String name,
-                      long stackSize, AccessControlContext acc) {
-    // (4)获取当前线程
-    Thread parent = currentThread();
-    ...
-    // (5)如果父线程的inheritableThreadLocals变量不为null
-    if (parent.inheritableThreadLocals != null)
-        // (6)设置子线程中的InheritableThreadLocals变量
-        this.inheritableThreadLocals =
-            ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
-}
-```
-
-在创建线程时，在构造函数里面会调用`init`方法。代码(4)获取了当前线程（这里是指**main函数所在的线程**，也就是父线程），然后代码(5)判断main函数所在线程里面的`inheritableThreadLocals`属性是否为null。
-
-```java
-static ThreadLocalMap createInheritedMap(ThreadLocalMap parentMap) {
-    return new ThreadLocalMap(parentMap);
-}
-```
-
-在`createInheritedMap`内部使用父线程的`inheritableThreadLocals`变量作为构造函数创建了一个新的`ThreadLocalMap`变量， 然后赋值给了子线程的`inheritableThreadLocals`变量。
-
-**总结：**
-
-`InheritableThreadLocal`类通过重写代码(2)和(3)让本地变量保存到了具体线程的`inheritableThreadLocals`变量里面，那么线程在通过`InheritableThreadLocal`类实例的set或者get方法设置变量时，就会创建当前线程的`inheritableThreadLocals`变量。当父线程创建子线程时，构造函数会把父线程中`inheritableThreadLocals`变量里面的本地变量复制一份保存到子线程的`inheritableThreadLocals`变量里面。
-
-```java
-public class ThreadLocalTest1 {
-    // 创建线程变量
-    public static ThreadLocal<String> threadLocal = new InheritableThreadLocal<>();
-
-    public static void main(String[] args) {
-        // 设置main线程变量
-        threadLocal.set("main线程");
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // 子线程输出线程变量的值
-                System.out.println("thread线程：" + threadLocal.get());
-            }
-        });
-
-        thread.start();
-
-        // 主线程输出线程变量的值
-        System.out.println("main线程：" + threadLocal.get());
-    }
-}
-/*
-main线程：main线程
-thread线程：main线程
- */
-```
 
 
 ## `Lock`锁
@@ -4479,6 +4632,43 @@ public ReentrantLock(boolean fair)
     sync = fair ? new FairSync() : new NonfairSync();
 }
 ```
+
+### Java SDK为什么要设计Lock
+
+四个可以发生死锁的情形，其中【不可剥夺条件】是指：线程已经获得资源，在未使用完之前，不能被剥夺，只能在使用完时自己释放。
+
+要想破坏这个条件，就需要具有申请不到进一步资源就释放已有资源的能力。很显然，这个能力是synchronized不具备的，使用synchronized，如果线程申请不到资源就会进入阻塞状态，我们做什么也改变不了它的状态，这是synchronized的致命弱点，这就强有力的给了Lock出现的理由。
+
+
+### 显式锁Lock
+
+Lock具有不会阻塞的功能，下面的三个方案都是解决这个问题的好办法：
+
+| 特性             | 描述                                                                                                                         | API                          |
+|------------------|------------------------------------------------------------------------------------------------------------------------------|------------------------------|
+| 能响应中断       | 如果不能自己释放，那可以响应中断也是很好的。Java多线程中断机制专门描述了中断过程，目的是通过中断信号来跳出某种状态，比如阻塞 | lockInterruptbly()           |
+| 非阻塞式的获取锁 | 尝试获取，获取不到不会阻塞，直接返回                                                                                         | tryLock()                    |
+| 支持超时         | 给定一个时间限制，如果一段时间内没获取到，不是进入阻塞状态，同样直接返回                                                     | tryLock(long time, timeUnit) |
+
+#### Lock使用范式
+
+```java
+Lock lock = new ReentrantLock();
+lock.lock();
+try{
+    ...
+}finally{
+    lock.unlock();
+}
+```
+
+在try{}外获取锁主要考虑两个方面：
+
+- 如果**没有获取到锁就抛出异常**，最终释放锁肯定是有问题的，因为还未曾拥有锁谈何释放锁呢；
+- 如果**在获取锁时抛出了异常**，也就是当前线程并未获取到锁，但执行到finally代码时，如果恰巧别的线程获取到了锁，则会被释放掉（无故释放）。
+
+
+
 
 ### 加锁示例
 
@@ -5529,7 +5719,13 @@ public class VolatileBarrierExample {
 
 # 线程通信
 
-解决死锁的思路之一就是**破坏请求和保持条件**，所有柜员都要通过唯一的**账本管理员**一次性拿到所有转账业务需要的账本。没有**等待/通知机制**之前，所有柜员都通过死循环的方式不断向账本管理员申请所有账本：`while(!accountBookManager.getAllRequiredAccountBook(this, target));`，但程序无限申请浪费CPU。
+- [并发编程为什么会有等待/通知机制](#破坏不可剥夺条件)？
+- 如何应用等待/通知机制？
+- 为什么说尽量使用notifyAll？
+- 什么时候使用notify不会有问题？
+- MESA监视器模型简介
+
+解决死锁的思路之一就是**破坏请求和保持条件**，所有柜员都要通过唯一的**账本管理员**一次性拿到所有转账业务需要的账本。没有**等待/通知机制**之前，所有柜员都通过死循环的方式不断向账本管理员申请所有账本：`while(!accountBookManager.getAllRequiredAccountBook(this, target));`，但程序无限申请，浪费CPU。
 
 无限循环实在太浪费CPU，而理想情况应该是这样：
 
@@ -6012,13 +6208,104 @@ Output:
  */
 ```
 
-#### 尽量使用notifyAll()
+### 尽量使用notifyAll()
 
 - notify()函数
   **随机唤醒一个**：一个线程调用共享对象的notify()方法，会唤醒一个在该共享变量上调用wait()方法后被挂起的线程，一个共享变量上可能有多个线程在等待，具体唤醒那一个，是随机的。
 
 - notifyAll()函数
-  唤醒所有：与notify()不同，notifyAll()会唤醒在该共享变量上由于调用wait()方法而被挂起的所有线程。
+  **唤醒所有**：与notify()不同，notifyAll()会唤醒在该共享变量上由于调用wait()方法而被挂起的所有线程。
+
+
+```java
+package Thread;
+
+public class NotifyTest {
+
+    private static volatile Object resourceA = new Object();
+
+    public static void main(String[] args) throws InterruptedException {
+
+        Thread threadA = new Thread(() -> {
+            synchronized (resourceA){
+                System.out.println("threadA get resourceA lock");
+
+                try{
+                    System.out.println("threadA begins to wait...");
+                    resourceA.wait();
+                    System.out.println("threadA ends wait");
+
+                }catch (InterruptedException e){
+                    System.out.println(e.getMessage());
+                }
+            }
+        });
+
+        Thread threadB = new Thread(() -> {
+            synchronized (resourceA){
+                System.out.println("threadB get resourceA lock");
+
+                try{
+                    System.out.println("threadB begins to wait...");
+                    resourceA.wait();
+                    System.out.println("threadB ends wait");
+
+                }catch (InterruptedException e){
+                    System.out.println(e.getMessage());
+                }
+            }
+        });
+
+        Thread threadC = new Thread(() -> {
+            synchronized (resourceA){
+                System.out.println("threadC begin to notify");
+                resourceA.notify();
+            }
+        });
+
+        threadA.start();
+        threadB.start();
+
+        Thread.sleep(1000);
+
+        threadC.start();
+
+        threadA.join();
+        threadB.join();
+        threadC.join();
+
+        System.out.println("main thread over now");
+    }
+}
+/*
+threadA get resourceA lock
+threadA begins to wait...
+threadB get resourceA lock
+threadB begins to wait...
+threadC begin to notify
+threadA ends wait
+...//等待
+ */
+```
+
+程序中我们使用notify()随机通知resourceA的等待队列的一个线程，threadA被唤醒，threadB却没有打印出`threadB ends wait`这句话。
+
+
+使用notifyAll()确实不会遗落等待队列中的线程，但也**产生了比较强烈的竞争**。
+
+如果notify()设计的本身就是bug，那么这个函数应该早就从JDK中移除了，它随机通知一个线程的形式必定是有用武之地的。
+
+
+### 什么时候可以使用notify()
+
+1. 所有等待线程拥有相同的等待条件；
+2. 所有等待线程被唤醒后，执行相同的操作；
+3. 只需要唤醒一个线程。
+
+notify()的典型的应用就是线程池！
+
+
+
 
 
 ## Condition
@@ -6767,6 +7054,48 @@ B=>BBBBBBBBB
     `keepAliveTime`：管理线程没有任务时最多保持多长时间后会终止。
 
 
+## 手动创建线程有什么缺点
+
+**不受控风险；频繁创建开销大**：
+
+系统资源有限，每个人针对不同业务都可以手动创建线程，并且创建标准不一样（比如线程没有名字）。当系统运行起来，所有线程都在疯狂抢占资源。
+
+过多的线程自然也会引起**上下文切换的开销**。
+
+创建一个线程干了什么导致开销大了？和我们创建一个普通Java对象有什么差别？
+
+`new Thread()`在操作系统层面并没有创建新的线程，这是编程语言特有的。真正转换为操作系统层面创建一个线程，还要调用操作系统内核的API，然后操作系统要为该线程分配一系列的资源。
+
+
+**`new Object()`过程**：
+
+当需要【对象】时，可以new一个，其过程为：
+
+- 分配一块内存M
+- 在内存M上初始化该对象
+- 将内存M的地址赋值给引用变量obj
+
+**创建一个线程的过程**：
+
+创建一个线程还要调用操作系统内核API。为了更好的理解创建并启动一个线程的开销，我们需要看看JVM在背后帮我们做了哪些事情：
+
+- 它为一个线程栈分配内存，该栈为每个线程方法调用保存一个栈帧
+- 每一栈帧由一个局部变量数组、返回值、操作数堆栈和常量池组成
+- 一些支持本机方法的jvm也会分配一个本机堆栈
+- 每个线程获得一个**程序计数器**，告诉它当前处理器执行的指令是什么
+- 系统创建一个与Java线程对应的本机线程
+- 将与线程相关的描述符添加到JVM内部数据结构中
+- 线程共享堆和方法区域
+
+这段描述稍稍有点抽象，用数据来说明创建一个线程（即便不干什么）需要多大空间呢？答案是大约1M左右。
+
+对于性能要求严苛的现在，频繁手动创建/销毁线程的代价是非常巨大的。
+
+
+常见的数据库连接池，实例池等都是一种池化（pooling）思想，简而言之就是**为了最大化收益，并最小化风险，将资源统一在一起管理**的思想。
+
+Java也提供了它自己实现的线程池模型——`ThreadPoolExecutor`。套用上面池化的想象来说，Java线程池就是为了最大化高并发带来的性能提升，并最小化手动创建线程的风险，将多个线程统一在一起管理的思想。
+
 ## 线程池设计思路
 
 线程池的思路和生产者消费者模型是很接近的。
@@ -6851,21 +7180,6 @@ pool-1-thread-2
 
 ## 线程池三大方法、七大参数、四种拒绝策略
 
-程序的运行，本质：占用系统的资源！ 
-
-创建、销毁，十分浪费资源。优化资源的使用！=> 池化技术
-
-线程池、连接池、内存池、对象池..... 
-
-池化技术：事先准备好一些资源，有人要用，就来我这里拿，用完之后还给我。
-
-线程池：**三大方法、7大参数、四种拒绝策略**。
-
-线程池的好处：线程复用、可以控制最大并发数、管理线程
-1、降低资源的消耗
-2、提高响应的速度
-3、方便管理。
-
 ### 三大方法
 
 ```java
@@ -6936,7 +7250,6 @@ pool-1-thread-36 ok
 
 ### 七大参数
 
-源码：
 ```java
 public static ExecutorService newSingleThreadExecutor() {
     return new FinalizableDelegatedExecutorService(
@@ -6955,6 +7268,15 @@ public static ExecutorService newCachedThreadPool() {
     return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, 
     TimeUnit.SECONDS,
     new SynchronousQueue<Runnable>());
+}
+```
+
+Executors大大的简化了我们创建各种类型线程池的方式，为什么还不让使用呢？
+
+其实，只要你打开看看它的静态方法参数就会明白了：传入的`workQueue`是一个边界为`Integer.MAX_VALUE`队列，我们也可以变相的称之为无界队列了，因为**边界太大**了，这么大的等待队列也是非常**消耗内存**的：
+```java
+public LinkedBlockingQueue() {
+    this(Integer.MAX_VALUE);
 }
 ```
 
@@ -6984,11 +7306,23 @@ public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小；线程
     }
 ```
 
+| 序号 | 参数名称        | 参数解释                                                                                                                     | 春运形象说明                                                                                                               |
+|------|-----------------|------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| 1    | corePoolSize    | 表示常驻核心线程数，如果大于0，即使本地任务执行完也不会被销毁                                                                | 日常固定的列车数辆（不管是不是春运，都要有固定这些车次运行）                                                               |
+| 2    | maximumPoolSize | 表示线程池能够容纳可同时执行的最大线程数（结合`workQueue`）                                                                                     | 春运客流量大，临时加车，加车后，总列车次数不能超过这个最大值，否则就会出现调度不开等问题 （结合`workQueue`）                 |
+| 3    | keepAliveTime   | 表示线程池中线程空闲的时间，当空闲时间达到该值时，线程会被销毁，只剩下`corePoolSize`个线程位置                               | 春运压力过后，临时的加车（如果空闲时间超过`keepAliveTime`）就会被撤掉，只保留日常固定的列车车次数量用于日常运营            |
+| 4    | unit            | `keepAliveTime`的时间单位，最终都会转换成`纳秒`，因为CPU的执行速度杠杠滴                                                     | `keepAliveTime`的单位，春运以天为计算单位                                                                                  |
+| 5    | workQueue       | **当请求的线程数大于`corePoolSize`时，线程进入该阻塞队列**                                                                   | 春运压力异常大，达到`corePoolSize`也不能满足要求，所有乘坐请求都会进入该阻塞队列中排队, 队列满，还有额外请求，就需要加车了 |
+| 6    | threadFactory   | 顾名思义，线程工厂，用来生产一组相同任务的线程，同时也可以通过它增加前缀名，虚拟机栈分析时更清晰                             | 比如（北京——上海）就属于该段列车所有前缀，表明列车运输职责                                                                 |
+| 7    | handler         | 执行拒绝策略，当`workQueue`达到上限，同时也达到`maximumPoolSize`就要通过这个来处理，比如拒绝，丢弃等，这是一种限流的保护措施 | 当`workQueue`排队也达到队列最大上线，`maximumPoolSize`就要提示无票等拒绝策略了,因为我们不能加车了，当前所有车次已经满负载  |
+
+
 ### ThreadPoolExecutor
 
 《阿里巴巴Java手册》建议：**线程池不允许使用`Executors`去创建，而是通过`ThreadPoolExecutor`的方式**，可以更明确线程池的运行规则，规避资源耗尽的风险。
 
-<div align=center><img src=Thread\线程池七大参数.jpg width=70%></div>
+<div align=center><img src=Thread\ThreadPoolExecutor任务调度流程图.png></div>
+
 
 Core and maximum pool sizes
 A ThreadPoolExecutor will automatically adjust the pool size (see getPoolSize()) according to the bounds set by `corePoolSize` (see getCorePoolSize()) and `maximumPoolSize` (see getMaximumPoolSize()). 
@@ -7001,11 +7335,11 @@ By setting corePoolSize and maximumPoolSize the same, you create a fixed-size th
 
 https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html
 
-1. 当池中正在运行的线程数（一个）（包括空闲线程数）小于`corePoolSize`时，新建线程执行任务：
+1. 当池中正在运行的线程数（包括空闲线程数）小于`corePoolSize`时，新建线程执行任务：
    `If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.`
 
 ```java
-package HowJThread.ThreadPools;
+package Thread;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -7017,30 +7351,31 @@ public class TestThreadPoolExecutor {
                 TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
 
         // 任务1
+        pool.execute(() -> System.out.println("任务一：" + Thread.currentThread().getName()));
+
+
+        //任务2
         pool.execute(() -> {
             try {
                 Thread.sleep(1000);
-                System.out.println("任务一：" + Thread.currentThread().getName());
+                System.out.println("任务二：" + Thread.currentThread().getName());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         });
 
-        //任务2
-        pool.execute(() -> System.out.println("任务二：" + Thread.currentThread().getName()));
-        
         pool.shutdown();
     }
 }
 /*
-任务二：pool-1-thread-2
-任务一：pool-1-thread-1
+任务二：pool-1-thread-1
+任务一：pool-1-thread-2
 
  */
 ```
-线程1结束后没有继续线程1，而是启动线程2。
+当执行任务一的线程（thread-1）执行完成之后，任务二并没有去复用thread-1而是新建线程（thread-2）去执行任务
 
-2. 当池中正在运行的线程数（包括空闲线程数）大于等于`corePoolSize`时，**新插入的任务进入`workQueue`排队**(如果`workQueue`长度允许)，等待空闲线程来执行。
+2. 当池中正在运行的线程数大于等于`corePoolSize`时，**新插入的任务进入`workQueue`排队**(如果`workQueue`长度允许)，等待空闲线程来执行。
    `If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.`
 
 ```java
@@ -7088,7 +7423,7 @@ public class TestThreadPoolExecutor {
 
  */
 ```
-任务二在运行过程中，任务三启动不会新建线程，因为**有一个空的队列**，`maximumPoolSize=3`这个参数不起作用。
+任务二在执行过程中，不会为任务三新建线程，因为**有一个空的队列**，先将其放入队列中，等thread-1执行完任务一，再去执行任务三。此时，`maximumPoolSize=3`这个参数不起作用。
 
 3. **当队列里的任务达到上限**，并且池中正在进行的线程小于`maxinumPoolSize`，对于新加入的任务，新建线程。
 
@@ -7207,7 +7542,7 @@ Exception in thread "main" java.util.concurrent.RejectedExecutionException...
 ```
 队列达到上限，线程池达到最大值，故抛出异常。
 
-<div align=center><img src=Thread\ThreadPoolExecutor任务调度流程图.png></div>
+
 
 ### 四种拒绝策略
 
@@ -7216,9 +7551,7 @@ Exception in thread "main" java.util.concurrent.RejectedExecutionException...
 * `new ThreadPoolExecutor.DiscardPolicy()` //队列满了，丢掉任务，不会抛出异常！
 * `new ThreadPoolExecutor.DiscardOldestPolicy()` //队列满了，尝试去和最早的竞争，也不会抛出异常！
 
-### 最大线程到底该如何设置（调优）
-- CPU密集型：几核，就是几，可以保持CPU的效率最高！并行！`Runtime.getRuntime().availableProcessors()`
-- IO密集型：判断你程序中十分耗IO的线程，大于其两倍（程序有15个大型任务，IO十分占用资源！，可设置成30。）
+我们需要经过**调优**的过程来设置**最佳线程参数值**：
 
 ```java
 import java.util.ArrayList;
@@ -7275,6 +7608,77 @@ public class Pool
 }
 ```
 
+### 线程池缺点
+
+1. 适用于生存周期较短的的任务，不适用于又长又大的任务。
+
+2. 线程池所有线程都处于多线程单元中，如果想把线程放到单线程单元中，线程池就废掉了。
+
+3. 如果想标识线程的各个状态，比如启动线程，终止线程，那么线程池就不能完成这些工作。
+
+4. 不能对于线程池中任务设置优先级。
+
+5. 对于任意给定的应用程序域，只能允许一个线程池与之对应。
+
+
+### 创建多少个线程合适
+
+使用多线程就是在正确的场景下通过设置正确个数的线程来最大化程序的运行速度。将这句话翻译到硬件级别就是要充分的利用CPU和I/O。
+
+#### CPU密集型程序
+
+一个完整请求，I/O操作可以在很短时间内完成，CPU还有很多运算要处理，也就是说CPU计算的比例占很大一部分。
+
+假如我们要计算 1+2+…100亿的总和，很明显，这就是一个CPU密集型程序。在【单核】CPU下，如果我们创建4个线程来分段计算，即：线程1计算 [1, 25亿）…… 以此类推线程4计算[75亿, 100亿]。
+
+<div align=center><img src=Thread\CPU密集型.png width=80%></div>
+
+由于是单核CPU，所有线程都在等待CPU时间片。按照理想情况来看，四个线程执行的时间总和与一个线程5独自完成是相等的，实际上我们还忽略了四个线程上下文切换的开销。
+
+所以，单核CPU处理CPU密集型程序，这种情况并不太适合使用多线程。
+
+此时如果在4核CPU下，同样创建四个线程来分段计算，看看会发生什么？
+
+<div align=center><img src=Thread\CPU密集型1.png width=80%></div>
+
+每个线程都有CPU来运行，并不会发生等待CPU时间片的情况，也没有线程切换的开销。理论情况来看效率提升了4倍。
+
+所以，如果是**多核CPU处理CPU密集型程序**，我们完全可以最大化的利用CPU核心数，应用并发编程来提高效率。
+
+**CPU密集型程序创建多少个线程合适？**
+
+对于CPU密集型来说，理论上`线程数量 = CPU 核数（逻辑）`就可以了，但是实际上，**数量一般会设置为`CPU核数（逻辑）+ 1`**。
+
+这样可以确保计算（CPU）密集型的线程恰好在某时因为发生一个页错误或者因其他原因而暂停时，刚好有一个“额外”的线程，可以确保在这种情况下CPU周期不会中断工作。
+
+#### I/O密集型程序
+
+与CPU密集型程序相对的是，一个完整请求，CPU运算操作完成之后还有很多I/O操作要做，也就是说I/O操作占比很大部分。
+
+在进行I/O操作时，CPU是空闲状态，所以我们要最大化的利用CPU，不能让其是空闲状态。
+
+同样在单核CPU的情况下：
+<div align=center><img src=Thread\IO密集型.png width=80%></div>
+
+从上图中可以看出，每个线程都执行了相同长度的CPU耗时和I/O耗时，如果你将上面的图多画几个周期，CPU操作耗时固定，**将I/O操作耗时变为CPU耗时的3倍，你会发现，CPU又有空闲了**，这时你就可以新建线程4，来继续最大化的利用CPU。
+
+**I/O密集型程序创建多少个线程合适？**
+
+一个CPU核心的最佳线程数：
+`最佳线程数 = (1/CPU利用率) = 1 + (I/O耗时/CPU耗时)`
+
+如果**多个核心**，那么I/O密集型程序的最佳线程数就是：
+
+`最佳线程数 = CPU核心数 * (1/CPU利用率) = CPU核心数 * （1 + （I/O耗时/CPU耗时)）`
+
+综上两种情况我们可以做出这样的总结：
+
+**线程等待时间所占比例越高，需要越多线程；线程CPU时间所占比例越高，需要越少线程。**
+
+
+即便算出了理论线程数，但实际CPU核数不够，会带来线程上下文切换的开销，所以下一步就需要增加CPU核数，那我们盲目的增加CPU核数就一定能解决问题吗？
+
+阿姆达尔定律(处理器并行运算后效率提升的能力)：假如我们的串行率是5%，那么我们无论采用什么技术，最高也就只能提高20倍的性能。
 
 
 # 集合类不安全
