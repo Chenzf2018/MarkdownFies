@@ -57,7 +57,7 @@ CPU通过时间片分配算法来循环执行任务，**当前任务执行一个
 
 - 分工：合适的线程才能更好的完成整块工作，当然一个线程可以轻松搞定的就没必要 多线程；主线程应该做的事交给子线程显然是解决不了问题的，每个线程做正确的事才能发挥作用。常见的**Executor，生产者-消费者模式，Fork/Join**等，都是分工思想的体现。
 
-- 同步/协作：任务拆分完毕，我要等张三的任务，张三要等李四的任务，也就是说**任务之间存在依赖关系**，前面的任务执行完毕，后面的任务才可以执行面对程序。我们需要了解程序的沟通方式，**一个线程执行完任务，如何通知后续线程执行**。Java SDK中`CountDownLatch`和`CyclicBarrier`就是用来解决**线程协作**问题的。
+- 同步/协作：任务拆分完毕，我要等张三的任务，张三要等李四的任务，也就是说**任务之间存在依赖关系**，前面的任务执行完毕，后面的任务才可以执行面对程序。我们需要了解程序的沟通方式，**一个线程执行完任务，如何通知后续线程执行**。**Java SDK中`CountDownLatch`和`CyclicBarrier`就是用来解决线程协作问题的**。
 
 - 互斥：**同一时刻，只允许一个线程访问共享变量**。**分工和同步强调的是性能，但是互斥是强调正确性**，就是我们常常提到的「线程安全」。当多个线程同时访问一个共享变量/成员变量时，就可能发生不确定性。造成不确定性主要是有**可见性、原子性、有序性**这三大问题，而解决这些问题的核心就是互斥。**synchronized关键字，Lock，ThreadLocal**等就是互斥的解决方案。
 
@@ -83,14 +83,14 @@ CPU通过时间片分配算法来循环执行任务，**当前任务执行一个
 - 主内存中有变量x，初始值为0；
 - 线程A要将x加1：先将x=0拷贝到自己的私有内存中，然后更新x的值；
 - 线程A将更新后的x值回刷到主内存的**时间是不固定的**；
-- 刚好在线程A没有回刷x到主内存时，线程B同样从主内存中读取x，此时为0。和线程A一样的操作，最后期盼的x=2就会变成x=1。
+- **刚好在线程A没有回刷x到主内存时，线程B同样从主内存中读取x，此时为0**。和线程A一样的操作，最后期盼的x=2就会变成x=1。
 
 在Java中，所有的**实例域，静态域和数组元素都存储在堆内存**中，堆内存在线程之间共享，称之为「共享变量」。局部变量，方法定义参数和异常处理器参数不会在线程之间共享，所以他们不会有内存可见性的问题，也就不受内存模型的影响。
 
 
 ### 原子性
 
-所谓原子操作是指不会被线程调度机制打断的操作；**这种操作一旦开始，就一直运行到结束，中间不会有任何context switch**。
+所谓原子操作是指**不会被线程调度机制打断的操作**；**这种操作一旦开始，就一直运行到结束，中间不会有任何context switch**。
 
 ```java
 package Thread;
@@ -130,7 +130,7 @@ public class UnsafeCounter {
 }
 ```
 
-不能用高级语言思维来理解CPU的处理方式，**`count++`转换成CPU`指令需要三步**，不是单一操作，所以不是原子性的！
+不能用高级语言思维来理解CPU的处理方式，**`count++`转换成CPU指令需要三步**，不是单一操作，所以不是原子性的！
 
 <div align=center><img src=Thread\原子性.png width=80%></div>
 
@@ -150,7 +150,7 @@ private synchronized long getCount() {
 
 问题是解决了，如果synchronized是万能良方，那么也许并发就没那么多事了，可以靠一个synchronized走天下了，事实并不是这样。
 
-synchronized是**独占锁** (同一时间只能有一个线程可以调用)，没有获取锁的线程会被**阻塞**；另外也会带来很多线程切换的**上下文开销**（*你(CPU)在看两本书(两个线程)，看第一本书很短时间后要去看第二本书，看第二本书很短时间后又回看第一本书，并要精确的记得看到第几行，当初看到了什么(CPU 记住线程级别的信息)，当让你 “同时” 看 10 本甚至更多，切换的开销就很大了*）。
+synchronized是**独占锁** (同一时间只能有一个线程可以调用)，没有获取锁的线程会被**阻塞**；另外也会带来很多线程切换的**上下文开销**（*你(CPU)在看两本书(**两个线程**)，看第一本书很短时间后要去看第二本书，看第二本书很短时间后又回看第一本书，并要精确的记得看到第几行，当初看到了什么(CPU记住**线程级别的信息**)，当让你“同时”看10本甚至更多，切换的开销就很大了*）。
 
 所以JDK中就有了**非阻塞CAS(Compare and Swap)算法**实现的原子操作类 `AtomicLong`等工具类。
 
@@ -2670,6 +2670,12 @@ hp，最后的值就是10001。
 
 ## synchronized
 
+**原子性问题的源头就是线程切换**，但在多核CPU的大背景下，不允许线程切换是不可能的。
+
+**互斥: 同一时刻只有一个线程执行！**
+
+上面这句话的意思是: 对共享变量的修改是互斥的，也就是说线程A修改共享变量时其他线程不能修改，这就不存在操作被打断的问题了！
+
 为避免竞争状态，应该防止多个线程同时进入程序的某一特定部分，程序中的这部分称为临界区(`critical region`) 。可以使用关键字`synchronized`来同步方法，以便<font color=red>一次只有一个线程可以访问这个方法</font>。
 `public synchronized void deposit(int amount)`
 
@@ -2684,10 +2690,230 @@ hp，最后的值就是10001。
 * 若将一个大的方法声明为`synchronized`将会影响效率。
 例如，A代码：只读；B代码：修改，方法里需要修改的内容才需要锁，锁得太多，浪费资源。
 
-**调用一个对象上的同步实例方法，需要给该对象加锁。而调用一个类上的同步静态方法，需要给该类加锁**。当执行方法中某一个代码块时，同步语句不仅可用于对`this对象`加锁，而且可用于对任何对象加锁。这个代码块称为`同步块(synchronized block)`。
+**调用一个对象上的同步实例方法，需要给该对象加锁。而调用一个类上的同步静态方法，需要给该类加锁**。当执行方法中某一个代码块时，同步语句不仅可用于**对`this对象`加锁**，而且可用于**对任何对象加锁**。这个代码块称为`同步块(synchronized block)`。
 
-* 同步块`sychronized(Obj){}`中，`Obj`被称为`同步监视器`，它可以是任何对象，但推荐使用共享资源作为同步监视器；同步方法中无需指定监视器，因为同步方法中监视器就是`this`，即该对象本身。或者是`class`(反射中讲解)。
+* 同步块`sychronized(Obj){}`中，`Obj`被称为`同步监视器`，它可以是**任何对象**，但推荐使用**共享资源**作为同步监视器；同步方法中无需指定监视器，因为同步方法中监视器就是`this`，即该对象本身。或者是`class`(反射中讲解)。
 * 同步监视器得执行过程：1.第一个线程访问，锁定同步监视器，执行其中代码；2.第二个线程访问，发现同步监视器被锁定，无法访问；3.第一个线程访问完毕，解锁同步监视器；4.第二个线程访问，发现同步监视器没有锁，然后锁定并访问。
+
+
+### 临界区
+
+#### synchronized的三种用法
+
+```java
+public class ThreeSync {
+    private static final Object object = new Object();
+    
+    public synchronized void normalSyncMethod(){
+        //临界区
+    }
+    
+    public static synchronized void staticSyncMethod(){
+        //临界区
+    }
+    
+    public void syncBlockMethod(){
+        synchronized (object){
+            //临界区
+        }
+    }
+}
+```
+
+三种`synchronized`锁的内容有一些差别:
+
+- 对于**普通同步方法**，锁的是**当前实例对象**，通常指`this`；
+- 对于**静态同步方法**，锁的是当前类的**Class对象**，如`ThreeSync.class`；
+- 对于**同步方法块**，锁的是**synchronized括号内的对象**。
+
+
+#### 临界区含义
+
+把**需要互斥执行的代码**看成为临界区！
+
+如何**用锁保护有效的临界区**是关键，无论是**隐式锁/内置锁(synchronized)**还是**显示锁(Lock)**的使用都是在找寻这种关系。
+
+<div align=center><img src=Thread\简易锁模型.png></div>
+
+线程进入临界区之前，尝试**加锁lock()**，加锁成功，则**进入临界区**(对共享变量进行修改)，持有锁的线程执行完临界区代码后，执行**unlock()释放锁**。
+
+**两个问题：**
+- 我们锁的是什么？
+- 我们保护的又是什么？
+  
+<div align=center><img src=Thread\临界区.png></div>
+
+资源R(共享变量)就是我们要保护的资源，所以我们就要创建资源R的锁LR来保护资源R。
+
+**LR和R之间有明确的指向关系**！
+
+我们编写程序时，往往脑子中的模型是对的，但是忽略了这个指向关系，导致自己的锁不能起到保护资源R的作用(用别人家的锁保护自己家的东西或用自己家的锁保护别人家的东西)，最终引发并发bug，所以在勾画草图时，要明确找到这个关系！
+
+左图LR虚线指向了非共享变量。我们写程序的时候很容易这么做，不确定哪个是要保护的资源，直接大杂烩，用LR将要保护的资源R和没必要保护的非共享变量一起保护起来了，举两个例子来说你就明白这么做的坏处了：
+
+- 编写串行程序时，是不建议try…catch整个方法的，这样如果出现问是很难定位的。道理一样，我们要用锁精确的锁住我们要保护的资源就够了，其他无意义的资源是不要锁的。
+- 锁保护的东西越多，临界区就越大，一个线程从走入临界区到走出临界区的时间就越长，这就让其他线程等待的时间越久，这样并发的效率就有所下降。
+
+```java
+public class ValidLock {
+    private static final Object object = new Object();
+    private int count;
+    
+    public synchronized void badSync(){  // 差的使用方法
+        //其他与共享变量count无关的业务逻辑
+        count++;
+    }
+    
+    public void goodSync(){  // 好的使用方法
+        //其他与共享变量count无关的业务逻辑
+        synchronized (object){
+            count++;
+        }
+    }
+}
+```
+
+在计数器程序例子中，我们会经常这么写:
+```java
+public class SafeCounter {
+    private int count;
+    
+    public synchronized void counter(){
+        count++;
+    }
+    
+    public synchronized int getCount(){
+        return count;
+    }
+}
+```
+
+下图就是上面程序的模型展示：
+
+
+这里我们**锁的是this**，可以**保护this.count**。但有人认为getCount方法没必要加synchronized关键字，因为是读的操作，不会对共享变量做修改。**如果不加上synchronized关键字，就违背了happens-before规则中的监视器锁规则**：对一个锁的解锁happens-before于随后对这个锁的加锁！也就是说**对count的写很可能对count的读不可见**，也就导致脏读。
+
+
+上面我们看到**一个this锁是可以保护多个资源**的，那用**多个不同的锁保护一个资源**可以吗？
+
+```java
+public class UnsafeCounter {
+    private static int count;
+    
+    public synchronized void counter(){
+        count++;
+    }
+    
+    public static synchronized int calc(){
+        return count++;
+    }
+}
+```
+**一个锁的是this，一个锁的是UnsafeCounter.class**，他们都想保护共享变量count。
+<div align=center><img src=Thread\多锁一个资源.png></div>
+
+两个临界区是用两个不同的锁来保护的，所以**临界区没有互斥关系，也就不能保护count**，所以这样加锁是无意义的。
+
+
+**总结：**
+- 解决原子性问题，就是要**互斥**，就是要保证中间状态对外不可见；
+- 锁是解决原子性问题的关键，明确知道我们锁的是什么，要保护的资源是什么，更重要的要知道你的锁能否保护这个受保护的资源(图中的箭头指向)；
+- **有效的临界区是一个入口和一个出口**。多个临界区保护一个资源，也就是一个资源有多个并行的入口和多个出口，这就没有起到互斥的保护作用，临界区形同虚设；
+- 锁自己家门能保护资源就没必要锁整个小区，如果锁了整个小区，这严重影响其他业主的活动(**锁粒度**的问题)。
+
+
+#### 保护单个资源
+
+要保护单个资源并对其进行修改其实很简单，只需按照下图分三步走：
+<div align=center><img src=Thread\单个资源锁模型.png></div>
+
+- 创建受保护资源R的锁
+- 加锁进入临界区
+- 解锁走出临界区
+  
+上图的关键是**R1的锁LR1保护R1**的指向关系是否正确！
+
+
+#### 保护多个没有关系的资源
+
+如果多个资源没有关系，那就是保护一个资源模型的复制：
+<div align=center><img src=Thread\多个无关联资源锁模型.png></div>
+
+比如现实中银行**取款**和**修改密码**操作：
+银行取款操作对应的资源是**余额**，修改密码操作对应的资源是**密码**，余额和密码两个资源完全没有关系，所以各自用自家的锁保护自家的资源就好了。
+
+#### 保护多个有关系的资源
+
+拿经典的银行转账案例来说明，**账户A给账户B转账**，账户A余额减少100元，账户B余额增加100 元。这个操作要是原子性的，那么资源「A 余额」和资源「B 余额」就这样“有了关系”，先来看程序:
+
+```java
+class Account {
+    private int balance;
+    // 转账
+    synchronized void transfer(Account target, int amt){
+        if (this.balance > amt) {
+            this.balance -= amt;
+            target.balance += amt;
+        }
+    } 
+}
+```
+用synchronized直接保护transfer方法，然后操作资源「A 余额」和资源「B 余额」就可以了...
+
+⚠️: 真的是这样吗？
+
+上面程序的结构模型为：
+
+
+我们通常容易忽略**锁和资源的指向关系**，我们想当然的用锁this来保护target资源了，也就没有起到保护作用！
+
+假设A，B，C账户初始余额都是200元，A向B转账100，B向C转账100。我们期盼最终的结果是：
+账户A余额：100元；
+账户B余额：200元；
+账户C余额：300元。
+
+假设线程1「A 向 B 转账」与线程2「B 向 C 转账」两个操作同时执行，根据JMM模型可知，线程1和线程2读取线程B当前的余额都是200元。
+
+- 线程1执行transfer方法锁定的是**A的实例(A.this)**，并没有锁定B的实例
+- 线程2执行transfer方法锁定的是**B的实例(B.this)**，并没有锁定C的实例
+
+所以**线程1和线程2可以同时进入transfer临界区**，上面你认为对的模型其实就会变成这个样子：
+<div align=center><img src=Thread\银行转账.png></div>
+
+根据**监视器锁规则**(对一个锁的解锁happens-before于随后对这个锁的加锁)和**传递性规则**，资源`B.alance`存在于两个“临界区”中，所以这个“临界区”对`B.balance`来说形同虚设，也就不满足监视器锁规则，进而导致传递性规则也不生效，说白了，**前序线程的更改结果对后一个线程不可见**。
+
+
+这样最终导致:
+
+- 账户B的余额可能是100：线程1写`B.balance(balance = 300)` **先于**线程2写`B.balance(balance = 100)`，也就是说线程1的结果会被线程2覆盖，导致最终账户B的余额为100。
+
+- 账户B的余额可能是300：与上述情况相反，线程1写`B.balance(balance = 300)`**后于**线程2写`B.balance(balance = 100)`，也就是说线程2的结果被线程1覆盖，导致最终账户B的余额为300。
+
+
+**正确方法：**
+
+```java{.line-numbers highlight=5}
+class Account {
+    private int balance;
+    // 转账
+    void transfer(Account target, int amt){
+        synchronized(Account.class) {
+            if (this.balance > amt) {
+                this.balance -= amt;
+                target.balance += amt;
+            }
+        }
+    } 
+}
+```
+
+我们**将this锁变为Account.class锁**，`Account.class`是虚拟机加载Account类时创建的，肯定是**唯一的**，**所有Account对象都共享`Account.class`**，也就是说，**`Account.class`锁能保护所有Account对象**。
+
+<div align=center><img src=Thread\银行转账1.png></div>
+
+如果**多个资源有关联**，为了让锁起到保护作用，我们需要**将锁的粒度变大**，比如将this锁变成了Account.class锁。
+
+转账业务非常常见，并发量非常大，如果我们将锁的粒度都提升到Account.class这个级别(分久必合)，假设每次转账业务都很耗时，那么显然这个**锁的性能是比较低**的，所以还需继续优化这个模型，选择合适的锁粒度，同时能保护多个有关联的资源。
 
 
 ### synchronized同步对象概念
@@ -3692,6 +3918,8 @@ class Phone7
 
 ### 死锁示例
 
+#### 示例一
+
 ```java
 public class DeadLock {
     // 创建资源
@@ -3760,9 +3988,40 @@ Thread-0 is waiting for resourceB...
 
 线程A休眠结束后会企图获取resourceB资源，而resourceB资源被线程B所持有，所以线程A会被阻塞而等待。而同时线程B休眠结束后会企图获取resourceA资源，而resourceA资源己经被线程A持有，所以线程A和线程B就陷入了相互等待的状态，也就产生了死锁。
 
+
+#### 示例二
+
+柜员1正在办理给铁蛋儿转账的业务，但只拿到了你的账本；柜员2正在办理铁蛋儿给你转账的业务，但只拿到了铁蛋儿的账本。此时双方出现了尴尬状态，两位柜员都在等待对方归还账本为当前客户办理转账业务。
+
+<div align=center><img src=Thread\银行转帐死锁.png></div>
+
+程序代码描述一下上面这个模型：
+
+```java
+class Account {
+    private int balance;
+
+    // 转账
+    void transfer(Account target, int amt){
+        // 锁定转出账户
+        synchronized(this) { 
+             
+            // 锁定转入账户
+            synchronized(target) {           
+                if (this.balance > amt) {
+                    this.balance -= amt;
+                    target.balance += amt;
+                }
+            }
+        }
+    } 
+}
+```
+synchronized内置锁非常执着，它会告诉你「死等」，最终出现死锁。
+
 ### 避免线程死锁
 
-要想避免死锁，只需要破坏掉至少一个构造死锁的必要条件即可。但是根据操作系统的知识，目前只有**请求并持有**和**环路等待条件**是可以被破坏的。
+要想避免死锁，只需要破坏掉至少一个构造死锁的必要条件即可。互斥条件是并发编程的根基，这个条件没办法改变。根据操作系统的知识，目前只有**请求并持有**和**环路等待条件**是可以被破坏的。
 
 造成死锁的原因其实和**申请资源的顺序**有很大关系，**使用资源申请的有序性原则**就可以避免死锁。
 
@@ -3795,6 +4054,105 @@ Thread threadB = new Thread(new Runnable() {
 
 所以**获取资源的有序性**破坏了资源的请求并持有条件和环路等待条件，因此避免了死锁。
 
+
+#### 破坏请求和保持条件
+
+每个柜员都可以取放账本，很容易出现互相等待的情况。要想破坏请求和保持条件，就要**一次性拿到所有资源**。
+
+任何软件工程遇到的问题都可以通过**增加一个中间层**来解决。
+
+我们不允许柜员都可以取放账本，账本要由单独的**账本管理员**来管理：
+<div align=center><img src=Thread\银行转帐账本管理员.png></div>
+
+也就是说账本管理员拿取账本是临界区，如果只拿到其中之一的账本，那么不会给柜员，而是等待柜员下一次询问是否两个账本都在：
+
+```java
+public class Account {
+    //单例的账本管理员
+    private AccountBookManager accountBookManager;
+    
+    private int balance;
+
+    public void transfer(Account target, int amt){
+        // 一次性申请转出账户和转入账户，直到成功
+        while(accountBookManager.getAllRequiredAccountBook(this, target));
+
+        try{
+            // 锁定转出账户
+            synchronized(this){
+                // 锁定转入账户
+                synchronized(target){
+                    if (this.balance > amt){
+                        this.balance -= amt;
+                        target.balance += amt;
+                    }
+                }
+            }
+        } finally {
+            accountBookManager.releaseObtainedAccountBook(this, target);
+        }
+
+    }
+}
+
+public class AccountBookManager {
+
+    List<Object> accounts = new ArrayList<>(2);
+
+    synchronized boolean getAllRequiredAccountBook(Object from, Object to){
+        if(accounts.contains(from) || accounts.contains(to)){
+            return false;
+        } else{
+            accounts.add(from);
+            accounts.add(to);
+            return true;
+        }
+    }
+    // 归还资源
+    synchronized void releaseObtainedAccountBook(Object from, Object to){
+        accounts.remove(from);
+        accounts.remove(to);
+    }
+}
+```
+
+#### 破坏不可剥夺条件
+
+为了解决内置锁的执着，Java显示锁支持通知(notify/notifyall)和等待(wait)，也就是说该功能可以实现喊一嗓子*老铁，铁蛋儿的账本先给我用一下，用完还给你*的功能。
+
+#### 破坏环路等待条件
+
+只需要**将资源序号大小排序获取**就会解决这个问题，将环路拆除：
+<div align=center><img src=Thread\银行转帐排序.png></div>
+
+```java
+class Account {
+    private int id;
+    private int balance;
+    // 转账
+    void transfer(Account target, int amt){
+        Account smaller = this
+        Account larger = target;
+        // 排序
+        if (this.id > target.id) {
+            smaller = target;
+            larger = this;
+        }
+        // 锁定序号小的账户
+        synchronized(smaller){
+            // 锁定序号大的账户
+            synchronized(larger){
+                if (this.balance > amt){
+                    this.balance -= amt;
+                    target.balance += amt;
+                }
+            }
+        }
+    }
+}
+```
+
+**当smaller被占用时，其他线程就会被阻塞**，也就不会存在死锁了。
 
 ## ThreadLocal
 
@@ -4744,6 +5102,186 @@ class Ticket2
 - 【退出】synchronized块的内存语义事把在synchronized块内对共享变量的修改**刷新到主内存中**
 
 
+### Happens-before规则
+
+**可见性/原子性/有序性**三个问题导致了很多并发Bug：
+
+- 为了解决CPU、内存、IO的短板，增加了**缓存**，但这导致了**可见性**问题；
+- 编译器/处理器擅自**优化** (Java代码在编译后会变成**Java字节码**，**字节码被类加载器加载到JVM里**，JVM执行字节码，最终需要转化为**汇编指令**在CPU上执行) ，导致有序性问题。
+
+既然不能完全禁止缓存和编译优化，那就**按需禁用缓存和编译优化**，按需就是要加一些约束，约束中就包括了**volatile，synchronized，final**三个关键字，同时还有**Happens-Before**原则(包含可见性和有序性的约束)。
+
+- 对于会改变程序执行结果的重排序，JMM要求编译器和处理器必须禁止这种重排序。
+- 对于不会改变程序执行结果的重排序，JMM对编译器和处理器不做要求 (JMM允许这种重排序)。
+  
+Happens-before规则主要用来约束两个操作，两个操作之间具有happens-before关系，并不意味着前一个操作必须要在后一个操作之前执行。happens-before仅仅要求**前一个操作(执行的结果)对后一个操作可见**，(the first is visible to and ordered before the second)。
+
+
+
+**1. 程序顺序性规则**：一个线程中，按照程序的顺序，前面的操作happens-before后续的任何操作。！
+
+顺序性是指，我们可以按照顺序推演程序的执行结果，但是编译器未必一定会按照这个顺序编译，但是编译器保证结果一定`==`顺序推演的结果。
+
+这里是一个线程中的操作，其实隐含了「as-if-serial」语义: 就是**只要执行结果不被改变，无论怎么“排序”，都是对的**。
+
+**2. volatile变量规则**：对一个volatile变量的写操作，happens-before后续对这个变量的读操作。
+
+```java{.line-numbers highlight=5}
+public class ReorderExample {
+    private int x = 0;
+    private int y = 1;
+
+    private volatile boolean flag = false;
+    
+    public void writer(){
+        x = 42;	//1
+        y = 50;	//2
+        flag = true;	//3
+    }
+    
+    public void reader(){
+        if (flag){	//4
+        System.out.println("x:" + x);	//5
+        System.out.println("y:" + y);	//6
+        }
+    }
+}
+```
+
+|  能否重排序 | 第二个操作 |  第二个操作 |  第二个操作 |
+|:-----------:|:----------:|:-----------:|:-----------:|
+|  第一个操作 |  普通读/写 | volatile 读 | volatile 写 |
+|  普通读/写  |      -     |      -      |      NO     |
+| volatile 读 |     NO     |      NO     |      NO     |
+| volatile 写 |      -     |      NO     |      NO     |
+
+- **如果第二个操作为`volatile写`，不管第一个操作是什么，都不能重排序**！这就确保了`volatile写之前的操作`不会被重排序到`volatile写`之后。
+
+    拿上面的代码来说，代码1和2不会被重排序到代码3的后面，但代码1和2可能被重排序 (没有依赖也不会影响到执行结果)。
+
+- **如果第一个操作为`volatile读`，不管第二个操作是什么，都不能重排序**，这确保了`volatile读之后的操作`不会被重排序到`volatile读`之前
+    拿上面的代码来说，代码4是读取volatile变量，代码5和6不会被重排序到代码4之前。
+
+
+volatile内存语义的实现是应用到了**内存屏障**。
+
+
+**3.传递性规则**：如果 A happens-before B, 且 B happens-before C, 那么 A happens-before C。
+
+<div align=center><img src=Thread\线程切换图.png></div>
+
+- `x=42`和`y=50` Happens-before `flag = true`，这是`规则1`；
+- 写变量(代码3)`flag=true` Happens-before 读变量(代码 4)`if(flag)`，这是`规则2`；
+- 根据`规则3传递性规则`，`x=42` Happens-before 读变量`if(flag)`。
+
+**如果线程B读到了flag是true，那么`x=42`和`y=50`对线程B就一定可见了**，这就是Java1.5的增强。
+
+
+**4.监视器锁规则**：对一个锁的**解锁**操作，happens-before后续对这个锁的**加锁**操作。
+```java
+public class SynchronizedExample {
+    private int x = 0;
+
+    public void synBlock(){
+        // 1.加锁
+        synchronized (SynchronizedExample.class){
+            x = 1; // 对x赋值
+        }
+        // 3.解锁
+    }
+    
+    // 1.加锁
+    public synchronized void synMethod(){
+        x = 2; // 对x赋值
+    }
+    // 3. 解锁
+}
+```
+
+**5.start()规则**：如果线程A执行操作`ThreadB.start()`(启动线程B)，那么A线程的`ThreadB.start()`操作 happens-before 于线程B中的任意操作！也就是说，**主线程A启动子线程B后，子线程B能看到主线程在启动子线程B前的操作**。
+
+```java
+public class StartExample {
+    private int x = 0;
+    private int y = 1;
+    private boolean flag = false;
+
+    public void write() {
+        System.out.println("x = " + x);
+        System.out.println("y = " + y);
+        System.out.println("flag =" + flag);
+    }
+
+    public static void main(String[] args) {
+        StartExample startExample = new StartExample();
+
+        Thread thread = new Thread(startExample::write, "线程thread");
+
+        startExample.x = 10;
+        startExample.y = 20;
+        startExample.flag = true;
+
+        thread.start();
+
+        System.out.println("主线程结束！");
+    }
+}
+/*
+主线程结束！
+x = 10
+y = 20
+flag =true
+ */
+```
+线程thread看到了主线程调用`thread1.start()`之前的所有赋值结果！
+
+
+**6.join()规则**：如果线程A执行操作`ThreadB.join()`并成功返回, 那么线程B中的任意操作 happens-before 于线程`A从ThreadB.join()`操作成功返回，和`start规则`刚好相反。主线程A等待子线程B完成，当子线程B执行完毕后，主线程能够看到子线程B的所有操作。
+
+```java
+public class JoinExample {
+    private int x = 0;
+    private int y = 1;
+    private boolean flag = false;
+
+    public void writer(){
+        this.x = 100;
+        this.y = 200;
+        this.flag = true;
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        JoinExample joinExample = new JoinExample();
+
+        Thread thread1 = new Thread(joinExample::writer, "线程1");
+        thread1.start();
+
+        thread1.join();
+
+        System.out.println("x:" + joinExample.x );
+        System.out.println("y:" + joinExample.y );
+        System.out.println("flag:" + joinExample.flag );
+        System.out.println("主线程结束");
+    }
+
+}
+/*
+x:100
+y:200
+flag:true
+主线程结束
+ */
+```
+
+**总结**：
+
+- Happens-before 重点是解决**前一个操作结果对后一个操作可见**。这些规则解决了多线程编程的可见性与有序性问题，但还没有完全解决原子性问题(除了synchronized)；
+- start()和join()规则也是解决主线程与子线程通信的方式之一；
+- 从内存语义的角度来说，`volatile的写-读`与`锁的释放-获取`有相同的内存效果；`volatile写`和`锁的释放`有相同的内存语义；`volatile读`与`锁的获取`有相同的内存语义。
+- volatile解决的是**可见性**问题，synchronized解决的是**原子性**问题。
+
+
+
 ### 使用volatile消除共享内存不可见问题
 
 当一个变量被声明为volatile时：
@@ -4809,6 +5347,60 @@ public class ThreadSafeInteger {
 ```
 这两个结果是完全相同，在解决【当前】共享变量数据可见性的问题上，二者算是等同的！
 
+
+
+#### volatile 写-读的内存语义
+
+假定线程A先执行writer方法，随后线程B执行reader方法：
+
+```java
+public class ReorderExample {
+    
+    private int x = 0;
+    private int y = 1;
+    private volatile boolean flag = false;
+    
+    public void writer(){
+        x = 42;	//1
+        y = 50;	//2
+        flag = true;  //3
+    }
+    
+    public void reader(){
+        if (flag){  //4
+            System.out.println("x:" + x);  //5
+            System.out.println("y:" + y);  //6
+        }
+    }
+}
+```
+
+当线程A执行writer方法时：
+
+<div align=center><img src=Thread\volatile可见性.png></div>
+
+**线程A将本地内存更改的变量写回到主内存中**！
+
+**volatile读的内存语义**：当读一个volatile变量时，JMM会**把该线程对应的本地内存置为无效**。线程接下来将从主内存中读取共享变量。
+
+所以当线程B执行reader方法时：
+
+<div align=center><img src=Thread\volatile可见性读.png></div>
+线程B本地内存变量无效，从主内存中读取变量到本地内存中，也就得到了线程A更改后的结果，这就是volatile如何保证可见性的过程！
+
+- 线程A写一个volatile变量，实质上是线程A向接下来将要读这个volatile变量的某个线程发出了(其对共享变量所做修改的)消息；
+- 线程B读一个volatile变量，实质上是线程B接收了之前某个线程发出的(在写这个volatile变量之前对共享变量所做修改的)消息。
+- 线程A写一个volatile变量，随后线程B读这个volatile变量，这个过程实质上是**线程A通过主内存向线程B发送消息**。
+
+
+从内存语义的角度来说，
+- `volatile的写-读`与`锁的释放-获取`有相同的内存效果；
+- `volatile写`和`锁的释放`有相同的内存语义；
+- `volatile读`与`锁的获取`有相同的内存语义。
+
+
+### synchronized与volatile区别
+
 如果说`synchronized`和`volatile`是完全等同的，那是不是就没必要设计两个关键字了？
 
 继续看个例子：
@@ -4870,8 +5462,6 @@ private synchronized void add10KCount() {
 */
 ```
 
-### synchronized与volatile区别
-
 **`count++`程序代码是一行，但是翻译成CPU指令却是三行**(可以用`javap -c`命令查看)。
 
 `synchronized`是**独占锁/排他锁**（**有你没我**），同时只能有一个线程调用 `add10KCount`方法，其他调用线程会被阻塞。所以三行CPU指令都是同一个线程执行完之后别的线程才能继续执行，这就是通常说说的**原子性**（**线程执行多条指令不被中断**）
@@ -4892,19 +5482,140 @@ synchronized是排他的，**线程排队就要有切换**，这个切换就好�
 volatile就不一样了，它是非阻塞的方式，所以在**解决共享变量可见性问题**的时候，volatile就是synchronized的弱同步体现了。
 
 
-### Happens-before解决有序性和可见性
 
-可见性/原子性/有序性三个问题导致了很多并发Bug：
 
-- 为了解决CPU、内存、IO的短板，增加了**缓存**，但这导致了**可见性**问题；
-- 编译器/处理器擅自**优化** (Java代码在编译后会变成**Java字节码**，**字节码被类加载器加载到JVM里**，JVM执行字节码，最终需要转化为**汇编指令**在CPU上执行) ，导致原子性，有序性问题。
 
-既然不能完全禁止缓存和编译优化，那就**按需禁用缓存和编译优化**，按需就是要加一些约束，约束中就包括了**volatile，synchronized，final**三个关键字，同时还有**Happens-Before**原则(包含可见性和有序性的约束)。
+### 内存屏障(Memory Barriers / Fences)
 
-- 对于会改变程序执行结果的重排序，JMM要求编译器和处理器必须禁止这种重排序。
-- 对于不会改变程序执行结果的重排序，JMM对编译器和处理器不做要求 (JMM允许这种重排序)。
+JMM针对编译器定制了`volatile重排序`的规则(`volatile变量规则`)，那JMM是怎样**禁止重排序**的呢？
+
+答案是**内存屏障**！
+
+为了实现volatile的内存语义，**编译器在生成字节码时，会在指令序列中插入内存屏障**来禁止特定类型的处理器重排序。即：volatile通过内存屏障保证程序不被”擅自”排序！
+
+想象内存屏障是一面高墙，如果两个变量之间有这个屏障，那么他们就不能互换位置(重排序)了。变量有读(Load)有写(Store)，操作有前有后，JMM就将内存屏障插入策略分为4种：
+1. 在每个`volatile写`操作的**前面**插入一个`StoreStore`屏障
+2. 在每个`volatile写`操作的**后面**插入一个`StoreLoad`屏障
+3. 在每个`volatile读`操作的**后面**插入一个`LoadLoad`屏障
+4. 在每个`volatile读`操作的**后面**插入一个`LoadStore`屏障
+
+1和2用图形描述以及对应表格规则如下图所示：
+<div align=center><img src=Thread\内存屏障1和2.png></div>
+
+3和4用图形描述以及对应表格规则如下图所示：
+<div align=center><img src=Thread\内存屏障3和4.png></div>
+
+```java
+public class VolatileBarrierExample {
+    private int a;
+    private volatile int v1 = 1;
+    private volatile int v2 = 2;
+
+    void readAndWrite(){
+        int i = v1; //第一个volatile读
+        int j = v2;	//第二个volatile读
+        a = i + j;	//普通写
+        v1 = i + 1;	//第一个volatile写
+        v2 = j * 2;	//第二个volatile写
+    }
+}
+```
+
+将屏障指令带入到程序：
+<div align=center><img src=Thread\内存屏障.png></div>
+
+- 彩色是将屏障指令带入到程序中生成的全部内容，也就是编译器生成的「最稳妥」的方案；
+- 显然有很多屏障是重复多余的，右侧虚线框指向的屏障是可以被「优化」删除掉的屏障。
 
 # 线程通信
+
+解决死锁的思路之一就是**破坏请求和保持条件**，所有柜员都要通过唯一的**账本管理员**一次性拿到所有转账业务需要的账本。没有**等待/通知机制**之前，所有柜员都通过死循环的方式不断向账本管理员申请所有账本：`while(!accountBookManager.getAllRequiredAccountBook(this, target));`，但程序无限申请浪费CPU。
+
+无限循环实在太浪费CPU，而理想情况应该是这样：
+
+- 柜员A如果拿不到所有账本，就傲娇的不再继续问了（线程阻塞自己`wait`）
+- 柜员B归还了柜员A需要的账本之后就主动通知柜员A账本可用（通知等待的线程`notify/notifyAll`）
+
+<div aling=center><img src=Thread\等待通知机制.png width=80%></div>
+
+- **一个锁对应一个【入口等待队列】，不同锁的入口等待队列没任何关系**，说白了他们就不存在竞争关系。
+  不同患者进入眼科和耳鼻喉科看大夫一点冲突都没有。
+- `wait(), notify()/notifyAll()`要在synchronized内部被使用，并且，如果锁的对象是this，就要`this.wait(), this.notify()/this.notifyAll()`，否则JVM就会抛出`java.lang.IllegalMonitorStateException`的。
+  等待/通知机制就是从【竞争】环境逐渐衍生出来的策略，不在锁竞争内部使用或等待/通知错了对象，自然是不符合常理的。
+
+要想将无限循环策略改为等待通知策略，还需要解决四个问题([以钱庄账本管理员为例](#破坏请求和保持条件))：
+<div aling=center><img src=Thread\等待通知机制1.png></div>
+
+```java{.line-numbers highlight=8}
+public class AccountBookManager {
+
+    List<Object> accounts = new ArrayList<>(2);
+
+    synchronized boolean getAllRequiredAccountBook(Object from, Object to){
+        if(accounts.contains(from) || accounts.contains(to)){
+            try{
+                this.wait();
+            }catch(Exception e){
+
+            }
+        } else{
+            accounts.add(from);
+            accounts.add(to);
+
+            return true;
+        }
+    }
+    // 归还资源
+    synchronized void releaseObtainedAccountBook(Object from, Object to){
+        accounts.remove(from);
+        accounts.remove(to);
+        notify();
+    }
+}
+```
+
+**问题一**：在上面`this.wait()`处，使用了`if`条件判断，会出现天大的麻烦，来看下图（从下往上看）：
+<div align=center><img src=Thread\等待通知机制2.png width=30%></div>
+
+notify唤醒的那一刻，线程【曾经/曾经/曾经】要求的条件得到了满足。从这一刻开始，到去条件等队列中唤醒线程，再到再次尝试获取锁是有**时间差**的。当再次获取到锁时，**线程曾经要求的条件是不一定满足**，所以需要重新进行条件判断，所以需要将if判断改成while判断：
+
+```java{.line-numbers highlight=6}
+public class AccountBookManager {
+
+    List<Object> accounts = new ArrayList<>(2);
+
+    synchronized boolean getAllRequiredAccountBook(Object from, Object to){
+        while(accounts.contains(from) || accounts.contains(to)){
+            try{
+                this.wait();
+            }catch(Exception e){
+
+            }
+        } else{
+            accounts.add(from);
+            accounts.add(to);
+
+            return true;
+        }
+    }
+    // 归还资源
+    synchronized void releaseObtainedAccountBook(Object from, Object to){
+        accounts.remove(from);
+        accounts.remove(to);
+        notify();
+    }
+}
+```
+
+一个线程可以从`挂起状态`变为`可运行状态`（也就是`被唤醒`），即使线程没有被其他线程调用`notify()/notifyAll()`方法进行通知，或被中断，或者等待超时，这就是所谓的【虚假唤醒】。虽然虚假唤醒很少发生，但要防患于未然，做法就是**不停的去测试该线程被唤醒条件是否满足**。
+
+**被唤醒的线程再次获取到锁之后，是从原来的wait之后开始执行的**，wait在循环里面，所以会再次进入循环条件**重新进行条件判断**。
+
+从哪里跌倒就从哪里爬起来；在哪里wait，就从wait那里继续向后执行。这也就成了使用wait()的标准范式：
+<div align=center><img src=Thread\wait()标准范式.jpg width=20%></div>
+
+**问题二**：线程归还所使用的账户之后使用`notify`而不是`notifyAll`进行通知。
+
 
 ## 监视器
 
@@ -5033,6 +5744,8 @@ public class TestThread {
 盖伦 回血1点，增加血后，盖伦的血量是2
  */
 ```
+
+
 
 ### 初识生产者消费者问题
 * 假设仓库中只能存放一件产品，生产者将生产出来的产品放入仓库，消费者将仓库中产品取走消费。
@@ -5298,6 +6011,14 @@ Output:
 观众观看了节目：快乐大本营
  */
 ```
+
+#### 尽量使用notifyAll()
+
+- notify()函数
+  **随机唤醒一个**：一个线程调用共享对象的notify()方法，会唤醒一个在该共享变量上调用wait()方法后被挂起的线程，一个共享变量上可能有多个线程在等待，具体唤醒那一个，是随机的。
+
+- notifyAll()函数
+  唤醒所有：与notify()不同，notifyAll()会唤醒在该共享变量上由于调用wait()方法而被挂起的所有线程。
 
 
 ## Condition
