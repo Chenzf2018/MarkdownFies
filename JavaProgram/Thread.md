@@ -4529,14 +4529,204 @@ class Account {
 
 
 
+## 中断
+
+在学习/编写并发程序时，总会听到/看到如下词汇：
+
+- 线程被中断或抛出InterruptedException
+- 设置了中断标识
+- 清空了中断标识
+- 判断线程是否被中断
+
+在Java`Thread类`里又提供了三个方法来处理并发中断问题：
+
+- interrupt()
+- interrupted()
+- isInterrupted()
+
+### 什么是中断机制
+
+在多线程编程中，中断是一种**协同**机制
+
+就像你妈妈叫你吃饭，你收到了中断游戏通知，但**是否马上放下手中的游戏去吃饭看你心情**。在程序中怎样演绎这个心情就看具体的业务逻辑了。
+
+在多线程的场景中，有的线程可能迷失在怪圈无法自拔（自旋浪费资源），这时就可以用**其他线程在恰当的时机给它个中断通知**，被“中断”的线程可以选择在恰当的时机选择跳出怪圈，最大化的利用资源。
+
+
+### 中断三个方法
+
+Java的每个线程对象里都有一个boolean类型的标识，代表是否有中断请求，可你寻遍Thread类你也不会找到这个标识，因为这是通过底层native方法实现的。
+
+**interrupt()**：
+
+**`interrupt()`方法是唯一一个可以将上面提到中断标志设置为true的方法**
+- 这是一个Thread类public的对象方法
+- 任何线程对象都可以调用该方法
+- 可以一个线程interrupt其他线程，也可以interrupt自己。中断标识的设置是通过native方法`interrupt0`完成的。
+
+```java
+public void interrupt() {
+    if (this != Thread.currentThread())
+        checkAccess();
+
+    synchronized (blockerLock) {
+        Interruptible b = blocker;
+        if (b != null) {
+            interrupt0(); // Just to set the interrupt flag
+            b.interrupt(this);
+            return;
+        }
+    }
+    interrupt0();
+}
+
+private native void interrupt0();
+```
+
+在Java中，线程被中断的反应是不一样的，脾气不好的直接就抛出了`InterruptedException()`：
+
+```java
+* <p> If this thread is blocked in an invocation of the {@link
+* Object#wait() wait()}, {@link Object#wait(long) wait(long)}, or {@link
+* Object#wait(long, int) wait(long, int)} methods of the {@link Object}
+* class, or of the {@link #join()}, {@link #join(long)}, {@link
+* #join(long, int)}, {@link #sleep(long)}, or {@link #sleep(long, int)},
+* methods of this class, then its interrupt status will be cleared and it
+* will receive an {@link InterruptedException}.
+```
+
+该方法注释上写的很清楚，当线程被阻塞在：`wait(), join(), sleep()`这些方法时，如果被中断，就会抛出`InterruptedException`受检异常（也就是必须要求我们catch进行处理的）
+
+这些可能阻塞的方法如果声明有`throws InterruptedException`，也就暗示我们它们是可中断的。
+
+**调用interrput()方法后，中断标识就被设置为true了**，那我们怎么利用这个中断标识，来判断某个线程中断标识到底什么状态呢？
+
+
+**isInterrupted()**：
+
+```java
+public boolean isInterrupted() {
+    return isInterrupted(false);
+}
+
+private native boolean isInterrupted(boolean ClearInterrupted);
+```
+
+这个方法名起的非常好，因为比较符合boolean类型字段的get方法规范。该方法就是返回中断标识的结果：
+- true：线程被中断，
+- false：线程**没被中断**或**被清空了中断标识**
+
+拿到这个标识后，线程就可以判断这个标识来执行后续的逻辑了。
+
+
+**interrupted()**：
+
+```java
+public static boolean interrupted() {
+    return currentThread().isInterrupted(true);
+}
+
+public boolean isInterrupted() {
+    return isInterrupted(false);
+}
+
+private native boolean isInterrupted(boolean ClearInterrupted);
+```
+
+按照常规翻译，过去时时态，这就是“被打断了/被打断的”，其实和上面的`isInterrupted()`方法差不多，两个方法都是调用private的isInterrupted()方法， 唯一差别就是**会清空中断标识**（这是从方法名中怎么也看不出来的）。
+
+调用该方法，会返回当前中断标识，同时会清空中断标识。
+
+中断标识被清空，如果该方法被连续调用两次，第二次调用将返回false；除非当前线程在第一次和第二次调用该方法之间被再次interrupt。
+
+```java
+Thread.currentThread().isInterrupted(); // true
+Thread.interrupted() // true，返回true后清空了中断标识将其置为 false
+Thread.currentThread().isInterrupted(); // false
+Thread.interrupted() // false
+```
+
+当你**可能要被大量中断并且想确保只处理一次中断时**，就可以使用这个方法了！
+
+
+### 中断使用场景与注意事项
+
+通常，中断的使用场景有以下几个
+
+- 点击某个桌面应用中的关闭按钮时（比如你关闭IDEA，不保存数据直接中断好吗？）；
+- 某个操作超过了一定的执行时间限制需要中止时；
+- 多个线程做相同的事情，只要一个线程成功其它线程都可以取消时；
+- 一组线程中的一个或多个出现错误导致整组都无法继续时；
+
+因为中断是一种协同机制，提供了更优雅中断方式，也提供了更多的灵活性，所以当遇到如上场景等，我们就可以考虑使用中断机制了。
+
+使用中断机制无非就是注意上面说的两项内容：
+
+- 中断标识
+- InterruptedException
+
+可将其总结为两个通用原则：
+
+**原则-1**：
+
+如果遇到的是可中断的阻塞方法，并抛出InterruptedException，可以继续向方法调用栈的上层抛出该异常；如果检测到中断，则可清除中断状态并抛出InterruptedException，使当前方法也成为一个可中断的方法。
+
+**原则-2**：
+
+若有时候不太方便在方法上抛出InterruptedException，比如要实现的某个接口中的方法签名上没有`throws InterruptedException`，这时就可以**捕获**可中断方法的InterruptedException并通过`Thread.currentThread.interrupt()`来重新设置中断状态。
+
+```java
+// 希望当前线程被中断之后，退出while
+
+Thread th = Thread.currentThread();
+while(true) {
+    if(th.isInterrupted()) {
+    break;
+    }
+    
+    // 省略业务代码
+    
+    try {
+        Thread.sleep(100);
+    }catch (InterruptedException e){
+        e.printStackTrace();
+    }
+}
+```
+
+```java
+/**
+* @throws InterruptedException
+*   if any thread has interrupted the current thread. The
+*   <i>interrupted status</i> of the current thread is
+*   cleared when this exception is thrown.
+*/
+public static native void sleep(long millis) throws InterruptedException;
+```
+
+sleep方法抛出InterruptedException后，中断标识也被清空置为false，我们在catch没有通过调用`th.interrupt()`方法再次将中断标识置为true，这就导致无限循环了。
+
+这两个原则很好理解。总的来说，我们应该留意InterruptedException，当我们捕获到该异常时，绝不可以默默的吞掉它，什么也不做，因为这会导致上层调用栈什么信息也获取不到。其实在编写程序时，捕获的任何受检异常我们都不应该吞掉。
+
+
+### JDK使用中断机制的地方
+
+ThreadPoolExecutor中的shutdownNow方法会遍历线程池中的工作线程并调用线程的interrupt方法来中断线程；
+
+FutureTask中的cancel方法，如果传入的参数为true，它将会在正在运行异步任务的线程上调用interrupt方法，如果正在执行的异步任务中的代码没有对中断做出响应，那么cancel方法中的参数将不会起到什么效果。
+
+
+
+
+
 
 ## `Lock`锁
 
-&emsp;&emsp;Java可以显式地加锁，这给协调线程带来了更多的控制功能。一个锁是一个`Lock`接口的实例，它定义了加锁和释放锁的方法。
+&emsp;&emsp;Java可以**显式地加锁**，这给协调线程带来了更多的控制功能。一个锁是一个`Lock`接口的实例，它定义了加锁和释放锁的方法。
 
 * 从`JDK5.0`开始，`Java`提供了更强大的线程同步机制——通过显示定义同步锁对象来实现同步。同步锁使用`Lock`对象充当。
 * `java.util.concurrent.locks.Lock`**接口**是控制多个线程对共享资源进行访问的工具。锁提供了对共享资源的独占访问，**每次只能有一个线程对`Lock`对象加锁**，线程开始访问共享资源之前，应先获得`Lock`对象。
-* `ReentrantLock`类（可重入锁）实现了`Lock`(`public class ReentrantLock implements Lock, java.io.Serializable`)，它拥有与`synchronized`相同的并发性和内存语义，在实现线程安全的控制中，比较常用的是`ReentrantLock`，可以显示加锁、释放锁。
+* `ReentrantLock`类（可重入锁）实现了`Lock`(`public class ReentrantLock implements Lock, java.io.Serializable`)，它拥有与`synchronized`相同的并发性和内存语义，**在实现线程安全的控制中，比较常用的是`ReentrantLock`，可以显示加锁、释放锁**。
     `ReentrantLock`是`Lock`的一个具体实现，用于创建相互排斥的锁。可以创建具有特定的公平策略的锁。<font color=red>公平策略值为真，则确保等待时间最长的线程首先获得锁。取值为假的公平策略将锁给任意一个在等待的线程</font>。被多个线程访问的使用公正锁的程序，其整体性能可能比那些使用默认设置的程序差，但是在获取锁且避免资源缺乏时可以有更小的时间变化。
 
 <div align=center><img src=Thread/ReentrantLock.png width=80%></div>
@@ -4564,7 +4754,7 @@ public ReentrantLock(boolean fair)
 
 ### 显式锁Lock
 
-Lock具有不会阻塞的功能，下面的三个方案都是解决这个问题的好办法：
+**Lock具有不会阻塞的功能**，下面的三个方案都是解决这个问题的好办法：
 
 | 特性             | 描述                                                                                                                         | API                          |
 |------------------|------------------------------------------------------------------------------------------------------------------------------|------------------------------|
@@ -4584,12 +4774,31 @@ try{
 }
 ```
 
-在try{}外获取锁主要考虑两个方面：
+在`try{}`外获取锁主要考虑两个方面：
 
 - 如果**没有获取到锁就抛出异常**，最终释放锁肯定是有问题的，因为还未曾拥有锁谈何释放锁呢；
 - 如果**在获取锁时抛出了异常**，也就是当前线程并未获取到锁，但执行到finally代码时，如果恰巧别的线程获取到了锁，则会被释放掉（无故释放）。
 
 
+### Lock是怎样起到锁的作用
+
+使用synchronized在程序编译成CPU指令后，在临界区会有`moniterenter`和`moniterexit`指令的出现，可以理解成进出临界区的标识。
+
+从范式上来看：
+
+- `lock.lock()`获取锁，“等同于”synchronized的`moniterenter`指令；
+
+- `lock.unlock()`释放锁，“等同于”synchronized的`moniterexit`指令。
+
+那Lock是怎么做到的呢？
+
+其实很简单，比如在ReentrantLock内部维护了一个volatile修饰的变量state，通过CAS来进行读写（最底层还是交给硬件来保证原子性和可见性），如果CAS更改成功，即获取到锁，线程进入到try代码块继续执行；如果没有更改成功，线程会被【挂起】，不会向下执行。
+
+但Lock是一个接口，里面根本没有state这个变量的存在。
+
+它怎么处理这个state呢？
+
+Lock接口的实现类基本都是通过【聚合】了一个【队列同步器】的子类完成线程访问控制的。
 
 
 ### 加锁示例
@@ -5151,6 +5360,51 @@ class Ticket2
 * `synchronized`可重入锁，不可以中断的，**非公平**；`Lock`可重入锁，可以判断锁，是否公平可以自己设置；
 * `synchronized`适合锁少量的代码同步问题，`Lock`适合锁大量的同步代码！
 * 优先使用顺序：`Lock` > 同步代码块 > 同步方法
+
+
+### 队列同步器AQS
+
+Lock接口的实现类基本都是通过【聚合】了一个【队列同步器】的子类完成线程访问控制的。
+
+队列同步器(AbstractQueuedSynchronizer)，简称同步器或AQS。`ReentrantLock, ReentrantReadWriteLock, Semaphore(信号量), CountDownLatch, 公平锁, 非公平锁,ThreadPoolExecutor`都和AQS有直接关系。
+
+锁是面向使用者的，它定义了使用者与锁交互的接口，隐藏了实现细节，我们只要像使用范式那样就可以了；
+
+同步器面向的是锁的实现者，比如我们自定义的同步器，它简化了锁的实现方式，屏蔽了同步状态管理、线程排队、等待/唤醒等底层操作。
+
+从AQS的类名称和修饰上来看，这是一个**抽象类**，所以从设计模式的角度来看同步器一定是基于【模版模式】来设计的，使用者需要**继承同步器**，实现自定义同步器，并**重写指定方法**，随后将同步器组合在自定义的同步组件中，并调用同步器的模版方法，而这些模版方法又回调用使用者重写的方法。
+
+想理解上面这句话，我们只需要知道下面两个问题就好了：
+
+- 哪些是自定义同步器可重写的方法？
+- 哪些是抽象同步器提供的模版方法？
+
+#### 同步器可重写的方法
+
+同步器提供的可重写方法只有5个：
+
+<div align=center><img src=Thread\同步器可重写的方法.png></div>
+
+自定义的同步组件或者锁**不可能既是独占式又是共享式**，为了避免强制重写不相干方法，所以就没有abstract来修饰了，但**要抛出异常**告知不能直接使用该方法：
+
+```java
+protected boolean tryAcquire(int arg) {
+    throw new UnsupportedOperationException();
+}
+```
+
+表格方法描述中所说的同步状态就是上文提到的有volatile修饰的state。所以我们在重写上面几个方法时，还要通过同步器提供的下面三个方法（AQS 提供的）来**获取或修改同步状态**：
+
+<div align=center><img src=Thread\同步状态方法.png></div>
+
+而独占式和共享式操作state变量的区别也就很简单了：
+
+<div align=center><img src=Thread\独占式和共享式操作state变量.png></div>
+
+所以`ReentrantLock, ReentrantReadWriteLock, Semaphore(信号量), CountDownLatch`这几个类其实仅仅是在实现以上几个方法上略有差别，其他的实现都是通过同步器的模版方法来实现的。
+
+
+
 
 
 ## volatile
