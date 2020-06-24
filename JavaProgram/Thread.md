@@ -1059,366 +1059,6 @@ class MyThread3 implements Callable<Integer>
  */
 ```
 
-# 知识点补充
-
-## 静态代理
-
-静态代理模式：真实对象和代理对象都要实现同一个接口；代理对象要代理真实角色。
-
-好处：
-* 代理对象可以做很多真实对象做不了的事情；
-* 真实对象专注自己该做的事情。
-
-```java
-package Thread;
-
-public class StaticProxy
-{
-    public static void main(String[] args)
-    {
-        WeddingCompany weddingCompany = new WeddingCompany(new People());
-        weddingCompany.HappyMarry();
-    }
-}
-
-interface Marry
-{
-    void HappyMarry();
-}
-
-// 真实角色
-class People implements Marry
-{
-    @Override
-    public void HappyMarry(){System.out.println("Get married.");}
-}
-
-// 代理角色
-class WeddingCompany implements Marry
-{
-    // 代理真实目标角色
-    private Marry target;
-
-    public WeddingCompany(Marry target)
-    {
-        this.target = target;
-    }
-
-    @Override
-    public void HappyMarry()
-    {
-        before();
-        this.target.HappyMarry();  // 这是真实对象
-        after();
-    }
-
-    private void before(){System.out.println("结婚前：婚庆公司布置现场！");}
-    private void after(){System.out.println("结婚后：婚庆公司收尾款！");}
-}
-/*
-结婚前：婚庆公司布置现场！
-Get married.
-结婚后：婚庆公司收尾款！
- */
-```
-
-对比与多线程关系：
-```java
- // Thread代理了System.out.println("Get married.")
- new Thread(() -> System.out.println("Get married.")).start();
-
- new WeddingCompany(new People()).HappyMarry();
-```
-
-
-## `Lambda`表达式
-
-&emsp;&emsp;可以避免匿名内部类定义过多；留下核心的逻辑，让代码看起来简洁。
-`new Thread(() -> System.out.println("Get married.")).start();`
-
-&emsp;&emsp;**函数式接口**的定义：任何接口，如果**只包含唯一一个抽象方法**，那么它就是一个函数式接口。
-
-```java
-public interface Runnable
-{
-    public abstract void run();
-}
-```
-
-<font color=red>对于函数式接口，可以通过`Lambda`表达式来创建该接口的对象</font>。下面将一步步展现代码简化过程：
-
-1. 使用外部类`：
-```java {.line-numbers highlight=20}
-package Thread;
-
-public class TestLambda
-{
-    public static void main(String[] args)
-    {
-        // 创建一个接口对象
-        FunctionalInterface functionalInterface = new FunctionalInterface1();
-        functionalInterface.testLambda();
-    }
-}
-
-// 1. 定义一个函数式接口
-interface FunctionalInterface
-{
-    void testLambda();
-}
-
-// 2. 实现类
-class FunctionalInterface1 implements FunctionalInterface
-{
-    @Override
-    public void testLambda(){System.out.println("尚未使用Lambdad！");}
-}
-```
-
-2. 使用静态内部类：
-```java {.line-numbers highlight=6}
-package Thread;
-
-public class TestLambda
-{
-    // 3. 使用静态内部类
-    static class FunctionalInterface2 implements FunctionalInterface
-    {
-        @Override
-        public void testLambda(){System.out.println("使用静态内部类！");}
-    }
-
-    public static void main(String[] args)
-    {
-        // 创建一个接口对象
-        FunctionalInterface functionalInterface = new FunctionalInterface1();
-        functionalInterface.testLambda();
-
-        functionalInterface = new FunctionalInterface2();
-        functionalInterface.testLambda();
-    }
-}
-
-// 1. 定义一个函数式接口
-interface FunctionalInterface
-{
-    void testLambda();
-}
-
-// 2. 实现类
-class FunctionalInterface1 implements FunctionalInterface
-{
-    @Override
-    public void testLambda(){System.out.println("尚未使用Lambda！");}
-}
-```
-3. 局部内部类：
-```java {.line-numbers highlight=22}
-package Thread;
-
-public class TestLambda
-{
-    // 3. 使用静态内部类
-    static class FunctionalInterface2 implements FunctionalInterface
-    {
-        @Override
-        public void testLambda(){System.out.println("使用静态内部类！");}
-    }
-
-    public static void main(String[] args)
-    {
-        // 创建一个接口对象
-        FunctionalInterface functionalInterface = new FunctionalInterface1();
-        functionalInterface.testLambda();
-
-        functionalInterface = new FunctionalInterface2();
-        functionalInterface.testLambda();
-
-        // 4. 局部内部类
-        class FunctionalInterface3 implements FunctionalInterface
-        {
-            @Override
-            public void testLambda(){System.out.println("使用局部内部类！");}
-        }
-
-        functionalInterface = new FunctionalInterface3();
-        functionalInterface.testLambda();
-    }
-}
-
-// 1. 定义一个函数式接口
-interface FunctionalInterface
-{
-    void testLambda();
-}
-
-// 2. 实现类
-class FunctionalInterface1 implements FunctionalInterface
-{
-    @Override
-    public void testLambda(){System.out.println("尚未使用Lambda！");}
-}
-```
-4. 匿名内部类：
-```java {.line-numbers highlight=32}
-package Thread;
-
-public class TestLambda
-{
-    // 3. 使用静态内部类
-    static class FunctionalInterface2 implements FunctionalInterface
-    {
-        @Override
-        public void testLambda(){System.out.println("使用静态内部类！");}
-    }
-
-    public static void main(String[] args)
-    {
-        // 创建一个接口对象
-        FunctionalInterface functionalInterface = new FunctionalInterface1();
-        functionalInterface.testLambda();
-
-        functionalInterface = new FunctionalInterface2();
-        functionalInterface.testLambda();
-
-        // 4. 局部内部类
-        class FunctionalInterface3 implements FunctionalInterface
-        {
-            @Override
-            public void testLambda(){System.out.println("使用局部内部类！");}
-        }
-
-        functionalInterface = new FunctionalInterface3();
-        functionalInterface.testLambda();
-
-        // 5. 匿名内部类：没有类的名称，必须借助接口或者父类
-        functionalInterface = new FunctionalInterface()
-        {
-            @Override
-            public void testLambda() { System.out.println("匿名内部类"); }
-        };
-        functionalInterface.testLambda();
-    }
-}
-
-// 1. 定义一个函数式接口
-interface FunctionalInterface
-{
-    void testLambda();
-}
-
-// 2. 实现类
-class FunctionalInterface1 implements FunctionalInterface
-{
-    @Override
-    public void testLambda(){System.out.println("尚未使用Lambda！");}
-}
-```
-
-5. 使用`Lambda`：
-```java {.line-numbers highlight=40}
-package Thread;
-
-public class TestLambda
-{
-    // 3. 使用静态内部类
-    static class FunctionalInterface2 implements FunctionalInterface
-    {
-        @Override
-        public void testLambda(){System.out.println("使用静态内部类！");}
-    }
-
-    public static void main(String[] args)
-    {
-        // 创建一个接口对象
-        FunctionalInterface functionalInterface = new FunctionalInterface1();
-        functionalInterface.testLambda();
-
-        functionalInterface = new FunctionalInterface2();
-        functionalInterface.testLambda();
-
-        // 4. 局部内部类
-        class FunctionalInterface3 implements FunctionalInterface
-        {
-            @Override
-            public void testLambda(){System.out.println("使用局部内部类！");}
-        }
-
-        functionalInterface = new FunctionalInterface3();
-        functionalInterface.testLambda();
-
-        // 5. 匿名内部类：没有类的名称，必须借助接口或者父类
-        functionalInterface = new FunctionalInterface()
-        {
-            @Override
-            public void testLambda() { System.out.println("匿名内部类"); }
-        };
-        functionalInterface.testLambda();
-
-        // 6. 使用Lambda简化
-        functionalInterface = () -> { System.out.println("使用Lambda");};  // ()中可添加参数
-        functionalInterface.testLambda();
-
-    }
-}
-
-// 1. 定义一个函数式接口
-interface FunctionalInterface
-{
-    void testLambda();
-}
-
-// 2. 实现类
-class FunctionalInterface1 implements FunctionalInterface
-{
-    @Override
-    public void testLambda(){System.out.println("尚未使用Lambda！");}
-}
-```
-
-### `Lambda`表达式简化
-```java
-package Thread;
-
-public class TestLambda2
-{
-    public static void main(String[] args)
-    {
-        FunctionInterface functionInterface = (int a) ->
-        {
-            System.out.println(a);
-        };
-        functionInterface.testLambda(100);
-
-        // 简化参数类型
-        functionInterface = (a) ->
-        {
-            System.out.println(a);
-        };
-        functionInterface.testLambda(200);
-
-        // 简化括号
-        functionInterface = a ->
-        {
-            System.out.println(a);
-        };
-        functionInterface.testLambda(300);
-
-        // 简化花括号(只有一行时能简化)
-        functionInterface = a -> System.out.println(a);
-        functionInterface.testLambda(400);
-    }
-
-
-}
-
-interface FunctionInterface
-{
-    void testLambda(int a);
-}
-```
-`Lambda`表达式只能在只有一行代码的情况下进行简化，如果有多行，必须得用代码块包裹；接口必须是函数式接口；多个参数也可以简化参数类型，但需要加括号。
-
 
 # 线程组(ThreadGroup)
 
@@ -4720,7 +4360,7 @@ FutureTask中的cancel方法，如果传入的参数为true，它将会在正在
 
 
 
-## `Lock`锁
+## Lock锁
 
 &emsp;&emsp;Java可以**显式地加锁**，这给协调线程带来了更多的控制功能。一个锁是一个`Lock`接口的实例，它定义了加锁和释放锁的方法。
 
@@ -4730,6 +4370,26 @@ FutureTask中的cancel方法，如果传入的参数为true，它将会在正在
     `ReentrantLock`是`Lock`的一个具体实现，用于创建相互排斥的锁。可以创建具有特定的公平策略的锁。<font color=red>公平策略值为真，则确保等待时间最长的线程首先获得锁。取值为假的公平策略将锁给任意一个在等待的线程</font>。被多个线程访问的使用公正锁的程序，其整体性能可能比那些使用默认设置的程序差，但是在获取锁且避免资源缺乏时可以有更小的时间变化。
 
 <div align=center><img src=Thread/ReentrantLock.png width=80%></div>
+
+```java
+package java.util.concurrent.locks;
+import java.util.concurrent.TimeUnit;
+
+
+public interface Lock {
+    void lock();
+
+    void lockInterruptibly() throws InterruptedException;
+
+    boolean tryLock();
+
+    boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
+
+    void unlock();
+
+    Condition newCondition();
+}
+```
 
 ```java
 // ReentrantLock.java
@@ -5368,9 +5028,7 @@ Lock接口的实现类基本都是通过【聚合】了一个【队列同步器�
 
 队列同步器(AbstractQueuedSynchronizer)，简称同步器或AQS。`ReentrantLock, ReentrantReadWriteLock, Semaphore(信号量), CountDownLatch, 公平锁, 非公平锁,ThreadPoolExecutor`都和AQS有直接关系。
 
-锁是面向使用者的，它定义了使用者与锁交互的接口，隐藏了实现细节，我们只要像使用范式那样就可以了；
-
-同步器面向的是锁的实现者，比如我们自定义的同步器，它简化了锁的实现方式，屏蔽了同步状态管理、线程排队、等待/唤醒等底层操作。
+**锁是面向使用者的**，它定义了使用者与锁交互的接口，隐藏了实现细节，我们只要像使用范式那样就可以了；**同步器面向的是锁的实现者**，比如我们自定义的同步器，它简化了锁的实现方式，屏蔽了同步状态管理、线程排队、等待/唤醒等底层操作。
 
 从AQS的类名称和修饰上来看，这是一个**抽象类**，所以从设计模式的角度来看同步器一定是基于【模版模式】来设计的，使用者需要**继承同步器**，实现自定义同步器，并**重写指定方法**，随后将同步器组合在自定义的同步组件中，并调用同步器的模版方法，而这些模版方法又回调用使用者重写的方法。
 
@@ -5404,7 +5062,121 @@ protected boolean tryAcquire(int arg) {
 所以`ReentrantLock, ReentrantReadWriteLock, Semaphore(信号量), CountDownLatch`这几个类其实仅仅是在实现以上几个方法上略有差别，其他的实现都是通过同步器的模版方法来实现的。
 
 
+#### 同步器提供的模版方法
 
+上面我们将同步器的实现方法分为**独占式**和**共享式**两类，模版方法其实除了提供以上两类模版方法之外，只是多了**响应中断**和**超时限制**的模版方法供Lock使用：
+
+<div align=center><img src=Thread\同步器提供的模版方法.png></div>
+
+上面的方法都有final关键字修饰，说明子类不能重写这个方法。
+
+<div align=center><img src=Thread\AQS队列同步器.png></div>
+
+```java
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+
+/**
+ * 自定义互斥锁
+ */
+
+public class MyMutex implements Lock {
+
+    // 静态内部类--自定义同步器
+    private static class MySync extends AbstractQueuedSynchronizer {
+
+        @Override
+        protected boolean tryAcquire(int arg) {
+            // 调用AQS提供的方法，通过CAS保证原子性
+            if (compareAndSetState(0, arg)) {
+                // 实现的是互斥锁，所以标记获取到同步状态（更新state成功）的线程，主要为了判断是否可重入
+                setExclusiveOwnerThread(Thread.currentThread());
+                //获取同步状态成功，返回 true
+                return true;
+            }
+
+            // 获取同步状态失败，返回 false
+            return false;
+        }
+
+        @Override
+        protected boolean tryRelease(int arg) {
+            // 未拥有锁却让释放，会抛出IMSE
+            if (getState() == 0)
+                throw new IllegalStateException();
+
+            // 可以释放，清空排它线程标记
+            setExclusiveOwnerThread(null);
+
+            // 设置同步状态为0，表示释放锁
+            setState(0);
+            return true;
+        }
+
+        // 是否独占式持有
+        @Override
+        protected boolean isHeldExclusively() {
+            return getState() == 1;
+        }
+
+        // 后续会用到，主要用于等待/通知机制，每个condition都有一个与之对应的条件等待队列
+        Condition newCondition() {
+            return new ConditionObject();
+        }
+    }
+
+
+    // 聚合自定义同步器
+    private final MySync sync = new MySync();
+
+    // 重写Lock接口中定义的方法
+
+    @Override
+    public void lock() {
+        // 阻塞式的获取锁，调用同步器模版方法独占式，获取同步状态
+        sync.acquire(1);
+    }
+
+    @Override
+    public void lockInterruptibly() throws InterruptedException {
+        // 调用同步器模版方法可中断式获取同步状态
+        sync.acquireInterruptibly(1);
+    }
+
+    @Override
+    public boolean tryLock() {
+        // 调用自己重写的方法，非阻塞式的获取同步状态
+        return sync.tryAcquire(1);
+    }
+
+    @Override
+    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+        // 调用同步器模版方法，可响应中断和超时时间限制
+        return sync.tryAcquireNanos(1, unit.toNanos(time));
+    }
+
+    @Override
+    public void unlock() {
+        // 释放锁
+        sync.release(1);
+    }
+
+    @Override
+    public Condition newCondition() {
+        // 使用自定义的条件
+        return sync.newCondition();
+    }
+}
+```
+
+`ReentrantLock, ReentrantReadWriteLock, Semaphore(信号量), CountDownLatch`都是按照这个结构实现，所以我们就来看一看AQS的模版方法到底是怎么实现锁。
+
+
+### AQS实现分析
+
+https://dayarch.top/p/java-aqs-and-reentrantlock.html
 
 
 ## volatile
@@ -5892,6 +5664,176 @@ public class VolatileBarrierExample {
 
 - 彩色是将屏障指令带入到程序中生成的全部内容，也就是编译器生成的「最稳妥」的方案；
 - 显然有很多屏障是重复多余的，右侧虚线框指向的屏障是可以被「优化」删除掉的屏障。
+
+
+## 读写锁
+
+互斥锁都是排他锁，也就是说同一时刻只允许一个线程进行访问，当面对可共享读的业务场景，互斥锁显然是比较低效的一种处理方式。为了提高效率，读写锁模型就诞生了。
+
+一个写线程改变了缓存中的值，其他读线程一定是可以 “感知” 到的，否则可能导致查询到的值不准确。所以关于读写锁模型就了下面这3条规定：
+
+- 允许多个线程同时读共享变量
+- 只允许一个线程写共享变量
+- 如果写线程正在执行写操作，此时则禁止其他读线程读共享变量
+
+ReadWriteLock是一个接口，其内部只有两个方法：
+```java
+public interface ReadWriteLock {
+    // 返回用于读的锁
+    Lock readLock();
+
+    // 返回用于写的锁
+    Lock writeLock();
+}
+```
+
+ReentrantReadWriteLock是ReadWriteLock的实现类：
+<div align=center><img src=Thread\对比ReentrantReadWriteLock与ReentrantLock的类结构.png></div>
+
+ReentrantReadWriteLock的基本特性：
+<div align=center><img src=Thread\ReentrantReadWriteLock的基本特性.png></div>
+
+读可以被多线程同时读，写的时候只能有一个线程去写！
+
+```java
+package Lock;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+/**
+ * 独占锁（写锁） 一次只能被一个线程占有
+ * 共享锁（读锁） 多个线程可以同时占有
+ * ReadWriteLock
+ * 读-读  可以共存！
+ * 读-写  不能共存！
+ * 写-写  不能共存！
+ */
+public class ReadWriteLockDemo
+{
+    public static void main(String[] args)
+    {
+        MyCache myCache = new MyCache();
+
+        // MyCacheLock myCache = new MyCacheLock();
+
+        // 写入
+        for (int i = 1; i <= 5 ; i++)
+        {
+            final int temp = i;
+            new Thread(() -> { myCache.put(temp + " ", temp + " "); }, String.valueOf(i)).start();
+        }
+
+        // 读取
+        for (int i = 1; i <= 5 ; i++)
+        {
+            final int temp = i;
+            new Thread(() -> { myCache.get(temp + " "); }, String.valueOf(i)).start();
+        }
+    }
+}
+
+// 加锁的
+class MyCacheLock
+{
+
+    private volatile Map<String, Object> map = new HashMap<>();
+    // 读写锁： 更加细粒度的控制
+    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    //private Lock lock = new ReentrantLock();
+
+    // 存，写入的时候，只希望同时只有一个线程写
+    public void put(String key, Object value)
+    {
+        readWriteLock.writeLock().lock();
+        try
+        {
+            System.out.println(Thread.currentThread().getName() + "写入" + key);
+            map.put(key, value);
+            System.out.println(Thread.currentThread().getName() + "写入OK");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+
+    // 取，读，所有人都可以读！
+    public void get(String key)
+    {
+        readWriteLock.readLock().lock();
+        try
+        {
+            System.out.println(Thread.currentThread().getName() + "读取" + key);
+            Object o = map.get(key);
+            System.out.println(Thread.currentThread().getName() + "读取OK");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            readWriteLock.readLock().unlock();
+        }
+    }
+    /*
+
+    3写入3
+    3写入OK
+    4读取4
+    5读取5
+    3读取3
+    3读取OK
+    5读取OK
+    4读取OK
+     */
+
+}
+
+/**
+ * 自定义缓存
+ */
+class MyCache
+{
+
+    private volatile Map<String, Object> map = new HashMap<>();
+
+    // 存，写
+    public void put(String key, Object value)
+    {
+        System.out.println(Thread.currentThread().getName() + "写入" + key);
+        map.put(key, value);
+        System.out.println(Thread.currentThread().getName() + "写入OK");
+    }
+
+    // 取，读
+    public void get(String key)
+    {
+        System.out.println(Thread.currentThread().getName() + "读取" + key);
+        Object o = map.get(key);
+        System.out.println(Thread.currentThread().getName() + "读取OK");
+    }
+
+    /*
+    1写入1
+    2写入2  // 写时被插队
+    5写入5
+    5写入OK
+    3写入3
+     */
+}
+```
+
+
 
 # 线程通信
 
@@ -7218,6 +7160,167 @@ B=>BBBBBBBBB
 ```
 
 
+## CountDownLatch
+
+```java
+import java.util.concurrent.CountDownLatch;
+
+// 减法计数器
+// 倒计时结束会执行某种操作
+// 等到线程结束完毕
+public class CountDownLatchDemo
+{
+    public static void main(String[] args) throws InterruptedException
+    {
+        // 总数是6，必须要执行任务的时候，再使用！
+        CountDownLatch countDownLatch = new CountDownLatch(6);
+
+        for (int i = 1; i <=6 ; i++)
+        {
+            new Thread(() -> {
+                System.out.println(Thread.currentThread().getName() + " Go out");
+                countDownLatch.countDown(); // 数量-1
+            }, String.valueOf(i)).start();
+        }
+
+        countDownLatch.await(); // 等待计数器归零，然后再向下执行
+
+        System.out.println("Close Door");
+    }
+}
+/*
+2 Go out
+3 Go out
+4 Go out
+1 Go out
+6 Go out
+5 Go out
+Close Door
+ */
+```
+
+**原理**
+- `countDownLatch.countDown();` // 数量-1
+- `countDownLatch.await();` // 等待计数器归零，然后再向下执行
+- 每次有线程调用`countDown()`，数量-1，假设计数器变为0，`countDownLatch.await()`就会被唤醒，继续执行！
+
+
+## CyclicBarrier
+
+```java
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+
+// 简单理解为加法计数器
+
+public class CyclicBarrierDemo
+{
+    public static void main(String[] args)
+    {
+        /*
+         * 集齐7颗龙珠召唤神龙
+         */
+        // 召唤龙珠的线程
+        // 如果parties=8则一直在等待
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(7, () -> {
+            System.out.println("召唤神龙成功！"); });
+
+        for (int i = 1; i <=7 ; i++)
+        {
+            final int temp = i;
+            // lambda能操作到 i 吗
+            new Thread(() -> {
+                System.out.println(Thread.currentThread().getName() + "收集" + temp + "个龙珠");  // 不能直接得到for中的i
+                try
+                {
+                    cyclicBarrier.await(); // 等待
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                catch (BrokenBarrierException e)
+                {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+    }
+}
+/*
+Thread-0收集1个龙珠
+Thread-1收集2个龙珠
+Thread-4收集5个龙珠
+Thread-2收集3个龙珠
+Thread-5收集6个龙珠
+Thread-6收集7个龙珠
+Thread-3收集4个龙珠
+召唤神龙成功！
+ */
+```
+
+## Semaphore信号量
+
+抢车位！6辆车抢3个停车位置。
+
+```java
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+public class SemaphoreDemo
+{
+    public static void main(String[] args)
+    {
+        // 线程数量：停车位！ 限流！
+        Semaphore semaphore = new Semaphore(3);
+
+        for (int i = 1; i <=6 ; i++) {
+            new Thread(()->{
+                try
+                {
+                    // acquire() 得到
+                    semaphore.acquire();
+
+                    System.out.println(Thread.currentThread().getName() + "抢到车位");
+                    TimeUnit.SECONDS.sleep(0);  // 停车时间
+                    System.out.println(Thread.currentThread().getName() + "离开车位");
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    // release() 释放
+                    semaphore.release();
+                }
+            }, String.valueOf(i)).start();
+        }
+    }
+}
+/*
+6抢到车位
+6离开车位
+3抢到车位
+5抢到车位
+5离开车位
+3离开车位
+1抢到车位
+1离开车位
+2抢到车位
+4抢到车位
+4离开车位
+2离开车位
+ */
+```
+
+**原理**
+- `semaphore.acquire()`获得，假设如果已经满了，等待，等待被释放为止！
+- `semaphore.release();` 释放，会将当前的信号量释放+1，然后唤醒等待的线程！
+
+作用：多个共享资源互斥的使用！并发限流，控制最大的线程数！
+
+
 # 线程池
 &emsp;&emsp;**经常创建和销毁、使用量特别大的资源**，比如并发情况下的线程，对性能影响很大。因此，可以**提前创建好多个线程，放入线程池中，使用时直接获取，使用完放回池中**。可以避免频繁创建、销毁，实现重复利用。<font color=red>类似每次需要骑车时，去站点使用共享单车，而不是每次都去买一辆</font>。 
 
@@ -8022,314 +8125,11 @@ Output:200000
  */
 ```
 
-# 常用辅助类（必会）
-
-## CountDownLatch
-
-```java
-import java.util.concurrent.CountDownLatch;
-
-// 减法计数器
-// 倒计时结束会执行某种操作
-// 等到线程结束完毕
-public class CountDownLatchDemo
-{
-    public static void main(String[] args) throws InterruptedException
-    {
-        // 总数是6，必须要执行任务的时候，再使用！
-        CountDownLatch countDownLatch = new CountDownLatch(6);
-
-        for (int i = 1; i <=6 ; i++)
-        {
-            new Thread(() -> {
-                System.out.println(Thread.currentThread().getName() + " Go out");
-                countDownLatch.countDown(); // 数量-1
-            }, String.valueOf(i)).start();
-        }
-
-        countDownLatch.await(); // 等待计数器归零，然后再向下执行
-
-        System.out.println("Close Door");
-    }
-}
-/*
-2 Go out
-3 Go out
-4 Go out
-1 Go out
-6 Go out
-5 Go out
-Close Door
- */
-```
-
-**原理**
-- `countDownLatch.countDown();` // 数量-1
-- `countDownLatch.await();` // 等待计数器归零，然后再向下执行
-- 每次有线程调用`countDown()`，数量-1，假设计数器变为0，`countDownLatch.await()`就会被唤醒，继续执行！
 
 
-## CyclicBarrier
-
-```java
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-
-// 简单理解为加法计数器
-
-public class CyclicBarrierDemo
-{
-    public static void main(String[] args)
-    {
-        /*
-         * 集齐7颗龙珠召唤神龙
-         */
-        // 召唤龙珠的线程
-        // 如果parties=8则一直在等待
-        CyclicBarrier cyclicBarrier = new CyclicBarrier(7, () -> {
-            System.out.println("召唤神龙成功！"); });
-
-        for (int i = 1; i <=7 ; i++)
-        {
-            final int temp = i;
-            // lambda能操作到 i 吗
-            new Thread(() -> {
-                System.out.println(Thread.currentThread().getName() + "收集" + temp + "个龙珠");  // 不能直接得到for中的i
-                try
-                {
-                    cyclicBarrier.await(); // 等待
-                }
-                catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
-                catch (BrokenBarrierException e)
-                {
-                    e.printStackTrace();
-                }
-            }).start();
-        }
-    }
-}
-/*
-Thread-0收集1个龙珠
-Thread-1收集2个龙珠
-Thread-4收集5个龙珠
-Thread-2收集3个龙珠
-Thread-5收集6个龙珠
-Thread-6收集7个龙珠
-Thread-3收集4个龙珠
-召唤神龙成功！
- */
-```
-
-## Semaphore信号量
-
-抢车位！6辆车抢3个停车位置。
-
-```java
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
-public class SemaphoreDemo
-{
-    public static void main(String[] args)
-    {
-        // 线程数量：停车位！ 限流！
-        Semaphore semaphore = new Semaphore(3);
-
-        for (int i = 1; i <=6 ; i++) {
-            new Thread(()->{
-                try
-                {
-                    // acquire() 得到
-                    semaphore.acquire();
-
-                    System.out.println(Thread.currentThread().getName() + "抢到车位");
-                    TimeUnit.SECONDS.sleep(0);  // 停车时间
-                    System.out.println(Thread.currentThread().getName() + "离开车位");
-                }
-                catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
-                finally
-                {
-                    // release() 释放
-                    semaphore.release();
-                }
-            }, String.valueOf(i)).start();
-        }
-    }
-}
-/*
-6抢到车位
-6离开车位
-3抢到车位
-5抢到车位
-5离开车位
-3离开车位
-1抢到车位
-1离开车位
-2抢到车位
-4抢到车位
-4离开车位
-2离开车位
- */
-```
-
-**原理**
-- `semaphore.acquire()`获得，假设如果已经满了，等待，等待被释放为止！
-- `semaphore.release();` 释放，会将当前的信号量释放+1，然后唤醒等待的线程！
-
-作用：多个共享资源互斥的使用！并发限流，控制最大的线程数！
 
 
-# 读写锁
 
-```java
-public interface ReadWriteLock
-```
-
-读可以被多线程同时读，写的时候只能有一个线程去写！
-
-```java
-package Lock;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-/**
- * 独占锁（写锁） 一次只能被一个线程占有
- * 共享锁（读锁） 多个线程可以同时占有
- * ReadWriteLock
- * 读-读  可以共存！
- * 读-写  不能共存！
- * 写-写  不能共存！
- */
-public class ReadWriteLockDemo
-{
-    public static void main(String[] args)
-    {
-        MyCache myCache = new MyCache();
-
-        // MyCacheLock myCache = new MyCacheLock();
-
-        // 写入
-        for (int i = 1; i <= 5 ; i++)
-        {
-            final int temp = i;
-            new Thread(() -> { myCache.put(temp + " ", temp + " "); }, String.valueOf(i)).start();
-        }
-
-        // 读取
-        for (int i = 1; i <= 5 ; i++)
-        {
-            final int temp = i;
-            new Thread(() -> { myCache.get(temp + " "); }, String.valueOf(i)).start();
-        }
-    }
-}
-
-// 加锁的
-class MyCacheLock
-{
-
-    private volatile Map<String, Object> map = new HashMap<>();
-    // 读写锁： 更加细粒度的控制
-    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private Lock lock = new ReentrantLock();
-
-    // 存，写入的时候，只希望同时只有一个线程写
-    public void put(String key, Object value)
-    {
-        readWriteLock.writeLock().lock();
-        try
-        {
-            System.out.println(Thread.currentThread().getName() + "写入" + key);
-            map.put(key, value);
-            System.out.println(Thread.currentThread().getName() + "写入OK");
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            readWriteLock.writeLock().unlock();
-        }
-    }
-
-    // 取，读，所有人都可以读！
-    public void get(String key)
-    {
-        readWriteLock.readLock().lock();
-        try
-        {
-            System.out.println(Thread.currentThread().getName() + "读取" + key);
-            Object o = map.get(key);
-            System.out.println(Thread.currentThread().getName() + "读取OK");
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            readWriteLock.readLock().unlock();
-        }
-    }
-    /*
-
-    3写入3
-    3写入OK
-    4读取4
-    5读取5
-    3读取3
-    3读取OK
-    5读取OK
-    4读取OK
-     */
-
-}
-
-/**
- * 自定义缓存
- */
-class MyCache
-{
-
-    private volatile Map<String, Object> map = new HashMap<>();
-
-    // 存，写
-    public void put(String key, Object value)
-    {
-        System.out.println(Thread.currentThread().getName() + "写入" + key);
-        map.put(key, value);
-        System.out.println(Thread.currentThread().getName() + "写入OK");
-    }
-
-    // 取，读
-    public void get(String key)
-    {
-        System.out.println(Thread.currentThread().getName() + "读取" + key);
-        Object o = map.get(key);
-        System.out.println(Thread.currentThread().getName() + "读取OK");
-    }
-
-    /*
-    1写入1
-    2写入2  // 写时被插队
-    5写入5
-    5写入OK
-    3写入3
-     */
-}
-```
 
 # 阻塞队列
 
@@ -8954,57 +8754,7 @@ java.lang.ArithmeticException: / by zero
  */
 ```
 
-# JMM
 
-> 请你谈谈你对`Volatile`的理解
-
-`Volatile`是Java虚拟机提供轻量级的同步机制
-- 保证可见性
-- 不保证原子性
-- 禁止指令重排
-
-> 什么是JMM
-> 
-JMM：Java内存模型，不存在的东西，概念！约定！
-
-关于JMM的一些同步的约定：
-- 线程解锁前，必须把共享变量**立刻**刷回主存。
-- 线程加锁前，必须读取主存中的最新值到工作内存中！
-- 加锁和解锁是同一把锁
-
-<div align=center><img src=Thread\JMM.jpg width=90%></div>
-
-存在的问题：
-
-<div align=center><img src=Thread\JMM1.jpg width=90%></div>
-
-内存交互操作有8种，虚拟机实现必须保证每一个操作都是原子的，不可在分的（对于double和long类
-型的变量来说，load、store、read和write操作在某些平台上允许例外）
-
-- lock（锁定）：作用于主内存的变量，把一个变量标识为线程独占状态
-- unlock（解锁）：作用于主内存的变量，它把一个处于锁定状态的变量释放出来，释放后的变量
-才可以被其他线程锁定
-- read（读取）：作用于主内存变量，它把一个变量的值从主内存传输到线程的工作内存中，以便
-随后的load动作使用
-- load（载入）：作用于工作内存的变量，它把read操作从主存中变量放入工作内存中
-- use（使用）：作用于工作内存中的变量，它把工作内存中的变量传输给执行引擎，每当虚拟机
-遇到一个需要使用到变量的值，就会使用到这个指令
-- assign（赋值）：作用于工作内存中的变量，它把一个从执行引擎中接受到的值放入工作内存的变
-量副本中
-- store（存储）：作用于主内存中的变量，它把一个从工作内存中一个变量的值传送到主内存中，
-以便后续的write使用
-- write（写入）：作用于主内存中的变量，它把store操作从工作内存中得到的变量的值放入主内
-存的变量中
-
-JMM对这八种指令的使用，制定了如下规则：
-- 不允许read和load、store和write操作之一单独出现。即使用了read必须load，使用了store必须write
-- 不允许线程丢弃他最近的assign操作，即工作变量的数据改变了之后，必须告知主存
-- 不允许一个线程将没有assign的数据从工作内存同步回主内存
-- 一个新的变量必须在主内存中诞生，不允许工作内存直接使用一个未被初始化的变量。就是怼变量实施use、store操作之前，必须经过assign和load操作
-- 一个变量同一时间只有一个线程能对其进行lock。多次lock后，必须执行相同次数的unlock才能解锁
-- 如果对一个变量进行lock操作，会清空所有工作内存中此变量的值，在执行引擎使用这个变量前，必须重新load或assign操作初始化变量的值
-- 如果一个变量没有被lock，就不能对其进行unlock操作。也不能unlock一个被其他线程锁住的变量
-- 对一个变量进行unlock操作之前，必须把此变量同步回主内存
 
 # Volatile
 
@@ -9317,4 +9067,364 @@ class Test{
 }
 ```
 
+
+# 知识点补充
+
+## 静态代理
+
+静态代理模式：真实对象和代理对象都要实现同一个接口；代理对象要代理真实角色。
+
+好处：
+* 代理对象可以做很多真实对象做不了的事情；
+* 真实对象专注自己该做的事情。
+
+```java
+package Thread;
+
+public class StaticProxy
+{
+    public static void main(String[] args)
+    {
+        WeddingCompany weddingCompany = new WeddingCompany(new People());
+        weddingCompany.HappyMarry();
+    }
+}
+
+interface Marry
+{
+    void HappyMarry();
+}
+
+// 真实角色
+class People implements Marry
+{
+    @Override
+    public void HappyMarry(){System.out.println("Get married.");}
+}
+
+// 代理角色
+class WeddingCompany implements Marry
+{
+    // 代理真实目标角色
+    private Marry target;
+
+    public WeddingCompany(Marry target)
+    {
+        this.target = target;
+    }
+
+    @Override
+    public void HappyMarry()
+    {
+        before();
+        this.target.HappyMarry();  // 这是真实对象
+        after();
+    }
+
+    private void before(){System.out.println("结婚前：婚庆公司布置现场！");}
+    private void after(){System.out.println("结婚后：婚庆公司收尾款！");}
+}
+/*
+结婚前：婚庆公司布置现场！
+Get married.
+结婚后：婚庆公司收尾款！
+ */
+```
+
+对比与多线程关系：
+```java
+ // Thread代理了System.out.println("Get married.")
+ new Thread(() -> System.out.println("Get married.")).start();
+
+ new WeddingCompany(new People()).HappyMarry();
+```
+
+
+## `Lambda`表达式
+
+&emsp;&emsp;可以避免匿名内部类定义过多；留下核心的逻辑，让代码看起来简洁。
+`new Thread(() -> System.out.println("Get married.")).start();`
+
+&emsp;&emsp;**函数式接口**的定义：任何接口，如果**只包含唯一一个抽象方法**，那么它就是一个函数式接口。
+
+```java
+public interface Runnable
+{
+    public abstract void run();
+}
+```
+
+<font color=red>对于函数式接口，可以通过`Lambda`表达式来创建该接口的对象</font>。下面将一步步展现代码简化过程：
+
+1. 使用外部类`：
+```java {.line-numbers highlight=20}
+package Thread;
+
+public class TestLambda
+{
+    public static void main(String[] args)
+    {
+        // 创建一个接口对象
+        FunctionalInterface functionalInterface = new FunctionalInterface1();
+        functionalInterface.testLambda();
+    }
+}
+
+// 1. 定义一个函数式接口
+interface FunctionalInterface
+{
+    void testLambda();
+}
+
+// 2. 实现类
+class FunctionalInterface1 implements FunctionalInterface
+{
+    @Override
+    public void testLambda(){System.out.println("尚未使用Lambdad！");}
+}
+```
+
+2. 使用静态内部类：
+```java {.line-numbers highlight=6}
+package Thread;
+
+public class TestLambda
+{
+    // 3. 使用静态内部类
+    static class FunctionalInterface2 implements FunctionalInterface
+    {
+        @Override
+        public void testLambda(){System.out.println("使用静态内部类！");}
+    }
+
+    public static void main(String[] args)
+    {
+        // 创建一个接口对象
+        FunctionalInterface functionalInterface = new FunctionalInterface1();
+        functionalInterface.testLambda();
+
+        functionalInterface = new FunctionalInterface2();
+        functionalInterface.testLambda();
+    }
+}
+
+// 1. 定义一个函数式接口
+interface FunctionalInterface
+{
+    void testLambda();
+}
+
+// 2. 实现类
+class FunctionalInterface1 implements FunctionalInterface
+{
+    @Override
+    public void testLambda(){System.out.println("尚未使用Lambda！");}
+}
+```
+3. 局部内部类：
+```java {.line-numbers highlight=22}
+package Thread;
+
+public class TestLambda
+{
+    // 3. 使用静态内部类
+    static class FunctionalInterface2 implements FunctionalInterface
+    {
+        @Override
+        public void testLambda(){System.out.println("使用静态内部类！");}
+    }
+
+    public static void main(String[] args)
+    {
+        // 创建一个接口对象
+        FunctionalInterface functionalInterface = new FunctionalInterface1();
+        functionalInterface.testLambda();
+
+        functionalInterface = new FunctionalInterface2();
+        functionalInterface.testLambda();
+
+        // 4. 局部内部类
+        class FunctionalInterface3 implements FunctionalInterface
+        {
+            @Override
+            public void testLambda(){System.out.println("使用局部内部类！");}
+        }
+
+        functionalInterface = new FunctionalInterface3();
+        functionalInterface.testLambda();
+    }
+}
+
+// 1. 定义一个函数式接口
+interface FunctionalInterface
+{
+    void testLambda();
+}
+
+// 2. 实现类
+class FunctionalInterface1 implements FunctionalInterface
+{
+    @Override
+    public void testLambda(){System.out.println("尚未使用Lambda！");}
+}
+```
+4. 匿名内部类：
+```java {.line-numbers highlight=32}
+package Thread;
+
+public class TestLambda
+{
+    // 3. 使用静态内部类
+    static class FunctionalInterface2 implements FunctionalInterface
+    {
+        @Override
+        public void testLambda(){System.out.println("使用静态内部类！");}
+    }
+
+    public static void main(String[] args)
+    {
+        // 创建一个接口对象
+        FunctionalInterface functionalInterface = new FunctionalInterface1();
+        functionalInterface.testLambda();
+
+        functionalInterface = new FunctionalInterface2();
+        functionalInterface.testLambda();
+
+        // 4. 局部内部类
+        class FunctionalInterface3 implements FunctionalInterface
+        {
+            @Override
+            public void testLambda(){System.out.println("使用局部内部类！");}
+        }
+
+        functionalInterface = new FunctionalInterface3();
+        functionalInterface.testLambda();
+
+        // 5. 匿名内部类：没有类的名称，必须借助接口或者父类
+        functionalInterface = new FunctionalInterface()
+        {
+            @Override
+            public void testLambda() { System.out.println("匿名内部类"); }
+        };
+        functionalInterface.testLambda();
+    }
+}
+
+// 1. 定义一个函数式接口
+interface FunctionalInterface
+{
+    void testLambda();
+}
+
+// 2. 实现类
+class FunctionalInterface1 implements FunctionalInterface
+{
+    @Override
+    public void testLambda(){System.out.println("尚未使用Lambda！");}
+}
+```
+
+5. 使用`Lambda`：
+```java {.line-numbers highlight=40}
+package Thread;
+
+public class TestLambda
+{
+    // 3. 使用静态内部类
+    static class FunctionalInterface2 implements FunctionalInterface
+    {
+        @Override
+        public void testLambda(){System.out.println("使用静态内部类！");}
+    }
+
+    public static void main(String[] args)
+    {
+        // 创建一个接口对象
+        FunctionalInterface functionalInterface = new FunctionalInterface1();
+        functionalInterface.testLambda();
+
+        functionalInterface = new FunctionalInterface2();
+        functionalInterface.testLambda();
+
+        // 4. 局部内部类
+        class FunctionalInterface3 implements FunctionalInterface
+        {
+            @Override
+            public void testLambda(){System.out.println("使用局部内部类！");}
+        }
+
+        functionalInterface = new FunctionalInterface3();
+        functionalInterface.testLambda();
+
+        // 5. 匿名内部类：没有类的名称，必须借助接口或者父类
+        functionalInterface = new FunctionalInterface()
+        {
+            @Override
+            public void testLambda() { System.out.println("匿名内部类"); }
+        };
+        functionalInterface.testLambda();
+
+        // 6. 使用Lambda简化
+        functionalInterface = () -> { System.out.println("使用Lambda");};  // ()中可添加参数
+        functionalInterface.testLambda();
+
+    }
+}
+
+// 1. 定义一个函数式接口
+interface FunctionalInterface
+{
+    void testLambda();
+}
+
+// 2. 实现类
+class FunctionalInterface1 implements FunctionalInterface
+{
+    @Override
+    public void testLambda(){System.out.println("尚未使用Lambda！");}
+}
+```
+
+### `Lambda`表达式简化
+```java
+package Thread;
+
+public class TestLambda2
+{
+    public static void main(String[] args)
+    {
+        FunctionInterface functionInterface = (int a) ->
+        {
+            System.out.println(a);
+        };
+        functionInterface.testLambda(100);
+
+        // 简化参数类型
+        functionInterface = (a) ->
+        {
+            System.out.println(a);
+        };
+        functionInterface.testLambda(200);
+
+        // 简化括号
+        functionInterface = a ->
+        {
+            System.out.println(a);
+        };
+        functionInterface.testLambda(300);
+
+        // 简化花括号(只有一行时能简化)
+        functionInterface = a -> System.out.println(a);
+        functionInterface.testLambda(400);
+    }
+
+
+}
+
+interface FunctionInterface
+{
+    void testLambda(int a);
+}
+```
+`Lambda`表达式只能在只有一行代码的情况下进行简化，如果有多行，必须得用代码块包裹；接口必须是函数式接口；多个参数也可以简化参数类型，但需要加括号。
 
