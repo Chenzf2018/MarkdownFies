@@ -1,6 +1,6 @@
 # 概念
 
-JDBC (Java DataBase Connection) 是通过JAVA访问数据库。
+JDBC (Java DataBase Connection) 是通过Java访问数据库。
 
 # Hello JDBC
 
@@ -8,7 +8,7 @@ JDBC (Java DataBase Connection) 是通过JAVA访问数据库。
 
 访问MySQL数据库需要用到第三方的类，这些第三方的类，都被压缩在一个叫做Jar的文件里。
 
-为了代码能够使用第三方的类，需要为项目导入mysql的专用Jar包`mysql-connector-java-5.0.8-bin.jar`。通常都会把项目用到的jar包统一放在项目的lib目录下，然后在IDEA中导入这个jar包。
+为了代码能够使用第三方的类，需要为项目导入MySQL的专用Jar包`mysql-connector-java-5.0.8-bin.jar`。通常都会把项目用到的jar包统一放在项目的lib目录下，然后在IDEA中导入这个jar包。
 
 ## 初始化驱动
 
@@ -16,7 +16,7 @@ JDBC (Java DataBase Connection) 是通过JAVA访问数据库。
 
 如果忘记了第一个步骤的导包，就会抛出`ClassNotFoundException`。
 
-`Class.forName`是把这个类加载到JVM中，加载的时候，就会执行其中的静态初始化块，完成驱动的初始化的相关工作。
+`Class.forName`是**把这个类加载到JVM中**，加载的时候，就会**执行其中的静态初始化块**，完成驱动的初始化的相关工作。
 
 ```java
 public class InitialJDBC {
@@ -24,7 +24,7 @@ public class InitialJDBC {
         //初始化驱动
         try {
             //驱动类com.mysql.jdbc.Driver
-            //就在 mysql-connector-java-5.0.8-bin.jar中
+            //就在mysql-connector-java-5.0.8-bin.jar中
             //如果忘记了第一个步骤的导包，就会抛出ClassNotFoundException
             Class.forName("com.mysql.jdbc.Driver");
 
@@ -42,7 +42,7 @@ public class InitialJDBC {
 
 建立与数据库的Connection连接，这里需要提供：
 - 数据库所处于的ip：127.0.0.1 (本机)
-- 数据库的端口号：3306 （mysql专用端口号）
+- 数据库的端口号：3306（mysql专用端口号）
 - 数据库名称：learingjdbc
 - 编码方式：UTF-8
 - 账号：root；密码：admin
@@ -121,8 +121,8 @@ public class CreateStatement {
                             "jdbc:mysql://127.0.0.1:3306/learningjdbc?characterEncoding=UTF-8",
                             "root", "admin");
 
-            // 注意：使用的是 java.sql.Statement
-            // 不要不小心使用到： com.mysql.jdbc.Statement;
+            // 注意：使用的是java.sql.Statement
+            // 不要不小心使用到：com.mysql.jdbc.Statement;
             Statement statement = connection.createStatement();
 
             System.out.println("获取 Statement对象：" + statement);
@@ -214,7 +214,7 @@ public class InsertJDBC {
 }
 ```
 
-<div align=center><img src=JDBC\执行插入语句后表内容.png width=50%></div>
+<div align=center><img src=JDBC\执行插入语句后表内容.png width=40%></div>
 
 
 ## 关闭连接
@@ -325,13 +325,13 @@ CRUD是最常见的数据库操作，即增删改查：
 
 ## 增
 
-```java {.line-numbers highlight=20}
+```java {.line-numbers highlight=22}
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class CloseStream {
+public class CreateJDBC {
     public static void main(String[] args) {
         try {
             Class.forName("com.mysql.jdbc.Driver");
@@ -340,20 +340,22 @@ public class CloseStream {
         }
 
         try (
-                Connection connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/learningjdbc?characterEncoding=UTF-8",
-                        "root", "admin");
+                Connection connection = DriverManager.getConnection(
+                        "jdbc:mysql://127.0.0.1:3306/learnjdbc?characterEncoding=UTF-8",
+                        "root", "admin"
+                );
                 Statement statement = connection.createStatement();
-        )
+                )
         {
             String sql = "INSERT INTO hero(name, hp, damage) VALUES('zufeng', 313.1, 21)";
             statement.execute(sql);
 
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 }
+
 ```
 
 ## 删除
@@ -366,29 +368,29 @@ import java.sql.Statement;
 
 public class Delete {
     public static void main(String[] args) {
-        try{
+        try {
             Class.forName("com.mysql.jdbc.Driver");
-        }catch (ClassNotFoundException e){
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
         try(
                 Connection connection = DriverManager.getConnection(
-                        "jdbc:mysql://127.0.0.1:3306/learningjdbc?" +
-                                "characterEncoding=UTF-8",
+                        "jdbc:mysql://127.0.0.1:3306/learnjdbc?characterEncoding=UTF-8",
                         "root", "admin"
                 );
                 Statement statement = connection.createStatement();
-                ){
-            String sql = "DELETE FROM hero WHERE id = 4";
+                )
+        {
+            String sql = "DELETE FROM hero WHERE id=2";
             statement.execute(sql);
-            System.out.println("删除成功！");
-        }catch (SQLException e){
-            // TODO Auto-generated catch block
+            
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 }
+
 ```
 
 ## 改
@@ -401,7 +403,6 @@ import java.sql.Statement;
 
 public class Update {
     public static void main(String[] args) {
-
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
@@ -409,14 +410,17 @@ public class Update {
         }
 
         try (
-                Connection connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/learningjdbc?characterEncoding=UTF-8",
-                        "root", "admin");
+                Connection connection = DriverManager.getConnection(
+                        "jdbc:mysql://127.0.0.1:3306/learnjdbc?characterEncoding=UTF-8",
+                        "root", "admin"
+                );
                 Statement statement = connection.createStatement();
-                ) {
-            String sql = "UPDATE hero SET name = 'zufeng' WHERE id = 2";
+                )
+        {
+            String sql = "UPDATE hero SET name = 'chenzufeng'";
             statement.execute(sql);
+            
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -425,7 +429,280 @@ public class Update {
 
 # 查询
 
+`executeQuery`执行SQL查询语句：
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
+
+public class Retrieve {
+    public static void main(String[] args) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try (
+                Connection connection = DriverManager.getConnection(
+                        "jdbc:mysql://127.0.0.1:3306/learnjdbc?characterEncoding=UTF-8",
+                        "root", "admin");
+                Statement statement = connection.createStatement();
+                )
+        {
+            String sql = "SELECT * FROM hero";
+            // 执行查询语句，并把结果集返回给ResultSet
+            ResultSet result = statement.executeQuery(sql);
+
+            while (result.next()) {
+                int id = result.getInt("id");
+                String name = result.getString(2);  // 使用字段的顺序
+                float hp = result.getFloat("hp");
+                int damage = result.getInt(4);
+                System.out.printf("%d\t%s\t%f\t%d\n", id, name, hp, damage);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**SQL语句判断账号密码是否正确**：
+
+1. 创建一个用户表，有字段`name, password`
+2. 插入一条数据：`insert into user values(null,'dashen','thisispassword');`
+ 
+
+3. SQL语句判断账号密码是否正确
+
+判断账号密码的**正确方式**是根据账号和密码到表中去找数据，如果有数据，就表明密码正确了，如果没数据，就表明密码错误。
+
+**不恰当的方式**是把uers表的数据全部查到内存中，挨个进行比较。 如果users表里有100万条数据呢？ 内存都不够用的。
+
+```SQL
+USE learnjdbc;
+
+CREATE TABLE user(
+       id INT(11) AUTO_INCREMENT,
+       name VARCHAR(225),
+       password VARCHAR(225),
+       PRIMARY KEY (id)
+)      ENGINE=InnoDB DEFAULT CHARSET=UTF8;
+
+INSERT INTO user VALUES(1, 'zufeng', '1206');
+```
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
+
+public class RetrievePassword {
+    public static void main(String[] args) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try (
+                Connection connection = DriverManager.getConnection(
+                        "jdbc:mysql://127.0.0.1:3306/learnjdbc?characterEncoding=UTF-8",
+                        "root", "admin");
+                Statement statement = connection.createStatement();
+                )
+        {
+            String name = "zufeng";
+            String password = "1206";
+            String sql = "SELECT * FROM user WHERE name = '" + name + "' and password = '" + password + "' ";  // 注意单引号与双引号之间不能有空格
+            ResultSet result = statement.executeQuery(sql);
+
+            if (result.next())
+                System.out.println("账号密码正确");
+            else
+                System.out.println("账号密码错误");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**获取总数**：
+
+```java
+import java.sql.*;
+
+public class RetrieveCount {
+    public static void main(String[] args) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try (
+                Connection connection = DriverManager.getConnection(
+                        "jdbc:mysql://127.0.0.1:3306/learnjdbc?characterEncoding=UTF-8",
+                        "root", "admin");
+                Statement statement = connection.createStatement();
+                )
+        {
+            String sql = "SELECT count(*) FROM hero";
+            ResultSet result = statement.executeQuery(sql);
+            System.out.println(result);  //com.mysql.jdbc.ResultSet@edcd21
+
+            int total = 0;
+            while (result.next())
+                total = result.getInt(1);
+            System.out.println("表hero中共有" + total + "条数据");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
 # 预编译Statement
+
+和Statement一样，`PreparedStatement`也是用来执行sql语句的。与创建Statement不同的是，**需要根据sql语句创建`PreparedStatement`**。除此之外，还能够通过**设置参数，指定相应的值**，而不是Statement那样使用**字符串拼接**。
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class TestPreparedStatement {
+    public static void main(String[] args) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        String sql = "INSERT INTO hero VALUES(null, ?, ?, ?)";
+
+        try (
+                Connection connection = DriverManager.getConnection(
+                        "jdbc:mysql://127.0.0.1:3306/learnjdbc?characterEncoding=UTF-8",
+                        "root", "admin");
+
+                // 根据sql语句创建PreparedStatement
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                )
+        {
+            // 设置参数
+            preparedStatement.setString(1, "chenzf");
+            preparedStatement.setFloat(2, 313.5f);
+            preparedStatement.setInt(3, 50);
+
+            preparedStatement.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+`PreparedStatement`有预编译机制，**性能比`Statement`更快**：
+```java
+for (int i = 0; i < 10; i++) {
+    String sql0 = "insert into hero values(null," + "'提莫'" + ","
+            + 313.0f + "," + 50 + ")";
+    s.execute(sql0);
+}
+```
+
+Statement执行10次，需要10次把SQL语句传输到数据库端，数据库要对每一次来的SQL语句进行编译处理。
+
+```java
+String sql = "insert into hero values(null,?,?,?)";
+for (int i = 0; i < 10; i++) {
+    ps.setString(1, "提莫");
+    ps.setFloat(2, 313.0f);
+    ps.setInt(3, 50);
+    ps.execute();
+}
+```
+PreparedStatement执行10次，只需要1次把SQL语句传输到数据库端，数据库对带?的SQL进行预编译，每次执行，只需要传输参数到数据库端。
+
+PreparedStatement还可以**防止SQL注入式攻击**：假设name是用户提交来的数据`String name = "'盖伦' OR 1=1";`，使用Statement就需要进行字符串拼接，拼接出来的语句是：`select * from hero where name = '盖伦' OR 1=1`。因为有`OR 1=1`，这是恒成立的，那么就会把所有的英雄都查出来，而不只是盖伦。如果Hero表里的数据是海量的，比如几百万条，把这个表里的数据全部查出来，会让数据库负载变高，CPU100%，内存消耗光，响应变得极其缓慢。
+
+而PreparedStatement使用的是参数设置，就不会有这个问题。
+
+```java{.line-numbers highlight=23}
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+ 
+public class TestJDBC {
+    public static void main(String[] args) {
+ 
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+ 
+        String sql = "select * from hero where name = ?";
+        try (Connection c = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/how2java?characterEncoding=UTF-8","root", "admin");
+        		Statement s = c.createStatement();
+            PreparedStatement ps = c.prepareStatement(sql);
+        ) {
+            // 假设name是用户提交来的数据
+            String name = "'盖伦' OR 1=1";
+            String sql0 = "select * from hero where name = " + name;
+            // 拼接出来的SQL语句就是
+            // select * from hero where name = '盖伦' OR 1=1
+            // 因为有OR 1=1，所以恒成立
+            // 那么就会把所有的英雄都查出来，而不只是盖伦
+            // 如果Hero表里的数据是海量的，比如几百万条，把这个表里的数据全部查出来
+            // 会让数据库负载变高，CPU100%，内存消耗光，响应变得极其缓慢
+            System.out.println(sql0);
+ 
+            ResultSet rs0 = s.executeQuery(sql0);
+            while (rs0.next()) {
+                String heroName = rs0.getString("name");
+                System.out.println(heroName);
+            }
+ 
+            s.execute(sql0);
+ 
+            // 使用预编译Statement就可以杜绝SQL注入
+ 
+            ps.setString(1, name);
+ 
+            ResultSet rs = ps.executeQuery();
+            // 查不出数据出来
+            while (rs.next()) {
+                String heroName = rs.getString("name");
+                System.out.println(heroName);
+            }
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+ 
+    }
+}
+```
+
 
 # execute与executeUpdate
 
