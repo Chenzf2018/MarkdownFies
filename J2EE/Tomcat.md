@@ -16,4 +16,9 @@ Tomcat是一种野外的猫科动物，不依赖人类，独立生活。Tomcat�
 
 部署一个功能完备的web应用有很多种方式，但是如果只是部署一个`test.html`，很简单：
 
-把`test.html`复制到`D:\WinSoftware\Tomcat\webapps`目录下，就可以通过`http://127.0.0.1:8080/test.html`访问了。
+把`test.html`复制到`D:\WinSoftware\Tomcat\webapps\ROOT`目录下，就可以通过`http://127.0.0.1:8090/test.html`访问了。
+
+## 改端口
+
+tomcat的端口配置相关信息在server.xml中：
+`<Connector port="8090" redirectPort="8443" connectionTimeout="20000" protocol="HTTP/1.1"/>`
