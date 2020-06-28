@@ -188,3 +188,4 @@ B+树的查询必须最终查找到叶子结点，而B-树只要找到匹配元�
 # 什么是MySQL索引
 
 https://zhuanlan.zhihu.com/p/117419077
+http://blog.codinglabs.org/articles/theory-of-mysql-index.html
