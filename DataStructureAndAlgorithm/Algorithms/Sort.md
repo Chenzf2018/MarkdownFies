@@ -716,5 +716,188 @@ public class TestQuickSort {
 
 快速排序在平均情形下是$O(nlogn)$，但在最坏情况下是$O(n^2)$。`pivot`(枢轴)的选择对快速排序的效率有影响！
 
-https://cloud.tencent.com/developer/article/1522936
-https://www.cnblogs.com/fivestudy/p/10212306.html
+
+# 计数排序
+
+前面所讨论的所有排序算法都是可以用在任何键值类型(例如，整数、字符串以及任何可比较的对象)上的**通用排序算法**。这些算法都是通过**比较它们的键值**来对元素排序的。已经证明，**基于比较的排序算法**的复杂度不会好于$O(nlogn)$。
+
+
+计数排序不是基于元素比较，而是利用**数组下标**来确定元素的正确位置。
+
+
+假设数组中有20个随机整数，取值范围为$0～10$，要求用最快的速度把这20个整数从小到大进行排序。
+
+考虑到这些整数只能够在$0、1、2、3、4、5、6、7、8、9、10$这11个数中取值，取值范围有限。所以，可以根据这有限的范围，**建立一个长度为11的数组。数组下标从0到10，元素初始值全为0**。
+
+假设20个随机整数的值如下所示：
+`9，3，5，4，9，1，2，7，8，1，3，6，5，3，4，0，10，9，7，9`
+
+下面就开始**遍历**这个无序的随机数列，**每一个整数按照其值对号入座，同时，对应数组下标的元素进行加1操作**：
+
+<div align=center><img src=Pictures\计数排序.png width=80%></div>
+
+该数组中每一个**下标位置的值**代表数列中**对应整数出现的次数**。
+
+有了这个统计结果，排序就很简单了。**直接遍历数组，输出数组元素的下标值，元素的值是几，就输出几次**。
+
+<div align=center><img src=Pictures\计数排序.gif></div>
+
+
+## 统计数组的长度
+
+例如数列：`90，99，95，94，95`是一个学生成绩表，这个数列的最大值是99，但最小的整数是90。如果创建长度为100的数组，那么前面从0到89的空间位置就都浪费了！
+
+**以`数列最大值-最小值+1`作为统计数组的长度**。同时，**数列的最小值作为一个偏移量**，用于计算整数在统计数组中的下标。
+
+以刚才的数列为例，统计出**数组的长度为$99-90+1=10$**，偏移量等于数列的最小值90（**根据最小值，算出其余数相对于最小值的位置**）。
+
+对于整数95，对应的统计**数组下标是**$95-90=5$，如图所示：
+
+<div align=center><img src=Pictures\计数排序1.png width=80%></div>
+
+
+## 遇到相同的数——稳定排序
+
+给出一个学生成绩表，要求按成绩从低到高进行排序，**如果成绩相同，则遵循原表固有顺序**。
+
+当我们填充统计数组以后，只知道有两个成绩并列为95分的同学，却不知道哪一个是小红，哪一个是小绿。
+
+**从统计数组的第2个元素开始，每一个元素都加上前面所有元素之和**：
+
+<div align=center><img src=Pictures\计数排序2.png width=80%></div>
+
+这样相加的目的，是**让统计数组存储的元素值，等于相应整数的最终排序位置的序号**。例如下标是9的元素值为5，代表**原始数列的整数99，最终的排序在第5位**。
+
+接下来，创建输出数组`sortedArray`，长度和输入数列一致。然后**从后向前遍历输入数列**：
+
+第1步，遍历成绩表(原始数据/输入数据：`90，99，95，94，95`)最后一行的小绿同学的成绩(95)：
+
+小绿的成绩是95分，找到`countArray`下标是5的元素，值是4，代表小绿的成绩**排名位置在第4位**。同时，给`countArray`下标是5的元素值减1，从4变成3，代表下次再遇到95分的成绩时，最终排名是第3。
+
+<div align=center><img src=Pictures\计数排序3.png></div>
+
+第2步，遍历成绩表倒数第2个的小白同学的成绩(94)：
+
+小白的成绩是94分，找到countArray下标是4的元素，值是2，代表小白的成绩排名位置在第2位。同时，给countArray下标是4的元素值减1，从2变成1，代表下次再遇到94分的成绩时（实际上已经遇不到了），最终排名是第1。
+
+<div align=center><img src=Pictures\计数排序4.png></div>
+
+第3步，遍历成绩表倒数第3行的小红同学的成绩(95)：
+
+小红的成绩是95分，找到countArray下标是5的元素，值是3（最初是4，减1变成了3），代表小红的成绩排名位置在第3位。同时，给countArray下标是5的元素值减1，从3变成2，代表下次再遇到95分的成绩时（实际上已经遇不到了），最终排名是第2。
+
+<div align=center><img src=Pictures\计数排序5.png></div>
+
+这样一来，同样是95分的小红和小绿就能够清楚地排出顺序了，也正因为此，优化版本的计数排序属于**稳定排序**。
+
+## 代码实现
+
+`CountSort.java`
+```java
+package sort;
+
+/**
+ * 仅针对输入数组为整数
+ * @author Chenzf
+ * @date 2020/7/5
+ * @version 1.0
+ */
+
+public class CountSort {
+    public static int[] countSort(int[] arr) {
+        // 1. 得到最大值和最小值，并计算出差值；注意浮点数的情况，这里先简化成整数
+        int max = arr[0];
+        int min = arr[0];
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] > max) {
+                max = arr[i];
+            }
+
+            if (arr[i] < min) {
+                min = arr[i];
+            }
+        }
+
+        int d = max - min;
+
+        // 2. 创建统计数组并统计对应的元素
+        int[] countArray = new int[d + 1];
+        for (int i = 0; i < arr.length; i++) {
+            countArray[arr[i] - min] ++;
+        }
+
+        // 3. 统计数组做变形，后面的元素等于前面的元素和
+        int sum = 0;
+        for (int i = 0; i < countArray.length; i++) {
+            sum += countArray[i];
+            countArray[i] = sum;
+        }
+
+        // 4. 倒序遍历原始数列arr，从统计数列countArray找到正确的位置，输出到结果数组
+        int[] sortedArray = new int[arr.length];
+        for (int i = arr.length - 1; i >= 0; i--) {
+            // 根据countArray[arr[i] - min]找到在sortedArray的位置（不是index）
+            sortedArray[countArray[arr[i] - min] - 1] = arr[i];
+            countArray[arr[i] - min] --;
+        }
+
+        return sortedArray;
+    }
+}
+```
+
+`TestCountSort.java`
+
+```java
+package sort;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/4
+ */
+
+public class TestCountSort {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待排元素：");
+            String[] strings = reader.readLine().split(" ");
+            int[] arr = new int[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                arr[i] = Integer.parseInt(strings[i]);
+            }
+
+            int[] sortedArray = CountSort.countSort(arr);
+
+            System.out.println("排序后：");
+            for (int num : sortedArray) {
+                System.out.print(num + " ");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+/*
+请输入待排元素：
+95 94 91 98 99 90 99 93 91 92
+排序后：
+90 91 91 92 93 94 95 98 99 99
+ */
+```
+
+## 算法效率
+
+代码第1，2，4步：`for (int i = 1; i < arr.length; i++); for (int i = 0; i < arr.length; i++); for (int i = arr.length - 1; i >= 0; i--)`涉及到遍历原始数列，运算量为$N$；第3步：`for (int i = 0; i < countArray.length; i++)`遍历统计数列，运算量为$M$。所以，总体运算量为$O(3N+M)$，时间复杂度为$O(N+M)$。
+
+空间复杂度，如果不考虑结果数组，只考虑统计数组大小的话，空间复杂度是$O(M)$。
+
+## 计数排序局限性
+
+1. 当数列最大和最小值差距过大时，并不适合用计数排序。
+2. 当数列元素不是整数时，也不适合用计数排序。
