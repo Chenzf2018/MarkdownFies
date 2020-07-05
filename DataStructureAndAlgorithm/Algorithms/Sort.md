@@ -715,3 +715,6 @@ public class TestQuickSort {
 ## 算法效率
 
 快速排序在平均情形下是$O(nlogn)$，但在最坏情况下是$O(n^2)$。`pivot`(枢轴)的选择对快速排序的效率有影响！
+
+https://cloud.tencent.com/developer/article/1522936
+https://www.cnblogs.com/fivestudy/p/10212306.html
