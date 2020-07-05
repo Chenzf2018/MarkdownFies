@@ -231,7 +231,7 @@ public class TestSelectionSort {
 
 # 插入排序
 
-举例理解：打扑克牌**抓牌、顺牌**！
+举例理解：打扑克牌**顺牌**！
 
 对数组的插入排序将数组分隔(partition) (即划分)为两部分。第一部分是有序的，初始时仅含有数组中的第一项。第二部分含有其余的项。<font color=red>算法从未排序部分移走第一项，并将它插入有序部分中合适的有序位置</font>。从有序部分的末尾开始，朝着开头方向，通过将待排序项与各有序项进行比较来选择合适的位置。当比较时，将有序部分的数组项右移，为插入腾出空间。
 
@@ -342,6 +342,9 @@ public class TestInsertionSort {
 
 将当前间隔3除以2得到1，所以最后一步只是对整个数组进行普通的插入排序。
 
+<div align=center><img src=Pictures/希尔排序.gif></div>
+
+
 `ShellSort.java`
 ```java
 package sort;
@@ -442,12 +445,13 @@ public class TestShellSort {
 
 
 # 归并排序
+
 归并排序算法将数组分为两半，对每部分递归地应用归并排序。在两部分都排好序后，对它们进行归并。该算法采用经典的`分治（divide-and-conquer）策略`（分治法将问题分(divide)成一些小的问题然后递归求解，而治(conquer)的阶段则将分的阶段得到的各答案"修补"在一起，即分而治之)。
 
 持续将数组划分为子数组，直到每个子数组只包含一个元素。然后，该算法将这些小的子数组归并为稍大的有序子数组，直到最后形成一个有序的数组。
 <div align=center><img src=Pictures/MergeSort.png width=70%></div>
 
-将两个有序数组归并为一个有序数组：
+**将两个有序数组归并为一个有序数组：**
 
 ```java
 private static void merge(int[] list1, int[] list2, int[] temp)
@@ -477,72 +481,116 @@ private static void merge(int[] list1, int[] list2, int[] temp)
 箭头上的数字表示递归调用及合并的次序：
 <div align=center><img src=Pictures/MergeSort2.png width=90%></div>
 
+<div align=center><img src=Pictures/归并排序.gif></div>
+
 
 `MergeSort.java`
 ```java
-package Sort;
+package sort;
 
-public class MergeSort
-{
-    private static <T extends Comparable<? super T>> void mergeSort(T[] list)
-    {
-        if (list.length > 1)
-        {
-            // divide the first half
-            // T[] firstHalf = (T[]) new Object[list.length / 2];
+/**
+ * @author Chenzf
+ * @date 2020/7/5
+ * @version 1.0
+ */
+
+public class MergeSort {
+    public static <T extends Comparable<? super T>> void mergeSort(T[] arr) {
+        if (arr.length > 1) {
+            // Divide the first half
             @SuppressWarnings("unchecked")
-            T[] firstHalf = (T[]) new Comparable<?>[list.length / 2];
-            System.arraycopy(list, 0, firstHalf, 0, list.length / 2);
+            T[] firstHalf = (T[]) new Comparable<?>[arr.length / 2];
+            System.arraycopy(arr, 0, firstHalf, 0, arr.length / 2);
             mergeSort(firstHalf);
 
-            // divide the second half
-            int secondHalfLength = list.length - list.length / 2;
+            // Divide the second half
+            int secondHalfLength = arr.length - arr.length / 2;
             @SuppressWarnings("unchecked")
             T[] secondHalf = (T[]) new Comparable<?>[secondHalfLength];
-            System.arraycopy(list, list.length / 2, secondHalf, 0, secondHalfLength);
+            System.arraycopy(arr, arr.length / 2, secondHalf, 0, secondHalfLength);
             mergeSort(secondHalf);
 
-            // Merge firstHalf with secondHalf into a list
-            merge(firstHalf, secondHalf, list);
+            // Merge firstHalf and secondHalf into one arr
+            merge(firstHalf, secondHalf, arr);
         }
     }
 
-    private static <T extends Comparable<? super T>> void merge(T[] list1, T[] list2, T[] temp)
-    {
-        int current1 = 0, current2 = 0, current3 = 0;  // Current index in list1,2,3
+    private static <T extends Comparable<? super T>> void merge(T[] arr1, T[] arr2, T[] temp) {
+        // Current index in arr1, arr2, temp
+        int currentIndex1 = 0;
+        int currentIndex2 = 0;
+        int currentIndex3 = 0;
 
-        while (current1 < list1.length && current2 < list2.length)
-        {
-            if (list1[current1].compareTo(list2[current2]) < 0)
-                temp[current3++] = list1[current1++];
-            else
-                temp[current3++] = list2[current2++];
+        while (currentIndex1 < arr1.length && currentIndex2 < arr2.length) {
+            if (arr1[currentIndex1].compareTo(arr2[currentIndex2]) < 0) {
+                temp[currentIndex3++] = arr1[currentIndex1++];
+            } else {
+                temp[currentIndex3++] = arr2[currentIndex2++];
+            }
         }
 
-        while (current1 < list1.length)
-            temp[current3++] = list1[current1++];
+        while (currentIndex1 < arr1.length) {
+            temp[currentIndex3++] = arr1[currentIndex1++];
+        }
 
-        while (current2 < list2.length)
-            temp[current3++] = list2[current2++];
-    }
+        while (currentIndex2 < arr2.length) {
+            temp[currentIndex3++] = arr2[currentIndex2++];
+        }
 
-    public static void main(String[] args)
-    {
-        Integer[] list = {7, 5, 9, 3, 6, 0, 2, 4};
-        System.out.println("排序前：");
-        for (Integer num : list)
-            System.out.print(num + " ");
-
-        mergeSort(list);
-        System.out.println("\n排序后：");
-        for (Integer num : list)
-            System.out.print(num + " ");
     }
 }
 ```
 
+`TestMergeSort.java`
+
+```java
+package sort;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/5
+ */
+
+public class TestMergeSort {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待排元素：");
+            String[] strings = reader.readLine().split(" ");
+            Integer[] arr = new Integer[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                arr[i] = Integer.parseInt(strings[i]);
+            }
+
+            MergeSort.mergeSort(arr);
+
+            System.out.println("排序后：");
+            for (Integer integer : arr) {
+                System.out.print(integer + " ");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+/*
+请输入待排元素：
+7 5 9 3 6 0 2 4
+排序后：
+0 2 3 4 5 6 7 9 
+*/
+```
+
 ## 算法效率
-归并排序的时间复杂度为$O\left(n\log n\right)$，优于冒泡排序、选择排序和插入排序。`java.util.Arrays`类中的`sort`方法是使用归并排序算法的变体来实现的。
+
+归并排序的时间复杂度在所有情形下都为$O\left(n\log n\right)$，优于冒泡排序、选择排序和插入排序。它对**临时数组**的需求(在合并阶段)是它的缺点。
+
+`java.util.Arrays`类中的`sort`方法是使用归并排序算法的变体来实现的。
 
 
 # 快速排序
@@ -556,76 +604,114 @@ public class MergeSort
 对子数组进行快速排序：
 <div align=center><img src=Pictures/QuickSort1.png width=70%></div>
 
+<div align=center><img src=Pictures/快速排序.gif></div>
+
+
 `QuickSort.java`
 ```java
-package Sort;
+package sort;
 
-public class QuickSort
-{
-    private static <T extends Comparable<? super T>> void quickSort(T[] list)
-    {
-        quickSort(list, 0, list.length - 1);
+/**
+ * @author Chenzf
+ * @date 2020/7/5
+ * @version 1.0
+ */
+
+public class QuickSort {
+    public static <T extends Comparable<? super T>> void quickSort(T[] arr) {
+        quickSort(arr, 0, arr.length - 1);
     }
 
-    private static <T extends Comparable<? super T>> void quickSort(T[] list, int first, int last)
-    {
-        if (last > first)
-        {
-            int pivotIndex = partition(list, first, last);
-            quickSort(list, first, pivotIndex - 1);
-            quickSort(list, pivotIndex + 1, last);
+    private static <T extends Comparable<? super T>> void quickSort(T[] arr, int first, int last) {
+        if (last > first) {
+            int pivotIndex = getPivotIndex(arr, first, last);
+            quickSort(arr, first, pivotIndex - 1);
+            quickSort(arr, pivotIndex + 1, last);
         }
     }
 
-    private static <T extends Comparable<? super T>> int partition(T[] list, int first, int last)
-    {
-        T pivot = list[first];
-        int low = first + 1;
-        int high = last;
+    private static <T extends Comparable<? super T>> int getPivotIndex(T[] arr, int low, int high) {
+        T pivot = arr[low];
+        int i = low;
+        int j = high + 1;
 
-        while (high > low)
-        {
-            while (low <= high && list[low].compareTo(pivot) <= 0)
-                low++;
-
-            while (low <= high && list[high].compareTo(pivot) > 0)
-                high--;
-
-            // 交换数据
-            if (high > low)
-            {
-                T temp = list[high];
-                list[high] = list[low];
-                list[low] = temp;
+        while (true) {
+            while (arr[++i].compareTo(pivot) < 0) {
+                if (i == high) {
+                    break;
+                }
             }
+
+            while (arr[--j].compareTo(pivot) > 0) {
+                if (j == low) {
+                    break;
+                }
+            }
+
+            if (i >= j) {
+                break;
+            }
+
+            exchange(arr, i, j);
         }
 
-        // high = low时
-        while (high > first && list[high].compareTo(pivot) >= 0)
-            high--;
-
-        if (pivot.compareTo(list[high]) > 0)
-        {
-            list[first] = list[high];
-            list[high] = pivot;
-            return high;
-        }
-        else
-            return first;
+        exchange(arr, low, j);
+        return j;
     }
 
-    public static void main(String[] args)
-    {
-        Integer[] list = {5, 2, 9, 3, 8, 4, 0, 1, 6, 7};
-        System.out.println("排序前：");
-        for (Integer num : list)
-            System.out.print(num + " ");
-
-        quickSort(list);
-        System.out.println("\n排序后：");
-        for (Integer num : list)
-            System.out.print(num + " ");
+    private static void exchange(Object[] arr, int i, int j) {
+        Object temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
     }
 }
 ```
 
+`TestQuickSort.java`
+
+```java
+package sort;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/5
+ */
+
+public class TestQuickSort {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待排序元素：");
+            String[] strings = reader.readLine().split(" ");
+            Integer[] arr = new Integer[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                arr[i] = Integer.parseInt(strings[i]);
+            }
+
+            QuickSort.quickSort(arr);
+
+            System.out.println("排序后：");
+            for (Integer integer : arr) {
+                System.out.print(integer + " ");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+/*
+请输入待排序元素：
+3 5 0 4 6 1 2 4
+排序后：
+0 1 2 3 4 4 5 6 
+*/
+```
+
+## 算法效率
+
+快速排序在平均情形下是$O(nlogn)$，但在最坏情况下是$O(n^2)$。`pivot`(枢轴)的选择对快速排序的效率有影响！
