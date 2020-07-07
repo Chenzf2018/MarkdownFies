@@ -2895,7 +2895,9 @@ class ReverseInteger {
 
 ## 146.LRU缓存机制
 
-`LRU`的全称是`Least Recently Used`，也就是说我们认为**最近使用过的数据应该是是有用的**，很久都没用过的数据应该是无用的，内存满了就优先删那些很久没用过的数据。
+`LRU`的全称是`Least Recently Used`，也就是说我们认为**最近使用过的数据应该是有用的**，很久都没用过的数据应该是无用的，**内存满了就优先删那些很久没用过的数据**。
+
+**题目描述：**
 
 运用你所掌握的数据结构，设计和实现一个`LRU`(**最近最少使用**) 缓存机制。它应该支持以下操作：获取数据`get`和写入数据`put`。
 
@@ -2921,7 +2923,7 @@ cache.get(4);       // 返回  4
 
 **思路与算法：**
 
-实现本题的两种操作，需要用到一个哈希表和一个双向链表。
+实现本题的两种操作，需要用到一个**哈希表**和一个**双向链表**。
 
 在面试中，面试官一般会期望读者能够自己实现一个简单的双向链表，而不是使用语言自带的、封装好的数据结构。在`Python`语言中，有一种结合了哈希表与双向链表的数据结构`OrderedDict`，只需要短短的几行代码就可以完成本题。在`Java`语言中，同样有类似的数据结构`LinkedHashMap`。这些做法都不会符合面试官的要求，因此下面只给出使用封装好的数据结构实现的代码，而不多做任何阐述：
 
@@ -2965,12 +2967,136 @@ LRU 缓存机制可以通过哈希表辅以双向链表实现，我们用一个�
   - 如果`key`不存在，**使用`key`和`value`创建一个新的节点，在双向链表的头部添加该节点，并将`key`和该节点添加进哈希表中**。然后判断双向链表的节点数是否超出容量，**如果超出容量，则删除双向链表的尾部节点，并删除哈希表中对应的项**；
   - 如果`key`存在，则与`get`操作类似，先通过哈希表定位，再将对应的节点的值**更新**为`value`，并**将该节点移到双向链表的头部**。
 
-上述各项操作中，访问哈希表的时间复杂度为$O(1)$，在双向链表的头部添加节点、在双向链表的尾部删除节点的复杂度也为$O(1)$。而将一个节点移到双向链表的头部，可以分成「删除该节点」和「在双向链表的头部添加节点」两步操作，都可以在$O(1)$时间内完成。
+上述各项操作中，**访问哈希表的时间复杂度为**$O(1)$；**在双向链表的头部添加节点、在双向链表的尾部删除节点的复杂度也为**$O(1)$；而**将一个节点移到双向链表的头部**，可以分成**删除该节点和在双向链表的头部添加节点**两步操作，都可以**在$O(1)$时间内完成**。
 
 小贴士：在双向链表的实现中，使用一个伪头部（`dummy head`）和伪尾部（`dummy tail`）标记界限，这样在添加节点和删除节点的时候就不需要检查相邻的节点是否存在。
 
 <div align=center><img src=LeetCode\146.gif></div>
 
-进阶:
+<div align=center><img src=LeetCode\LRU.jpg></div>
 
-你是否可以在 O(1) 时间复杂度内完成这两种操作？
+
+**代码：**
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/7
+ * @version 1.0
+ *
+ * Your LRUCache object will be instantiated and called as such:
+ * LRUCache obj = new LRUCache(capacity);
+ * int param_1 = obj.get(key);
+ * obj.put(key,value);
+ */
+class LRUCache {
+    class DoubleLinkedNode {
+        int key, value;
+        DoubleLinkedNode prev, next;
+
+        public DoubleLinkedNode() {}
+
+        public DoubleLinkedNode(int key, int value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
+    /**
+     * @ cache 哈希表存放缓存数据，并根据key定位对应数据在双向链表中的位置
+     * @ size 双向链表的大小
+     * @ capacity LRUCache的容量
+     * @ head, tail 双向链表的伪头部和伪尾部
+     */
+
+    private Map<Integer, DoubleLinkedNode> cache = new HashMap<>();
+    private int size;
+    private int capacity;
+    private DoubleLinkedNode head, tail;
+
+
+    public LRUCache(int capacity) {
+        this.size = 0;
+        this.capacity = capacity;
+        // 创建伪头部和伪尾部节点
+        head = new DoubleLinkedNode();
+        tail = new DoubleLinkedNode();
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    public int get(int key) {
+        DoubleLinkedNode node = cache.get(key);
+        if (node == null) {
+            return -1;
+        }
+
+        // 如果key存在，则先通过哈希表定位，再删除结点并移至头部
+        moveToHead(node);
+        return node.value;
+    }
+
+    public void put(int key, int value) {
+        // 根据哈希表定位数据在链表中的位置
+        DoubleLinkedNode node = cache.get(key);
+
+        // 如果结点不存在，则在链表头部创建新结点，并添加至哈希表
+        if (node == null) {
+            DoubleLinkedNode newNode = new DoubleLinkedNode(key, value);
+            // 添加至哈希表
+            cache.put(key, newNode);
+            // 添加至双向链表头部
+            addToHead(newNode);
+            size++;
+
+            // 如果超出容量，删除双向链表的尾部结点
+            if (size > capacity) {
+                DoubleLinkedNode lastNode = removeTail();
+                size--;
+                // 删除哈希表中对应的项
+                cache.remove(lastNode.key);
+            }
+
+        } else {
+            // 如果结点存在，则更新数据，并在链表中将其移至头部
+            node.value = value;
+            moveToHead(node);
+        }
+    }
+
+    private void moveToHead(DoubleLinkedNode node) {
+        // 先删除结点
+        removeNode(node);
+        // 在头部添加结点
+        addToHead(node);
+    }
+
+    private void removeNode(DoubleLinkedNode node) {
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+
+    private void addToHead(DoubleLinkedNode node) {
+        node.prev = head;
+        node.next = head.next;
+        head.next.prev = node;
+        head.next = node;
+    }
+
+    private DoubleLinkedNode removeTail() {
+        // 找到欲删除的最后一个结点
+        DoubleLinkedNode lastNode = tail.prev;
+        // 删除该结点
+        removeNode(lastNode);
+        return lastNode;
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：对于`put`和`get`都是$O(1)$。
+
+空间复杂度：$O(\text{capacity})$，因为哈希表和双向链表最多存储$\text{capacity} + 1$个元素。
