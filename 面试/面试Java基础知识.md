@@ -78,8 +78,8 @@ integer3.equals(integer4): true
 */
 ```
 
-* `==`和`!=`比较的是`对象的引用`。
-* 如果想比较两个对象的实际内容是否相同，必须使用所有对象都适用的特殊方法`equals()`。但这个方法<font color=red>不适用于基本类型</font>，基本类型直接使用`==`和`!=`即可。
+* `==`和`!=`比较的是**对象的引用**。
+* 如果想比较两个对象的**实际内容**是否相同，必须使用所有对象都适用的特殊方法`equals()`。但这个方法<font color=red>不适用于基本类型</font>，基本类型直接使用`==`和`!=`即可。
 
 <font color=red>`equals()`的默认行为是比较引用</font>：
 
@@ -106,7 +106,7 @@ value1.equals(value2): false
 */
 ```
 
-<font color=red>`equals()`的默认行为是比较引用。所以除非在自己的新类中覆盖`equals()`方法，否则默认是比较引用，而不是实际内容</font>。大多数Java库类通过覆写`equals()`方法比较对象的内容而不是其引用。
+<font color=red>`equals()`的默认行为是比较引用。所以除非在自己的新类中覆盖`equals()`方法，否则默认是比较引用，而不是实际内容</font>。**大多数Java库类通过覆写`equals()`方法比较对象的内容而不是其引用**。
 
 在`Object.java`中：
 ```java
@@ -129,12 +129,259 @@ public boolean equals(Object obj)
 }
 ```
 
+### 注意
+
+对于`Integer var=?`在-128至127之间的赋值，Integer对象是在`IntegerCache.cache`产生，会复用已有对象，**这个区间内的Integer值可以直接使用==进行判断**；但是**这个区间之外的所有数据**，都会**在堆上产生**，并不会复用已有对象，推荐**使用equals方法**进行判断。
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        /**
+         * 对于Integer var=?在-128至127之间的赋值，
+         * Integer对象是在IntegerCache.cache产生，会复用已有对象，
+         * 这个区间内的Integer值可以直接使用==进行判断，
+         * 但是这个区间之外的所有数据，都会在堆上产生，并不会复用已有对象，
+         * 推荐使用equals方法进行判断。
+         */
+        Integer integer1 = 100;
+        Integer integer2 = 100;
+        // 所有的包装类对象之间值的比较，全部使用equals方法比较
+        // true
+        System.out.println(integer1 == integer2);
+
+        Integer integer3 = 1000;
+        Integer integer4 = 1000;
+        // false
+        System.out.println(integer3 == integer4);
+    }
+}
+```
+Integer的作者在写这个类时，为了**避免重复创建对象**，对Integer值做了缓存，如果这个值在缓存范围内，直接返回缓存好的对象，否则new一个新的对象返回。
+
+`Integer.java`
+```java
+public static Integer valueOf(int i) {
+    if (i >= IntegerCache.low && i <= IntegerCache.high)
+        // 如果在缓存的数组中，直接取数组里相应的对象返回
+        return IntegerCache.cache[i + (-IntegerCache.low)];
+    // 不在缓存的数组里，直接new一个对象返回
+    return new Integer(i);
+}
+```
+
+## 为什么重写equals()方法为什么要重写hashCode()方法
+
+**参考：**
+https://www.jianshu.com/p/3819388ff2f4
+https://zhuanlan.zhihu.com/p/43001449
+
+equals()用于**判断两个对象是否相等**；hashCode()被设计是用来**使得哈希容器能高效的工作**。
+
+在Java中，有一些哈希容器，比如Hashtable、HashMap等等，当我们调用这些容器的诸如`get(Object obj)`方法时，**容器的内部肯定需要判断一下当前obj对象在容器中是否存在**，然后再进行后续的操作。一般来说，判断是够存在，肯定是要将obj对象和容器中的每个元素一一进行比较，要使用equals()才是正确的。
+
+但是**如果哈希容器中的元素有很多的时候，使用equals()必然会很慢**。这个时候我们想到一种替代方案就是`hashCode()`：当我们调用哈希容器的`get(Object obj)`方法时，它会**首先利用查看当前容器中是否存在有相同哈希值的对象**，如果不存在，那么直接返回null；如果存在，**再调用当前对象的equals()方法比较一下看哈希处的对象是否和要查找的对象相同**；如果不相同，那么返回null。如果相同，则返回该哈希处的对象。
+
+**`hashCode()`返回一个int类型，两个int类型比较起来要快很多**。所以说，`hashCode()`被设计用来使得哈希容器能高效的工作。也**只有在哈希容器中，才使用hashCode()来比较对象是否相等**，但要注意这种比较是一种弱的比较，还要利用equals()方法最终确认。
+
+equals方法和hashCode方法都是Object类中的方法：
+```java
+public boolean equals(Object obj) {
+    return (this == obj);
+}
+
+public native int hashCode();
+```
+
+equals方法在其内部是调用了"=="，所以说**在不重写equals方法的情况下，equals方法是比较两个对象是否具有相同的引用**，即是否指向了同一个内存地址。
+
+而hashCode是一个本地方法，他返回的是这个**对象的内存地址**。
+
+hashCode的通用规定：
+
+- 在应用程序的执行期间，只要对象的equals方法的比较操作所用到的信息没有被修改，那么对同一个对象的多次调用，hashCode方法都必须始终返回同一个值。在一个应用程序与另一个应用程序的执行过程中，执行hashCode方法所返回的值可以不一致。
+
+- 如果两个对象根据equals(Object)方法比较是相等的，那么调用这两个对象中的hashCode方法都必须产生同样的整数结果。即：**如果两个对象的equals()相等，那么他们的hashCode()必定相等**。**如果两个对象的hashCode()不相等，那么他们的equals()必定不等**。
+
+- 如果两个对象根据equals(Object)方法比较是不相等的，那么调用这两个对象中的hashCode方法，则不一定要求hashCode方法必须产生不同的结果。但是程序员应该知道，给不相等的对象产生截然不同的整数结果，有可能提高散列表的性能。
+
+由上面三条规定可知，**如果重写了equals方法而没有重写hashCode方法的话，就违反了第二条规定**。**相等的对象必须拥有相等的hash code**。
+
+
+不重写hashCode方法所带来的严重后果：
+```java {.line-numbers highlight=12-25}
+import java.util.HashMap;
+import java.util.Map;
+
+public class Test {
+    static class Person {
+        private String name;
+
+        public Person (String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            // 判断是否是同一对象
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj instanceof Person) {
+                Person person = (Person) obj;
+                // 直接调用String的equals方法
+                return name.equals(person.name);
+            }
+
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        Person person1 = new Person("czf");
+        Person person2 = new Person("czf");
+
+        Map<Person, Integer> hashMap = new HashMap<>();
+        hashMap.put(person1, 1);
+
+        // true
+        System.out.println(person1.equals(person2));
+        // false
+        System.out.println(hashMap.containsKey(person2));
+    }
+}
+```
+对于第一个输出true我们很容易知道，因为我们重写了equals方法，只要两个对象的name属性相同就会返回ture。
+
+但是为什么第二个为什么输出的是false呢？
+
+就是因为我们没有重写hashCode方法。所以我们得到一个结论：**如果一个类重写了equals方法但是没有重写hashCode方法，那么该类无法结合所有基于散列的集合（HashMap，HashSet）一起正常运作**。
+
+```java {.line-numbers highlight=28-31}
+import java.util.HashMap;
+import java.util.Map;
+
+public class Test {
+    static class Person {
+        private String name;
+
+        public Person (String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            // 判断是否是同一对象
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj instanceof Person) {
+                Person person = (Person) obj;
+                // 直接调用String的equals方法
+                return name.equals(person.name);
+            }
+
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            // 直接调用String的hashCode方法
+            return name.hashCode();
+        }
+    }
+
+    public static void main(String[] args) {
+        Person person1 = new Person("czf");
+        Person person2 = new Person("czf");
+
+        Map<Person, Integer> hashMap = new HashMap<>();
+        hashMap.put(person1, 1);
+
+        // true
+        System.out.println(person1.equals(person2));
+        // true
+        System.out.println(hashMap.containsKey(person2));
+    }
+}
+```
+
+
+
+## Java字符串两种声明方式在堆内存中不同的体现
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        String string1 = "100";
+        String string2 = "100";
+        // true
+        System.out.println(string1 == string2);
+
+        // 'new String("100")' is redundant
+        String string3 = new String("100");
+        String string4 = new String("100");
+        // false
+        System.out.println(string3 == string4);
+    }
+}
+```
+当代码执行到`String s1 = "100"`时，会先看常量池里有没有字符串刚好是“100”这个对象，如果没有，在常量池里创建初始化该对象，并**把引用指向它**，如下图，绿色部分为常量池，存在于**堆内存**中：
+
+<div align=center><img src=Pictures\equals.png width=80%></div>
+
+当执行到`String s2 = "100"`时，发现常量池已经有了100这个值，于是不再在常量池中创建这个对象，而是**把引用直接指向了该对象**：
+
+<div align=center><img src=Pictures\equals1.png width=80%></div>
+
+这时候我们打印`System.out.println(s1 == s2)`时，由于**==是判断两个对象是否指向同一个引用**，所以这儿打印出来的就应该是true。
+
+继续执行到`Strings3 = new String("100")`这时候我们加了一个new关键字，这个关键字呢就是告诉JVM，你直接**在堆内存里开辟一块新的内存**：
+
+<div align=center><img src=Pictures\equals2.png width=80%></div>
+
+继续执行`String s4 = new String("100")`：
+
+<div align=center><img src=Pictures\equals3.png width=80%></div>
+
+这时候再打印`System.out.println(s3 == s4)`那一定便是false了，因为s3和s4不是指向对一个引用（对象）。
+
+我们在写代码过程中，为了**避免重复的创建对象**，尽量使用`String s1 ="123"`而不是String s1 = new String("123")，因为**JVM对前者给做了优化**。
+
 
 ## `String`和`StringBuffer`, `StringBuilder`的区别
 
 它们可以储存和操作`字符串`，即包含`多个字符`的字符数据。`String`类提供了数值<font color=red>不可改变的字符串</font>。而`StringBuffer`和`StringBuilder`类的<font color=red>对象能够被多次的修改，并且不产生新的未使用对象</font>。
 
 `StringBuilder`类在Java5中被提出，它和`StringBuffer`之间的最大不同在于<font color=red>`StringBuilder`的方法不是线程安全的（不能同步访问）</font>。但由于` StringBuilder`相较于`StringBuffer`有<font color=red>速度优势</font>，所以多数情况下建议使用`StringBuilder`类。然而在应用程序要求线程安全的情况下，则必须使用`StringBuffer`类。
+
+`String.java`
+```java
+public boolean equals(Object anObject) {
+    // 判断是否是同一个对象
+    if (this == anObject) {
+        return true;
+    }
+    // 判断obj是否是Person的一个实例
+    if (anObject instanceof String) {
+        String anotherString = (String)anObject;
+        int n = value.length;
+        if (n == anotherString.value.length) {
+            char v1[] = value;
+            char v2[] = anotherString.value;
+            int i = 0;
+            while (n-- != 0) {
+                if (v1[i] != v2[i])
+                    return false;
+                i++;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+```
 
 ```java
 public class stringBuffer

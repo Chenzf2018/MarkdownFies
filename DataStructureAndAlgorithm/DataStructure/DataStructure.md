@@ -977,7 +977,7 @@ The number of keywords in D:\Learning_Java\Java_Code\Inheritance\src\inheritance
 **小结：**
 - 无序，允许为`null`，**非同步**；
 - 底层由**散列表(哈希表)**实现（Java中散列表的实现是通过**数组+链表**）；
-- 初始容量和装载因子对HashMap影响较大，需适中。
+- **初始容量**和**装载因子**对HashMap影响较大，需适中。
 - **不需要线程安全**的场合可以用`HashMap`，需要线程安全的场合可以用`ConcurrentHashMap`。
 
 在JDK8中HashMap的底层是：**<u>数组+链表</u>(散列表)+红黑树**；
