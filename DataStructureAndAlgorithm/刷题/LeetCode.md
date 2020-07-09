@@ -1,6 +1,6 @@
 # 字符串
 
-## 3. 无重复字符的最长子串（**）
+## 3. 无重复字符的最长子串（中等）
 
 **题目**：
 
@@ -1684,7 +1684,7 @@ public class TwoSum {
 
 **题目：**
 
-给定一个未排序的整数数组，找出最长连续序列的长度。要求算法的时间复杂度为O(n)。
+给定一个未排序的整数数组，找出最长连续序列的长度。要求算法的时间复杂度为$O(n)$。
 
 示例:
 ```
@@ -2105,7 +2105,7 @@ nums2 = [3, 4]
 
 # 数组
 
-## 4. 寻找两个正序数组的中位数（***）
+## 4. 寻找两个正序数组的中位数（难）
 
 给定两个大小为`m`和`n`的正序（从小到大）数组`nums1`和`nums2`。请你找出这两个正序数组的中位数，并且要求算法的时间复杂度为$O(log(m + n))$。
 
@@ -2148,6 +2148,145 @@ class Solution {
             a[k++] = nums2[j++];
 
         return n % 2 == 1 ? a[(n - 1) / 2] * 1.0 : (a[n / 2] + a[n / 2 - 1]) / 2.0;
+    }
+}
+```
+
+
+## 31. 下一个排列(中等)
+
+**题目描述：**
+
+实现获取**下一个排列**的函数，算法需要将给定数字序列重新排列成**字典序**中**下一个更大的排列**。如果不存在下一个更大的排列，则将数字重新排列成最小的排列（即升序排列）。
+
+必须原地修改，只允许使用额外常数空间。
+
+**示例：**
+```
+1,2,3 → 1,3,2
+3,2,1 → 1,2,3
+1,1,5 → 1,5,1
+```
+
+**字典序：**
+
+[1, 2, 3]的字典序排列：
+
+| 排列 | 123 | 132 | 213 | 231 | 312 | 321 |
+|:----:|-----|-----|-----|-----|-----|-----|
+
+字典序就是保持左边不变（变得最慢），右边依次从正序到逆序的排列过程。
+
+**思路与算法：**
+
+**暴力法：**
+
+我们找出由给定数组的元素形成的列表的每个可能的排列，并找出比给定的排列更大的排列。
+
+但是这个方法要求我们找出所有可能的排列，这需要很长时间，实施起来也很复杂。
+
+复杂度分析：
+
+时间复杂度：$O(n!)$，可能的排列总计有$n!$个。
+空间复杂度：$O(n)$，因为数组将用于存储排列。
+
+**一遍扫描：**
+
+提示一：对于任何给定序列的**降序**，没有可能的下一个更大的排列：`[9, 5, 4, 3, 1]`。
+提示二：<div align=center><img src=LeetCode\31.gif></div>
+
+算法：
+- 从数组的最后一位依次向前遍历，找到第一个满足$a[i]>a[i-1]$的数——$a[i-1]$(**找到第一个不满足“从右至左递增”的数**)；现在，对$a[i-1]$右侧的重新排列，不可能创建更大的排列，因为该子数组由数字按降序组成。
+- 从$a[i-1]$开始向数组的右侧遍历，找到刚好比$a[i-1]$大的数$a[j]$(**$a[j]$右侧的数都比$a[i-1]$小，其左边的数都比$a[i-1]$大**)；
+- 将$a[i-1]$右侧的数进行升序排序(**只需要反转，因为这些数从左至右是降序排序的**)。
+
+<div align=center><img src=LeetCode\31.png></div>
+
+**代码实现：**
+`NextPermutation.java`
+
+```java
+/**
+ * @author Chenzf
+ * @date 2020/7/9
+ * @version 1.0
+ */
+
+public class NextPermutation {
+    public static void nextPermutation(int[] nums) {
+        // 从数组中index=nums.length-2的数开始向左遍历
+        // 找到第一个不满足“从右至左升序排列”的数nums[i]
+        int i = nums.length - 2;
+        while (i >= 0 && nums[i + 1] <= nums[i]) {
+            i--;
+        }
+
+        // 找到nums[i]右侧，最后一个比nums[i]大的数
+        if (i >= 0) {
+            int j = nums.length - 1;
+            while (j >= 0 && nums[j] <= nums[i]) {
+                j--;
+            }
+
+            // 交换nums[j]和nums[i]
+            swap(nums, i, j);
+        }
+
+        // 将nums[i]右侧的数(已是降序排序)反转--最终按升序排序
+        reverse(nums, i + 1);
+    }
+
+    private static void swap(int[] nums, int i, int j) {
+        int temp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+
+    /**
+     * 双指针，前后交换
+     */
+    private static void reverse(int[] nums, int start) {
+        int i = start, j = nums.length - 1;
+        while (i < j) {
+            swap(nums, i, j);
+            i++;
+            j--;
+        }
+    }
+}
+```
+
+`TestNextPermutation.java`
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/9
+ */
+
+public class TestNextPermutation {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待处理数组：");
+            String[] strings = reader.readLine().split(",");
+            int[] arr = new int[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                arr[i] = Integer.parseInt(strings[i]);
+            }
+
+            NextPermutation.nextPermutation(arr);
+
+            for (int num : arr) {
+                System.out.print(num + ",");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 ```
