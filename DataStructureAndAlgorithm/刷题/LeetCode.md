@@ -2207,6 +2207,7 @@ class Solution {
 
 ```java
 /**
+ * leetcode_31_下一个排列
  * @author Chenzf
  * @date 2020/7/9
  * @version 1.0
@@ -2222,9 +2223,10 @@ public class NextPermutation {
         }
 
         // 找到nums[i]右侧，最后一个比nums[i]大的数
+        // 从右向左
         if (i >= 0) {
             int j = nums.length - 1;
-            while (j >= 0 && nums[j] <= nums[i]) {
+            while (j > i && nums[j] <= nums[i]) {
                 j--;
             }
 
@@ -2272,7 +2274,7 @@ public class TestNextPermutation {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("请输入待处理数组：");
-            String[] strings = reader.readLine().split(",");
+            String[] strings = reader.readLine().split(" ");
             int[] arr = new int[strings.length];
             for (int i = 0; i < strings.length; i++) {
                 arr[i] = Integer.parseInt(strings[i]);
@@ -2281,7 +2283,7 @@ public class TestNextPermutation {
             NextPermutation.nextPermutation(arr);
 
             for (int num : arr) {
-                System.out.print(num + ",");
+                System.out.print(num + " ");
             }
 
         } catch (IOException e) {
