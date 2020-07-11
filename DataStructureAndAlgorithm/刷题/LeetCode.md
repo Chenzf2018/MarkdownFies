@@ -60,46 +60,80 @@
 
 还需要使用一种数据结构来判断**是否有重复的字符**，常用的数据结构为**哈希集合**(`HashSet`)。在左指针向右移动的时候，我们从哈希集合中移除一个字符，在右指针向右移动的时候，我们往哈希集合中添加一个字符。
 
+**思路：**
+
+1. 遍历字符；
+2. 以当前字符为起点，向其右侧遍历字符，如果在`HashSet`中不存在遍历到的字符，则存入`HashSet`中(避免重复)，直到遇到`HashSet`中存在的字符，记录截至位置`rk`；
+3. 向右侧移动起点，重复步骤二。
+
 **代码：**
 
 ```java
-import java.util.HashSet;
-import java.util.Scanner;
 import java.util.Set;
+import java.util.HashSet;
+
+/**
+ * leetcode_3_无重复字符的最长子串
+ * @author Chenzf
+ * @date 2020/7/10
+ * @version 1.0
+ */
 
 public class LongestSubstringWithoutRepeatingCharacters {
-    private static int lengthOfLongestSubstring(String s) {
-        // 哈希集合，记录每个字符是否出现过
+    public static int longestSubstringWithoutRepeatCharacters(String s) {
+        // 创建HashSet存入字符
         Set<Character> hashSet = new HashSet<>();
-        int n = s.length();
-        // 右指针，初始值为 -1，相当于我们在字符串的左边界的左侧，还没有开始移动
-        int rk = -1, ans = 0;
 
-        // i窗口的起始位置
-        for (int i = 0; i < n; ++i) {
+        int length = s.length();
+        // 最长子串的截止位置
+        int rk = 0;
+        int result = 0;
+
+        for (int i = 0; i < length; i++) {
             if (i != 0) {
-                // 左指针向右移动一格，移除一个字符
+                // 左指针右移一位，并移除当前字符的前一个字符
                 hashSet.remove(s.charAt(i - 1));
             }
 
-            while (rk + 1 < n && ! hashSet.contains(s.charAt(rk + 1))) {
-                // 没有重复的，就不断地移动右指针
-                hashSet.add(s.charAt(rk + 1));
-                ++rk;
+            while (rk < length && ! hashSet.contains(s.charAt(rk))) {
+                hashSet.add(s.charAt(rk));
+                rk++;
             }
 
-            // 第 i 到 rk 个字符是一个极长的无重复字符子串，长度为rk - i + 1
-            // i是当前左指针所在位置
-            ans = Math.max(ans, rk - i + 1);
+            result = Math.max(result, ((rk - 1) - i) + 1);
         }
-        return ans;
+
+        return result;
     }
 
-    public static void main(String[] args)
-    {
-        Scanner input = new Scanner(System.in);
-        System.out.print("请输入待检测的字符串：");
-        System.out.println("无重复字符的最长子串：" + lengthOfLongestSubstring(input.nextLine()));
+}
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/10
+ */
+
+public class TestLongestSubstringWithoutRepeatingCharacter {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待检测字符串：");
+            String string = reader.readLine();
+
+            int result =
+                    LongestSubstringWithoutRepeatingCharacters.longestSubstringWithoutRepeatCharacters(string);
+
+            System.out.println(result);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 ```
