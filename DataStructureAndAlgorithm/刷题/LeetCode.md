@@ -1,6 +1,6 @@
 # 字符串
 
-## 3. 无重复字符的最长子串（中等）
+## 3. 无重复字符的最长子串(中等)
 
 **题目**：
 
@@ -68,7 +68,9 @@
 
 **代码：**
 
-```java
+注意：字符串的长度函数为`length()`：`(String s) s.length();`，`(String[] s) s.length;`
+
+```java {.line-numbers highlight=24}
 import java.util.Set;
 import java.util.HashSet;
 
@@ -92,6 +94,7 @@ public class LongestSubstringWithoutRepeatingCharacters {
         for (int i = 0; i < length; i++) {
             if (i != 0) {
                 // 左指针右移一位，并移除当前字符的前一个字符
+                // 移动窗口，并删除前一个字符
                 hashSet.remove(s.charAt(i - 1));
             }
 
@@ -149,9 +152,104 @@ public class TestLongestSubstringWithoutRepeatingCharacter {
 <div align=center><img src=LeetCode\3滑动窗口.png></div>
 
 
+# 67. 二进制求和(简单)
+
+**题目描述：**
+
+给你两个二进制字符串，返回它们的和（用二进制表示）。输入为非空字符串且只包含数字1和0。
+
+**示例：**
+
+```
+示例 1:
+
+输入: a = "11", b = "1"
+输出: "100"
+
+示例 2:
+
+输入: a = "1010", b = "1011"
+输出: "10101"
+ 
+
+提示：
+
+1. 每个字符串仅由字符'0'或'1'组成。
+2. 1 <= a.length, b.length <= 10^4
+3. 字符串如果不是 "0" ，就都不含前导零。
+```
+
+**思路与算法：**
+
+将两个字符串从右向左，连同进位，对应相加。会得到一个反向的字符，需要最后进行反转！
+<div align=center><img src=LeetCode\67.jpg></div>
+
+**代码实现：**
+
+```java
+/**
+ * leetcode_67_二进制求和
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ */
+
+public class AddBinary {
+    public static String addBinary(String a, String b) {
+        StringBuilder ans = new StringBuilder();
+        // 进位标志
+        int carry = 0;
+        // int sum = 0;
+
+        for (int i = a.length() - 1, j = b.length() - 1; i >= 0 || j >= 0; i--, j--) {
+            // ans当前位的和
+            int sum = carry;
+            sum += (i >= 0 ? a.charAt(i) - '0' : 0);
+            sum += (j >=0 ? b.charAt(j) - '0' : 0);
+            ans.append(sum % 2);
+            // carry /= 2;
+            carry = sum / 2;
+        }
+
+        // 会多产生一个进位
+        ans.append(carry == 1 ? carry : "");
+
+        return ans.reverse().toString();
+    }
+}
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/11
+ */
+
+public class TestAddBinary {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入两个字符串：");
+            String a = reader.readLine();
+            String b = reader.readLine();
+
+            System.out.println(AddBinary.addBinary(a, b));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
 # 动态规划
 
-## 5. 最长回文子串（**）
+## 5. 最长回文子串(中等)
 
 给定一个字符串`s`，找到`s`中最长的回文子串。你可以假设`s`的最大长度为1000。
 
@@ -168,7 +266,7 @@ public class TestLongestSubstringWithoutRepeatingCharacter {
 
 **思路与算法**：
 
-对于一个子串而言，如果它是回文串，并且长度大于2，那么将它首尾的两个字母去除之后，它仍然是个回文串。
+**对于一个子串而言，如果它是回文串，并且长度大于2，那么将它首尾的两个字母去除之后，它仍然是个回文串**。
 
 例如对于字符串$\textrm{``ababa''}$，如果我们已经知道$\textrm{``bab''}$是回文串，那么$\textrm{``ababa''}$一定是回文串，这是因为它的首尾两个字母都是$\textrm{``a''}$。
 
@@ -1641,9 +1739,9 @@ class Solution {
 
 # 哈希表
 
-## 1. 两数之和（*）
+## 1. 两数之和(简单)
 
-给定一个整数数组`nums`和一个目标值`target`，请你在该数组中找出和为目标值的那**两个整数**，并返回他们的数组**下标**。
+给定一个整数数组`nums`和一个目标值`target`，请你在该数组中找出**和为目标值**的那**两个整数**，并返回他们的数组**下标**。
 
 你可以假设每种输入只会对应一个答案。但是，数组中同一个元素不能使用两遍。
 
@@ -1679,7 +1777,7 @@ class Solution {
 
 **两遍哈希表**：
 
-为了对运行时间复杂度进行优化，我们需要一种更有效的方法来检查数组中是否存在目标元素。如果存在，我们需要找出它的索引。保持数组中的每个**元素**与其**索引**相互对应的最好方法是什么？哈希表。
+为了对运行时间复杂度进行优化，我们需要一种更有效的方法来**检查数组中是否存在目标元素**。如果存在，我们需要找出它的索引。保持数组中的每个**元素**与其**索引**相互对应的最好方法是什么？哈希表。
 
 通过**以空间换取速度**的方式，我们可以将查找时间从$O(n)$降低到$O(1)$。哈希表正是为此目的而构建的，它支持**以近似恒定的时间进行快速查找**。用“近似”来描述，是因为一旦出现冲突，查找用时可能会退化到$O(n)$。但只要你仔细地挑选哈希函数，在哈希表中进行查找的用时应当被摊销为$O(1)$。
 
@@ -1688,31 +1786,85 @@ class Solution {
 
 **代码：**
 ```java
-import java.util.HashMap;
 import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * leetcode_1_两数之和
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ */
 
 public class TwoSum {
-    private static int[] twoSum(int[] nums, int target){
-        Map<Integer, Integer> map = new HashMap<>();
-        for (int i = 0; i < nums.length; i++)
-            map.put(nums[i], i);
-
-        for (int i = 0; i < nums.length; i++){
-            int complement = target - nums[i];
-            if (map.containsKey(complement) && map.get(complement) != i)
-                return new int[] { i, map.get(complement) };  // 找到一组就结束
+    public static int[] twoSum(int[] nums, int target) {
+        // 创建一个HashMap来存储数据，便于查找
+        Map<Integer, Integer> hashMap = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            // V put(K key, V value)
+            hashMap.put(nums[i], i);
         }
 
-        throw new IllegalArgumentException("No two sum solution.");
-    }
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            // 如果hashMap中存在complement且不是nums[i]本身
+            // hashMap.get(Object Key)
+            if (hashMap.containsKey(complement) && hashMap.get(complement) != i) {
+                return new int[] {i, hashMap.get(complement)};
+            }
+        }
 
-    public static void main(String[] args) {
-        int[] results = twoSum(new int[]{2, 7, 11, 15}, 9);
-        for (int result : results)
-            System.out.print(result + " ");
+        // Missing return statement
+        throw new IllegalArgumentException("No two sum solution");
     }
 }
 ```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/11
+ */
+
+public class TestTwoSum {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待测数据：");
+            String[] strings = reader.readLine().split(" ");
+            int[] nums = new int[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                nums[i] = Integer.parseInt(strings[i]);
+            }
+            System.out.println("请输入目标值：");
+            int target = Integer.parseInt(reader.readLine());
+
+            // System.out.println(TwoSum.twoSum(nums, target)); // [I@16d3586
+
+            int[] results = TwoSum.twoSum(nums, target);
+            for (int result : results) {
+                System.out.print(result + " ");
+            }
+
+        } catch(IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：$O(n)$
+我们把包含有$n$个元素的列表遍历两次。由于**哈希表将查找时间缩短到**$O(1)$，所以时间复杂度为$O(n)$。
+
+空间复杂度：$O(n)$
+所需的额外空间**取决于哈希表中存储的元素数量**，该表中存储了$n$个元素。
+
 
 ## 128. 最长连续序列
 
@@ -1803,7 +1955,7 @@ public class LongestConsecutiveSequence {
 
 # 链表
 
-## 2. 两数相加（**）
+## 2. 两数相加（中等）
 
 给出两个**非空**的链表用来表示两个**非负的整数**。其中，它们各自的位数是按照**逆序**的方式存储的，并且它们的每个节点只能存储**一位**数字。
 
@@ -1832,53 +1984,59 @@ $l1=[9,9]，l2=[1]$ | 求和运算最后可能出现额外的进位，这一点�
 **代码：**
 
 ```java
+package solution;
+
 /**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode() {}
- *     ListNode(int val) { this.val = val; }
- *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
- * }
+ * leetcode_2_两数相加，与“leetcode_67_二进制求和”相似
+ * @author Chenzf 
+ * @date 2020/7/11
+ * @version 1.0
  */
 
 public class AddTwoNumbers {
     class ListNode {
         int val;
         ListNode next;
-        ListNode() {}
-        ListNode(int val) { this.val = val; }
-        ListNode(int val, ListNode next) { this.val = val; this.next = next; }
-    }
 
-    public ListNode addTwoNumbers(ListNode listNode1, ListNode listNode2)
-    {
-        ListNode pre = new ListNode(0);  // 定义一个哑结点dummyHead/预先指针pre
-        ListNode p = listNode1, q = listNode2, curr = pre;
-        int carry = 0;  // 进位
-
-        while (p != null || q != null)
-        {
-            int x = (p != null) ? p.val : 0;
-            int y = (q != null) ? q.val : 0;
-            int sum = carry + x + y;
-
-            carry = sum / 10;
-            curr.next = new ListNode(sum % 10);
-            curr = curr.next;
-
-            if (p != null)
-                p = p.next;
-            if (q != null)
-                q = q.next;
+        ListNode (int val) {
+            this.val =val;
         }
 
-        // 防止求和最后出现进位 99 + 1 -> 001
-        if (carry == 1)
-            curr.next = new ListNode(carry);
+        ListNode (int val, ListNode next) {
+            this.val = val;
+            this.next = next;
+        }
+    }
 
-        return pre.next;
+    public ListNode addTwoNumbers(ListNode listNode1, ListNode listNode2) {
+        // 进位标志
+        int carry = 0;
+        ListNode dummyHead = new ListNode(0, null);
+        ListNode currentNode = dummyHead;
+
+        while (listNode1 != null || listNode2 != null) {
+            int sum = carry;
+            sum += (listNode1 != null ? listNode1.val : 0);
+            sum += (listNode2 != null ? listNode2.val : 0);
+
+            carry = sum / 10;
+            currentNode.next = new ListNode(sum % 10);
+
+            currentNode = currentNode.next;
+            if (listNode1 != null) {
+                listNode1 = listNode1.next;
+            }
+            if (listNode2 != null) {
+                listNode2 = listNode2.next;
+            }
+        }
+
+        // 两个链表都到达了尾端，此时进位值为1
+        if (carry == 1) {
+            currentNode.next = new ListNode(carry);
+        }
+
+        return dummyHead.next;
     }
 }
 ```
@@ -2715,13 +2873,11 @@ class SymmetricTree {
 }
 ```
 
-## 104. 二叉树的最大深度(*)
+## 104. 二叉树的最大深度(简单)
 
 **题目：**
 
-给定一个二叉树，找出其最大深度。
-
-二叉树的深度为根节点到最远叶子节点的最长路径上的节点数。
+给定一个二叉树，找出其最大深度。二叉树的深度为根节点到最远叶子节点的最长路径上的节点数。
 
 说明: 叶子节点是指没有子节点的节点。
 
@@ -2744,23 +2900,41 @@ $H(1) = 1 + max(H(2), H(7))$
 
 **代码：**
 ```java
+package solution;
+
 /**
+ * leetcode_104_二叉树最大深度
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ *
  * Definition for a binary tree node.
+ *
  * public class TreeNode {
  *     int val;
  *     TreeNode left;
  *     TreeNode right;
- *     TreeNode(int x) { val = x; }
+ *
+ *     TreeNode(int val) {
+ *         this.val = val;
+ *     }
+ *
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
  * }
  */
-class MaximumDepthofBinaryTree {
-    public int maxDepth(TreeNode root) {
-        if(root == null)
+
+public class MaximumDepthOfBinaryTree {
+    public int maxDepth(TreeNode node) {
+        if (node == null) {
             return 0;
-        else{
-            int left_height = maxDepth(root.left);
-            int right_height = maxDepth(root.right);
-            return java.lang.Math.max(left_height, right_height) + 1;
+        } else {
+            int leftHeight = maxDepth(node.left);
+            int rightHeight = maxDepth(node.right);
+            return Math.max(leftHeight, rightHeight) + 1;
         }
     }
 }
@@ -2771,6 +2945,13 @@ class MaximumDepthofBinaryTree {
 时间复杂度：我们每个结点只访问一次，因此时间复杂度为$O(N)$，其中$N$是结点的数量。
 
 空间复杂度：在最糟糕的情况下，树是完全不平衡的，例如每个结点只剩下左子结点，递归将会被调用$N$次（树的高度），因此保持调用栈的存储将是$O(N)$。但在最好的情况下（树是完全平衡的），树的高度将是$\log(N)$。因此，在这种情况下的空间复杂度将是$O(\log(N))$。
+
+
+在递归中，如果层级过深，很可能保存过多的临时变量，导致栈溢出。
+
+事实上，**函数调用的参数是通过栈空间来传递的**，在调用过程中会占用线程的栈资源。而递归调用，只有走到最后的结束点后函数才能依次退出，而未到达最后的结束点之前，占用的栈空间一直没有释放，如果递归调用次数过多，就可能导致占用的栈资源超过线程的最大值，从而导致栈溢出，导致程序的异常退出。
+
+99%的递归转非递归，都可以通过栈来进行实现。
 
 
 ## 108. 将有序数组转换为二叉搜索树(*)
@@ -2900,6 +3081,72 @@ class Solution {
 时间复杂度：$\mathcal{O}(N)$，每个元素只访问一次。
 
 空间复杂度：$\mathcal{O}(N)$，二叉搜索树空间$\mathcal{O}(N)$，递归栈深度$\mathcal{O}(\log N)$。
+
+
+# 广度优先算法
+
+## 102. 二叉树的层序遍历(中等)
+
+**题目描述：**
+
+给一个二叉树，请返回其按层序遍历得到的节点值。即逐层地，从左到右访问所有节点。
+
+**示例：**
+
+```
+二叉树：[3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+
+返回其层次遍历结果：
+
+[[3],[9,20],[15,7]]
+```
+
+<div align=center><img src=LeetCode\102.png width=80%></div>
+
+
+**思路与算法：**
+
+BFS使用**队列**，把每个还没有搜索到的点依次放入队列，然后再弹出队列的头部元素当做当前遍历点。
+
+BFS总共有两个模板：
+
+1. 如果**不需要确定当前遍历到了哪一层**，BFS模板如下
+```
+while queue 不空：
+    cur = queue.pop()
+    for 节点 in cur的所有相邻节点：
+        if 该节点有效且未访问过：
+            queue.push(该节点)
+```
+
+2. 如果要确定当前遍历到了哪一层，BFS模板如下
+这里增加了level表示当前遍历到二叉树中的哪一层了，也可以理解为在一个图中，现在已经走了多少步了。size表示在当前遍历层有多少个元素，也就是队列中的元素数，我们把这些元素一次性遍历完，即把当前层的所有元素都向外走了一步。
+
+```
+level = 0
+while queue 不空：
+    size = queue.size()
+    while (size --) {
+        cur = queue.pop()
+        for 节点 in cur的所有相邻节点：
+            if 该节点有效且未被访问过：
+                queue.push(该节点)
+    }
+    level ++;
+```
+
+本题要求二叉树的层次遍历，所以同一层的节点应该放在一起，故使用模板二。
+
+使用队列保存每层的所有节点，每次把队列里的原先所有节点进行出队列操作，再把每个元素的非空左右子节点进入队列。因此即可得到每层的遍历。
+
+
+
 
 
 # 贪心算法
@@ -3365,3 +3612,197 @@ class LRUCache {
 时间复杂度：对于`put`和`get`都是$O(1)$。
 
 空间复杂度：$O(\text{capacity})$，因为哈希表和双向链表最多存储$\text{capacity} + 1$个元素。
+
+
+
+# 树
+
+# 98. 验证二叉搜索树(中等)
+
+**题目描述：**
+
+给定一个二叉树，判断其是否是一个有效的**二叉搜索树**。
+
+假设一个二叉搜索树具有如下特征：
+
+- 节点的左子树只包含小于当前节点的数。
+- 节点的右子树只包含大于当前节点的数。
+- 所有左子树和右子树自身必须也是二叉搜索树。
+
+**示例：**
+
+```
+输入:
+    2
+   / \
+  1   3
+输出: true
+
+
+输入:
+    5
+   / \
+  1   4
+     / \
+    3   6
+输出: false
+
+解释: 输入为: [5,1,4,null,null,3,6]。
+     根节点的值为 5 ，但是其右子节点值为 4 。
+```
+
+## 中序遍历
+
+**二叉搜索树中序遍历得到的值构成的序列一定是升序的**，这启示我们在**中序遍历**的时候**实时检查当前节点的值是否大于前一个中序遍历到的节点的值**即可。如果均大于说明这个序列是升序的，整棵树是二叉搜索树，否则不是，下面的代码使用**栈**来模拟中序遍历的过程：
+
+<div align=center><img src=LeetCode\98.gif width=80%></div>
+
+```java {.line-numbers highlight=29-30}
+package solution;
+
+import java.util.Stack;
+
+/**
+ * leetcode_98_验证二叉搜索树
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ */
+
+public class ValidateBinarySearchTree {
+    public boolean isValidBST(TreeNode node) {
+        Stack<TreeNode> stack = new Stack<>();
+        // int inorder = - Integer.MAX_VALUE;
+        // 需要一个很大的负数，防止第一个数满足if (node.val <= inorder)
+        double inorder = - Double.MAX_VALUE;
+
+        while (! stack.isEmpty() || node != null) {
+            // 找到整棵树最左侧的结点
+            while (node != null) {
+                stack.push(node);
+                node = node.left;
+            }
+
+            node = stack.pop();
+
+            // 如果中序遍历得到的节点的值小于等于前一个 inorder，说明不是二叉搜索树
+            // 这里需要初始时inorder是一个很小的数
+            if (node.val <= inorder) {
+                return false;
+            }
+            
+            inorder = node.val;
+            node = node.right;
+        }
+        
+        return true;
+    }
+}
+```
+
+
+
+## 968. 监控二叉树(困难)
+
+**题目描述：**
+
+给定一个二叉树，我们在**树的节点上安装摄像头**。节点上的每个摄影头都可以监视其父对象、自身及其直接子对象。计算监控树的所有节点所需的最小摄像头数量。
+
+- 给定树的节点数的范围是[1, 1000]。
+- 每个节点的值都是0。
+
+**示例：**
+
+<div align=center><img src=LeetCode\968_1.png></div>
+
+```
+输入：[0,0,null(第一个结点的右子结点),0,0]
+输出：1
+解释：如图所示，一台摄像头足以监控所有节点。
+```
+
+<div align=center><img src=LeetCode\968_2.png></div>
+
+```
+输入：[0,0,null,0,null,0,null,null,0]
+输出：2
+解释：需要至少两个摄像头来监视树的所有节点。 上图显示了摄像头放置的有效位置之一。
+```
+
+### 动态规划
+
+我们尝试覆盖每个节点，从树的顶部开始向下。所考虑的**每个节点都必须由该节点或某个邻居的摄像机覆盖**。
+
+让`solve(node)`函数提供一些信息，说明在不同的状态下，需要多少摄像机才能覆盖此节点的子树。基本上有三种状态:
+
+[状态 0]：森严的子树：该节点下的所有节点都被覆盖，但该节点没被覆盖。
+[状态 1]：正常的子树：该节点下的所有节点和该节点均被覆盖，但是该节点没有摄像头。
+[状态 2]：放置摄像头：该节点和子树均被覆盖，且该节点有摄像头。
+
+一旦我们用这种方式来界定问题，答案就明显了：
+
+若要满足森严的子树，此节点的孩子节点必须处于状态1。
+若要满足正常的子树，此节点的孩子节点必须在状态1或2，其中至少有一个孩子在状态2。
+若该节点放置了摄像头，则它的孩子节点可以在任一的状态。
+
+### 贪心-未看懂
+
+如果一个节点**有孩子节点**且**没有被摄像机覆盖**，则我们需要放置一个摄像机在该节点。此外，如果一个节点**没有父节点**且**没有被覆盖**，则必须放置一个摄像机在该节点。
+
+
+**代码实现：**
+
+```java
+package solution;
+
+import java.util.Set;
+import java.util.HashSet;
+
+/**
+ * leetcode_968_监控二叉树：使用贪心算法
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ *
+ *  Definition for a binary tree node.
+ *  public class TreeNode {
+ *      int val;
+ *      TreeNode left;
+ *      TreeNode right;
+ *      TreeNode(int x) { val = x; }
+ *   }
+ */
+
+public class BinaryTreeCameras_v1 {
+    private int result;
+    private Set<TreeNode> covered;
+
+    public int minCameraCover(TreeNode root) {
+        result = 0;
+        covered = new HashSet<>();
+        covered.add(null);
+
+        deepFirstSearch(root, null);
+
+        return result;
+    }
+
+    public void deepFirstSearch(TreeNode node, TreeNode parent) {
+        if (node != null) {
+            deepFirstSearch(node.left, node);
+            deepFirstSearch(node.right, node);
+
+            boolean needCovered = (parent == null) && ! covered.contains(node)
+                    || ! covered.contains(node.left) || ! covered.contains(node.right);
+
+            if (needCovered) {
+                result++;
+                covered.add(node);
+                covered.add(parent);
+                covered.add(node.left);
+                covered.add(node.right);
+            }
+        }
+    }
+}
+```
