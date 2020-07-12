@@ -1866,7 +1866,7 @@ public class TestTwoSum {
 所需的额外空间**取决于哈希表中存储的元素数量**，该表中存储了$n$个元素。
 
 
-## 128. 最长连续序列
+## 128. 最长连续序列(困难)
 
 **题目：**
 
@@ -1955,7 +1955,7 @@ public class LongestConsecutiveSequence {
 
 # 链表
 
-## 2. 两数相加（中等）
+## 2. 两数相加(中等)
 
 给出两个**非空**的链表用来表示两个**非负的整数**。其中，它们各自的位数是按照**逆序**的方式存储的，并且它们的每个节点只能存储**一位**数字。
 
@@ -3146,7 +3146,67 @@ while queue 不空：
 使用队列保存每层的所有节点，每次把队列里的原先所有节点进行出队列操作，再把每个元素的非空左右子节点进入队列。因此即可得到每层的遍历。
 
 
+**代码实现：**
 
+```java {.line-numbers highlight=37-40}
+package solution;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.LinkedList;
+
+/**
+ * leetcode_102_二叉树的层序遍历
+ */
+
+public class BinaryTreeLevelOrder {
+    public List<List<Integer>> levelOrder(TreeNode node) {
+        // 最后输出结果
+        List<List<Integer>> result = new ArrayList<>();
+        // 存放每层的结点
+        Queue<TreeNode> queue = new LinkedList<>();
+
+        queue.offer(node);
+
+        while (! queue.isEmpty()) {
+            int size = queue.size();
+
+            // 每一层的遍历结果
+            List<Integer> level = new LinkedList<>();
+
+            for (int i = 0; i < size; i++) {
+                // queue.peek()返回队列的头元素，不删除
+                TreeNode currentNode = queue.peek();
+                /*
+                Queue中remove()和poll()都是用来从队列头部删除一个元素。
+                在队列元素为空的情况下，remove() 方法会抛出NoSuchElementException异常，
+                poll() 方法只会返回null
+                 */
+                queue.poll();
+
+                // 防止当结点的左结点为null，右结点不为null时，出现queue=[null, XX]
+                if (currentNode == null) {
+                    continue;
+                }
+
+                level.add(currentNode.val);
+
+                // 利用完当前结点后，将其左、右结点加入队列中
+                queue.offer(currentNode.left);
+                queue.offer(currentNode.right);
+            }
+
+            if (! level.isEmpty()) {
+                // 将每一层的结果加入最终结果列表中
+                result.add(level);
+            }
+        }
+
+        return result;
+    }
+}
+```
 
 
 # 贪心算法
@@ -3617,7 +3677,7 @@ class LRUCache {
 
 # 树
 
-# 98. 验证二叉搜索树(中等)
+## 98. 验证二叉搜索树(中等)
 
 **题目描述：**
 
@@ -3651,7 +3711,7 @@ class LRUCache {
      根节点的值为 5 ，但是其右子节点值为 4 。
 ```
 
-## 中序遍历
+### 中序遍历
 
 **二叉搜索树中序遍历得到的值构成的序列一定是升序的**，这启示我们在**中序遍历**的时候**实时检查当前节点的值是否大于前一个中序遍历到的节点的值**即可。如果均大于说明这个序列是升序的，整棵树是二叉搜索树，否则不是，下面的代码使用**栈**来模拟中序遍历的过程：
 
@@ -3680,9 +3740,11 @@ public class ValidateBinarySearchTree {
             // 找到整棵树最左侧的结点
             while (node != null) {
                 stack.push(node);
+                // 左遍历
                 node = node.left;
             }
 
+            // 中遍历
             node = stack.pop();
 
             // 如果中序遍历得到的节点的值小于等于前一个 inorder，说明不是二叉搜索树
@@ -3692,6 +3754,7 @@ public class ValidateBinarySearchTree {
             }
             
             inorder = node.val;
+            // 右遍历
             node = node.right;
         }
         
@@ -3700,6 +3763,493 @@ public class ValidateBinarySearchTree {
 }
 ```
 
+**复杂度分析：**
+
+时间复杂度：$O(n)$，其中$n$为二叉树的节点个数。二叉树的每个节点最多被访问一次，因此时间复杂度为$O(n)$。
+
+空间复杂度：$O(n)$，其中$n$为二叉树的节点个数。栈最多存储$n$个节点，因此需要额外的$O(n)$ 的空间。
+
+
+## 110. 平衡二叉树(简单)
+
+**题目描述：**
+
+给定一个二叉树，判断它是否是**高度平衡**的二叉树。
+
+一棵高度平衡二叉树定义为：
+
+一个二叉树每个节点的**左右两个子树的高度差的绝对值不超过1**。
+
+**示例：**
+
+```
+示例 1:
+
+给定二叉树 [3,9,20,null,null,15,7]
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回 true 。
+
+示例 2:
+
+给定二叉树 [1,2,2,3,3,null,null,4,4]
+
+       1
+      / \
+     2   2
+    / \
+   3   3
+  / \
+ 4   4
+返回 false 。
+```
+
+**思路与算法：**
+
+根据定义，一棵二叉树$T$存在节点$p\in T$，满足$|\texttt{height}(p.left) - \texttt{height}(p.right)| > 1$时，它是不平衡的。下图中每个节点的高度都被标记出来，高亮区域是一棵不平衡子树：
+
+<div align=center><img src=LeetCode\110_1.png width=60%></div>
+
+**自顶向下递归：**
+
+定义方法$\texttt{height}$，用于计算任意一个节点$p\in T$的高度：
+
+<div align=left><img src=LeetCode\110_2.jpg></div>
+
+接下来就是比较每个节点左右子树的高度。在一棵以$r$为根节点的树$T$中，只有每个节点左右子树高度差不大于1时，该树才是平衡的。因此可以比较每个节点左右两棵子树的高度差，然后向上递归：
+
+<div align=left><img src=LeetCode\110.gif></div>
+
+**代码实现：**
+
+```java
+package solution;
+
+/**
+ * leetcode_110_平衡二叉树
+ * @author Chenzf
+ * @date 2020/7/12
+ * @version 1.0
+ */
+
+public class BalancedBinaryTree {
+    /**
+     * Recursively obtain the height of a tree.
+     * An empty tree has -1 height
+     */
+    private int height(TreeNode node) {
+        // An empty tree has height -1
+        if (node == null) {
+            return -1;
+        }
+
+        return 1 + Math.max(height(node.left), height(node.right));
+    }
+
+    public boolean isBalanced(TreeNode node) {
+        // An empty tree satisfies the definition of a balanced tree
+        if (node == null) {
+            return true;
+        }
+
+        // Check if subtrees have height within 1. 
+        // If they do, check if the subtrees are balanced
+        return Math.abs(height(node.left) - height(node.right)) < 2
+                && isBalanced(node.left) && isBalanced(node.right);
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(n\log n)$。
+- 空间复杂度：$\mathcal{O}(n)$。
+
+
+**自底向上的递归：**
+
+自顶向下递归计算$\texttt{height}$存在大量冗余。每次调用$\texttt{height}$时，要同时计算其子树高度。但是自底向上计算，每个子树的高度只会计算一次。可以递归先计算当前节点的子节点高度，然后再通过子节点高度判断当前节点是否平衡，从而**消除冗余**。
+
+首先判断子树是否平衡，然后比较子树高度判断父节点是否平衡。算法如下：
+
+<div align=left><img src=LeetCode\110_1.gif></div>
+
+```java
+package solution;
+
+/**
+ * leetcode_110_平衡二叉树
+ * @author Chenzf
+ * @date 2020/7/12
+ * @version 2.0 自底向上递归
+ */
+
+public class BalancedBinaryTree {
+    public boolean isBalanced(TreeNode node) {
+        return isBalancedTreeHelper(node).balanced;
+    }
+
+    /**
+     * Return whether or not the tree at root is balanced while also storing
+     * the tree's height in a reference variable.
+     */
+    private TreeInfo isBalancedTreeHelper(TreeNode node) {
+        // An empty tree is balanced and has height = -1
+        if (node == null) {
+            return new TreeInfo(-1, true);
+        }
+
+        // Check subtrees to see if they are balanced.
+        TreeInfo left = isBalancedTreeHelper(node.left);
+        if (! left.balanced) {
+            return new TreeInfo(-1, false);
+        }
+
+        TreeInfo right = isBalancedTreeHelper(node.right);
+        if (! right.balanced) {
+            return new TreeInfo(-1, false);
+        }
+
+        // Use the height obtained from the recursive calls to
+        // determine if the current node is also balanced.
+        if (Math.abs(left.height - right.height) < 2) {
+            return new TreeInfo(Math.max(left.height, right.height) + 1, true);
+        }
+        
+        return new TreeInfo(-1, false);
+    }
+}
+
+/**
+ * Utility class to store information from recursive calls
+ */
+final class TreeInfo {
+    public final int height;
+    public final boolean balanced;
+
+    public TreeInfo(int height, boolean balanced) {
+        this.height = height;
+        this.balanced = balanced;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(n)$，计算每棵子树的高度和判断平衡操作都在恒定时间内完成。
+- 空间复杂度：$\mathcal{O}(n)$，如果树不平衡，递归栈可能达到$\mathcal{O}(n)$。
+
+
+
+
+## 450. 删除二叉搜索树中的节点(中等)
+
+**题目描述：**
+
+给定一个二叉搜索树的根节点root和一个值key，删除二叉搜索树中的key对应的节点，并**保证二叉搜索树的性质不变**。返回二叉搜索树（有可能被更新）的根节点的引用。
+
+**示例：**
+
+```
+root = [5,3,6,2,4,null,7]
+key = 3
+
+    5
+   / \
+  3   6
+ / \   \
+2   4   7
+
+给定需要删除的节点值是 3，所以我们首先找到 3 这个节点，然后删除它。
+
+一个正确的答案是 [5,4,6,2,null,null,7], 如下图所示。
+
+    5
+   / \
+  4   6
+ /     \
+2       7
+
+另一个正确答案是 [5,2,6,null,4,null,7]。
+
+    5
+   / \
+  2   6
+   \   \
+    4   7
+```
+
+### 二叉搜索树的三个特性
+
+**二叉搜索树的中序遍历的序列是递增排序的序列**。中序遍历的遍历次序：`Left -> Node -> Right`
+
+```java
+public LinkedList<Integer> inorder(TreeNode root, LinkedList<Integer> arr) {
+    if (root == null) return arr;
+    inorder(root.left, arr);
+    arr.add(root.val);
+    inorder(root.right, arr);
+    return arr;
+} 
+```
+
+<div align=center><img src=LeetCode\450_1.jpg width=80%></div>
+
+`Successor`代表的是中序遍历序列的下一个节点。即**比当前节点大的最小节点**，简称**后继节点**。 **先取当前节点的右节点，然后一直取该节点的左节点，直到左节点为空，则最后指向的节点为后继节点**。
+
+```java
+public int successor(TreeNode root) {
+    root = root.right;
+    while (root.left != null) root = root.left;
+    return root;
+} 
+```
+
+`Predecessor`代表的是中序遍历序列的前一个节点。即**比当前节点小的最大节点**，简称**前驱节点**。**先取当前节点的左节点，然后取该节点的右节点，直到右节点为空，则最后指向的节点为前驱节点**。
+
+```java
+public int predecessor(TreeNode root) {
+    root = root.left;
+    while (root.right != null) root = root.right;
+    return root;
+} 
+```
+
+<div align=center><img src=LeetCode\450_2.jpg width=80%></div>
+
+
+**思路与算法：**
+
+这里有三种可能的情况：
+
+- 要删除的节点为**叶子节点**，可以直接删除：
+
+<div align=center><img src=LeetCode\450_3.jpg width=80%></div>
+
+- 要删除的几点不是叶子节点且**拥有右节点**，则**该节点可以由该节点的后继节点进行替代**，该后继节点位于右子树中较低的位置。然后可以从后继节点的位置递归向下操作以删除后继节点。
+
+<div align=center><img src=LeetCode\450_4.jpg width=80%></div>
+
+- 要删除的节点不是叶子节点，且**没有右节点但是有左节点**。这意味着它的后继节点在它的上面，但是我们并不想返回。我们可以**使用它的前驱节点进行替代**，然后再递归的向下删除前驱节点。
+
+<div align=center><img src=LeetCode\450_5.jpg width=80%></div>
+
+
+**算法：**
+
+- 如果`key > root.val`，说明要删除的节点在右子树，`root.right = deleteNode(root.right, key)`。
+- 如果`key < root.val`，说明要删除的节点在左子树，`root.left = deleteNode(root.left, key)`。
+- 如果`key == root.val`，则该节点就是我们要删除的节点，则：
+  - 如果该节点是叶子节点，则直接删除它：`root = null`。
+  - 如果该节点**不是叶子节点且有右节点，则用它的后继节点的值替代**`root.val = successor.val`，然后删除后继节点。
+  - 如果该节点不是叶子节点且**只有左节点**，则**用它的前驱节点的值替代**`root.val = predecessor.val`，然后删除前驱节点。
+- 返回root。
+
+<div align=center><img src=LeetCode\450_6.jpg width=80%></div>
+
+**代码实现：**
+
+```java
+package solution;
+
+/**
+ * leetcode_450_删除二叉搜索树中的节点
+ * @author Chenzf
+ * @date 2020/7/12
+ * @version 1.0
+ */
+
+public class DeleteNodeInBST {
+
+    /**
+     * 寻找当前节点的后继节点
+     * One step right and then always left
+     * @param node
+     * @return
+     */
+    public int successor(TreeNode node) {
+        node = node.right;
+        while (node.left != null) {
+            node = node.left;
+        }
+        return node.val;
+    }
+
+    /**
+     * 寻找当前节点的前驱节点
+     * One step left and then always right
+     * @param node
+     * @return
+     */
+    public int predecessor(TreeNode node) {
+        node = node.left;
+        while (node.right != null) {
+            node = node.right;
+        }
+        return node.val;
+    }
+
+    /**
+     * 删除一个节点
+     * @param node
+     * @param key
+     * @return
+     */
+    public TreeNode deleteNode(TreeNode node, int key) {
+        if (node == null) {
+            return null;
+        }
+
+        if (key > node.val) {
+            // delete from the right subtree
+            node.right = deleteNode(node.right, key);
+        } else if (key < node.val) {
+            // delete from the left subtree
+            node.left = deleteNode(node.left, key);
+        } else {
+            // delete the current node
+
+            // the node is a leaf
+            if (node.left == null && node.right == null) {
+                node = null;
+            } else if (node.right != null) {
+                // the node is not a leaf and has a right child
+                node.val = successor(node);
+                node.right = deleteNode(node.right, node.val);
+            } else {
+                // the node is not a leaf, has no right child, and has a left child
+                node.val = predecessor(node);
+                node.left = deleteNode(node.left, node.val);
+            }
+        }
+
+        return node;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(\log N)$。在算法的执行过程中，我们一直在树上向左或向右移动。首先先用$\mathcal{O}(H_1)$的时间找到要删除的节点，$H_1$值得是从根节点到要删除节点的高度。然后删除节点需要$\mathcal{O}(H_2)$的时间，$H_2$指的是从要删除节点到替换节点的高度。由于$\mathcal{O}(H_1 + H_2) = \mathcal{O}(H)$，$H$值得是树的高度，若树是一个平衡树则 $H = \log N$。
+- 空间复杂度：$\mathcal{O}(H)$，递归时堆栈使用的空间，$H$是树的高度。
+
+
+
+
+## 700. 二叉搜索树中的搜索(简单)
+
+**题目描述：**
+
+给定二叉搜索树(BST)的根节点和一个值。 你需要在BST中找到节点值等于给定值的节点。返回以该节点为根的子树。如果节点不存在，则返回NULL。
+
+**示例：**
+
+```
+给定二叉搜索树:
+
+        4
+       / \
+      2   7
+     / \
+    1   3
+
+和值: 2
+
+你应该返回如下子树:
+
+      2     
+     / \   
+    1   3
+
+在上述示例中，如果要找的值是 5，但因为没有节点值为 5，我们应该返回 NULL。
+```
+
+<div align=center><img src=LeetCode\700_1.png width=70%></div>
+
+
+**思路与算法：**
+
+**递归**实现非常简单：
+
+- 如果根节点为空`root == null`或者根节点的值等于搜索值`val == root.val`，返回根节点。
+- 如果`val < root.val`，进入根节点的左子树查找`searchBST(root.left, val)`。
+- 如果`val > root.val`，进入根节点的右子树查找`searchBST(root.right, val)`。
+- 返回根节点。
+
+<div align=center><img src=LeetCode\700_2.png width=70%></div>
+
+```java {.line-numbers highlight=16}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf 
+ * @date 2020/7/12
+ * @version 1.0 递归
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        if (node == null || value == node.val) {
+            return node;
+        }
+        
+        return value < node.val ? searchBST(node.left, value) : searchBST(node.right, value);
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+
+- 空间复杂度：$\mathcal{O}(H)$，**递归栈**的深度为$H$。平均情况下深度为$\mathcal{O}(\log N)$，最坏情况下深度为$\mathcal{O}(N)$。
+
+
+为了降低空间复杂度，将递归转换为**迭代**：
+
+- 如果根节点不空`root != null`且根节点不是目的节点`val != root.val`：
+  - 如果`val < root.val`，进入根节点的左子树查找`root = root.left`。
+  - 如果`val > root.val`，进入根节点的右子树查找`root = root.right`。
+- 返回root。
+
+<div align=center><img src=LeetCode\700_3.png width=70%></div>
+
+```java {.line-numbers highlight=12-13}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf
+ * @date 2020/7/12
+ * @version 2.0 迭代
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        while (node != null && value != node.val) {
+            node = value < node.val ? node.left : node.right;
+        }
+        
+        return node;
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+- 空间复杂度：$\mathcal{O}(1)$，恒定的额外空间。
+
+
+**递归与迭代的区别：**
+
+- 递归：**重复调用函数自身**实现循环称为递归；
+- 迭代：利用变量的**原值推出新值**称为迭代，或者说迭代是**函数内某段代码实现循环**；
 
 
 ## 968. 监控二叉树(困难)
