@@ -33,6 +33,7 @@ Java合集框架支持以下两种类型的容器：
   - `Queue`用于存储采用**先进先出**方式处理的对象。
   - `Priority Queue`用于存储按照**优先级顺序**处理的对象。
 
+<div align=center><img src=DataStructure\容器.jpg></div>
 
 `Collection接口`为线性表、向量、栈、队列，优先队列以及集合定义了共同的操作。在Java合集框架中定义的所有接口和类都分组在`java.util`包中。
 
@@ -987,7 +988,8 @@ https://www.jianshu.com/p/8324a34577a0
 ### 概述
 
 HashMap存储的是key-value的键值对，允许key为null，也允许value为null。
-HashMap内部为数组+链表的结构，会**根据key的hashCode值来确定数组的索引**(确认放在哪个桶里)，如果遇到索引相同的key，桶的大小是2，假设一个key的hashCode是7，一个key的hashCode是3，那么他们就会被分到一个桶中(hash冲突)。**如果发生hash冲突，HashMap会将同一个桶中的数据以链表的形式存储**，但是如果发生hash冲突的概率比较高，就会导致**同一个桶中的链表长度过长**，遍历效率降低，所以在JDK1.8中**如果链表长度到达阀值(默认是8)，就会将链表转换成红黑二叉树**。
+
+HashMap内部为数组+链表的结构，会**根据key的hashCode值来确定数组的索引**(确认放在哪个桶里)。遇到索引相同的key，那么他们就会被分到一个桶中(hash冲突)。**如果发生hash冲突，HashMap会将同一个桶中的数据以链表的形式存储**，但是如果发生hash冲突的概率比较高，就会导致**同一个桶中的链表长度过长**，遍历效率降低，所以在JDK1.8中**如果链表长度到达阀值(默认是8)，就会将链表转换成红黑二叉树**。
 
 
 - 无序，允许为`null`，**非同步**；
@@ -1080,7 +1082,7 @@ HashMap中的**红黑树节点** 采用**TreeNode类**实现：
 
 ### HashMap中的重要参数
 
-有时候两个key的hashCode可能会定位到一个桶中，这时就发生了**hash冲突**，如果HashMap的**hash算法越散列**，那么发生hash冲突的概率越低；如果数组越大，那么发生hash冲突的概率也会越低，但是数组越大带来的**空间开销越多**，但是遍历速度快。这就要在空间和时间上进行权衡，这就要看看HashMap的扩容机制，在说扩容机制之前先看几个比较重要的字段：
+**有时候两个key的hashCode可能会定位到一个桶中**，这时就发生了**hash冲突**，如果HashMap的**hash算法越散列**，那么发生hash冲突的概率越低；如果数组越大，那么发生hash冲突的概率也会越低，但是数组越大带来的**空间开销越多**，但是遍历速度快。这就要在空间和时间上进行权衡，这就要看看HashMap的扩容机制，在说扩容机制之前先看几个比较重要的字段：
 
 ```java
 /**
@@ -1167,8 +1169,8 @@ HashMap的**默认初始长度是16**，并且每次自动扩展或是手动初�
 #### 加载因子
 
 装载因子的默认值是`0.75`，无论是初始大了还是初始小了对我们HashMap的性能都不好：
-- 装载因子初始值大了，可以减少散列表再散列(扩容的次数)，但同时会导致散列冲突的可能性变大(散列冲突也是耗性能的一个操作，要得操作链表(红黑树)！
-- 装载因子初始值小了，可以减小散列冲突的可能性，但同时扩容的次数可能就会变多！
+- 装载因子初始值**大**了，可以减少散列表再散列(**减少扩容的次数**)，但同时会导致**散列冲突的可能性变大**！
+- 装载因子初始值**小**了，可以**减小散列冲突的可能性**，但同时**扩容的次数可能就会变多**！
 
 <div align=center><img src=DataStructure\HashMap21.jpg></div>
 
@@ -1353,7 +1355,7 @@ public class HashMap<K,V>
 
 ### 确定哈希桶数据索引位置
 
-Hash，一般翻译做**散列**，也有直接音译为**哈希**的，就是**把任意长度的输入，通过散列算法，变换成固定长度的输出，该输出就是散列值**。这种转换是一种**压缩映射**，也就是，**散列值的空间通常远小于输入的空间**，不同的输入可能会散列成相同的输出，所以不可能从散列值来唯一的确定输入值。简单的说就是一种将任意长度的消息压缩到某一固定长度的消息摘要的函数。
+Hash，一般翻译做**散列**，也有直接音译为**哈希**的，就是**把任意长度的输入，通过散列算法，变换成固定长度的输出，该输出就是散列值**。这种转换是一种**压缩映射**，也就是，**散列值的空间通常远小于输入的空间**，不同的输入**可能会散列成相同的输出**，所以不可能从散列值来唯一的确定输入值。简单的说就**是一种将任意长度的消息压缩到某一<font color=red>固定长度</font>的消息摘要的函数**。
 
 所有散列函数都有如下一个基本特性：**根据同一散列函数计算出的散列值如果不同，那么输入值肯定也不同。但是，根据同一散列函数计算出的散列值如果相同，输入值不一定相同**。
 
@@ -1363,9 +1365,9 @@ Hash，一般翻译做**散列**，也有直接音译为**哈希**的，就是**
 
 因为**HashMap扩容每次都是扩容为原来的2倍**，所以length总是2的次方，这是非常规的设置，常规设置是把桶的大小设置为素数，因为素数发生hash冲突的概率要小于合数，比如HashTable的默认值设置为11，就是桶的大小为素数的应用(HashTable扩容后不能保证是素数)。HashMap采用这种设置是为了在取模和扩容的时候做出优化。
 
-hashMap是通过**key的hashCode的高16位和低16位异或(不同则为1)**后和桶的数量**取模**得到**索引位置**，即`key.hashcode()^(hashcode>>>16)%length`，当length是2^n时，`h & (length-1)`运算等价于`h % length`，而&操作比%效率更高。而采用高16位和低16位进行异或，也可以让所有的位数都参与运算，使得在length比较小的时候也可以做到尽量的散列。
+hashMap是通过**key的hashCode的高16位和低16位异或(不同则为1)**后和桶的数量**取模**得到**索引位置**，即`key.hashcode()^(hashcode>>>16)%length`，当length是2^n时，`h & (length-1)`运算等价于`h % length`，而&操作比%效率更高。而**采用高16位和低16位进行异或，也可以让所有的位数都参与运算，使得在length比较小的时候也可以做到尽量的散列**。
 
-在**扩容**的时候，**如果length每次是2^n**，那么重新计算出来的索引只有两种情况，一种是**old索引+16**，另一种是**索引不变**，所以就不需要每次都重新计算索引。
+在**扩容**的时候，**如果length每次是2^n**，那么重新计算出来的索引只有两种情况，一种是**old索引+16**，另一种是**索引不变**，所以就**不需要每次都重新计算索引**(JDK1.7中HashMap需要)。
 
 #### 扰动函数
 
@@ -1739,7 +1741,7 @@ HashMap的Resize不是简单地把长度扩大，而是经过下面两个步骤�
 1. 扩容：创建一个新的Entry空数组，**长度是原数组的2倍**。
 2. ReHash：遍历原Entry数组，把所有的Entry重新Hash到新数组。
 
-JDK1.7在扩容后，需按照原来方法重新计算，即`hashCode()->> 扰动处理 ->>(h & length-1)`！
+**JDK1.7在扩容后，需按照原来方法重新计算**，即`hashCode()->> 扰动处理 ->>(h & length-1)`！
 
 为什么要重新Hash呢？因为**长度扩大以后，Hash的规则也随之改变**。
 
@@ -1754,7 +1756,7 @@ Resize后的HashMap：
 <div align=center><img src=DataStructure\HashMap8.png width=70%></div>
 
 
-高并发环境下，JDK1.7中HashMap可能出现的致命问题：
+**高并发环境下**，JDK1.7中HashMap可能出现的致命问题：
 
 假设一个HashMap已经到了Resize的临界点。此时有两个线程A和B，在同一时刻对HashMap进行Put操作：
 
@@ -1839,7 +1841,7 @@ e = Entry3
 Entry2.next = Entry3
 Entry3.next = Entry2
 ```
-链表出现了环形：
+**链表出现了环形**：
 
 <div align=center><img src=DataStructure\HashMap31.png width=70%></div>
 
@@ -1867,7 +1869,7 @@ Entry3.next = Entry2
 
 <div align=center><img src=DataStructure\HashMap10.png></div>
 
-元素在重新计算hash之后，因为n变为2倍，那么n-1的mask范围在高位多1bit(红色)，因此新的index就会发生这样的变化：
+元素在重新计算hash之后，**因为n变为2倍，那么n-1的mask范围在高位多1bit(红色)**，因此新的index就会发生这样的变化：
 
 <div align=center><img src=DataStructure\HashMap11.png></div>
 
@@ -2011,15 +2013,15 @@ https://blog.csdn.net/qq_36520235/article/details/82417949
    那么他们为什么要这样做呢？
    因为JDK1.7是用单链表进行的纵向延伸，当采用头插法时会容易出现**逆序且环形链表死循环**问题。但是在JDK1.8之后是因为加入了**红黑树**使用尾插法，能够避免出现逆序且链表死循环的问题。
 
-2. 扩容后数据存储位置的计算方式也不一样：
-   - 在JDK1.7的时候是**直接用hash值和需要扩容的二进制数进行&**（这里就是为什么扩容的时候为啥一定必须是2的幂次的原因所在，因为如果只有2的n次幂的情况时最后一位二进制数才一定是1，这样能最大程度减少hash碰撞）（`hash值 & length-1`）；
-   - 而在JDK1.8的时候直接用了JDK1.7的时候计算的规律，也就是**扩容前的原始位置+扩容的大小值=JDK1.8的计算方式**，而不再是JDK1.7的那种异或的方法。但是这种方式就相当于**只需要判断Hash值的新增参与运算的位是0还是1**就直接迅速计算出了扩容后的储存方式。
-3. JDK1.7的时候使用的是**数组+单链表**的数据结构。但是在JDK1.8及之后时，使用的是**数组+链表+红黑树**的数据结构（当链表的深度达到8的时候，也就是默认阈值，就会**自动扩容把链表转成红黑树的数据结构**来把时间复杂度从$O(n)$变成$O(logN)$提高了效率）
+2. **扩容后数据存储位置的计算方式**也不一样：
+   - 在JDK1.7的时候是**直接用hash值和需要扩容的二进制数进行&**（这里就是为什么扩容的时候为啥一定必须是2的幂次的原因所在，因为如果只有2的n次幂的情况时最后一位二进制数才一定是1，这样能**最大程度减少hash碰撞**）（`hash值 & length-1`）；
+   - 而在JDK1.8的时候直接用了JDK1.7的时候计算的规律，却简化成**扩容前的原始位置+扩容的大小值=JDK1.8的计算方式**。这种方式相当于**只需要判断Hash值的新增参与运算的位是0还是1**就直接迅速计算出了扩容后的储存方式。
+3. JDK1.7的时候使用的是**数组+单链表**的**数据结构**。但是在JDK1.8及之后时，使用的是**数组+链表+红黑树**的数据结构（当链表的深度达到8的时候，也就是默认阈值，就会**自动扩容把链表转成红黑树的数据结构**来把时间复杂度从$O(n)$变成$O(logN)$提高了效率）
 
 **数据结构的区别：**
 <div align=center><img src=DataStructure\HashMap5.webp></div>
 
-**获取数据的区别：**
+**插入数据的区别：**
 <div align=center><img src=DataStructure\HashMap.webp></div>
 
 **扩容机制的区别：**
@@ -2517,4 +2519,469 @@ visit	1
 <div align=center><img src=DataStructure\Map总结.jpg></div>
 
 
+# 红黑树
 
+要学习红黑树，需要先了解二叉查找树。
+
+## 二叉查找树
+
+
+一棵二叉查找树(BST)是一棵二叉树，其中每个结点都含有一个Comparable的键(以及相关联的值)且每个结点的键都**大于其左子树中的任意结点的键**，而**小于右子树的任意结点的键**。
+
+画出二叉查找树时，会将键写在结点上，用键来指代结点：
+<div align=center><img src=DataStructure\BST结构.jpg></div>
+
+二叉查找树的特点：
+
+- 左子树上所有结点的值均小于或等于它的根结点的值。
+- 右子树上所有结点的值均大于或等于它的根结点的值。
+- 左、右子树也分别为二叉排序树。
+
+### 数据表示
+
+嵌套定义了一个私有类来表示二叉查找树上的一个结点，每个结点都含有一个键、一个值、一条左链接、一条右链接和一个结点计数器：
+
+```java
+private class Node {
+    private Key key;                     // 键
+    private Value value;                 // 值
+    private Node left, right;            // 指向子树的链接
+    private int number;                  // 以该结点为根的子树中的结点总数
+
+    public Node(Key key, Value value, int number) {
+        this.key = key;
+        this.value = value;
+        this.number = number;
+    }
+}
+```
+
+一棵二叉查找树代表了一组键及其相应的值的集合，而同一个集合可以用多棵不同的二叉查找树来表示，将一棵二叉查找树的所有键投影到一条直线上，保证一个结点的左子树中的键出现在它的左边，右子树中的键出现在它的右边：
+
+<div align=center><img src=DataStructure\两棵BST代表同一个集合.jpg></div>
+
+### 查找
+
+<div align=center><img src=DataStructure\查找.jpg></div>
+
+查找的过程运用了二分查找的思想，查找所需的**最大次数**等于二叉查找树的高度。
+
+```java
+public Value get(Key key) {
+    return get(root, key);
+}
+
+private Value get(Node node, Key key) {
+
+    // 在以node为根结点的子树中查找，并返回key所对应的值
+    if (node == null) {
+        return null;
+    }
+
+    int cmp = key.compareTo(node.key);
+    if (cmp < 0) {
+        return get(node.left, key);
+    } else if (cmp > 0) {
+        return get(node.right, key);
+    } else {
+        return node.value;
+    }
+}
+```
+
+### 插入
+<div align=center><img src=DataStructure\插入.jpg></div>
+
+```java
+    // 插入
+    public void put(Key key, Value value) {
+        root = put(root, key, value);
+    }
+
+    private Node put(Node node, Key key, Value value) {
+        if (node == null) {
+            return new Node(key, value, 1);
+        }
+
+        int cmp = key.compareTo(node.key);
+        if (cmp < 0) {
+            node.left = put(node.left, key, value);
+        } else if (cmp > 0) {
+            node.right = put(node.right, key, value);
+        } else {
+            node.value = value;
+        }
+
+        node.number = size(node.left) + size(node.right) + 1;
+        return node;
+
+    }
+```
+
+### 删除
+
+二叉查找树的删除分成三种情况：
+
+**情况1，待删除的结点没有子节点：**
+
+<div align=center><img src=DataStructure\二叉查找树删除.jpg width=50%></div>
+
+上图中，待删除的节点12是叶子节点，没有孩子，因此直接删除即可：
+
+<div align=center><img src=DataStructure\二叉查找树删除1.jpg width=50%></div>
+
+**情况2，待删除的节点有一个孩子：**
+
+<div align=center><img src=DataStructure\二叉查找树删除2.jpg width=50%></div>
+
+待删除的节点13只有左孩子，于是我们让左孩子节点11取代被删除的节点，节点11以下的节点关系无需变动：
+
+<div align=center><img src=DataStructure\二叉查找树删除3.jpg width=50%></div>
+
+**情况3，待删除的结点有两个孩子：**
+
+<div align=center><img src=DataStructure\二叉查找树删除4.jpg width=50%></div>
+
+上图中，待删除的节点5有两个孩子，这种情况比较复杂。此时，我们需要选择与待删除节点最接近的节点来取代它。节点3仅小于节点5，节点6仅大于节点5，两者都是合适的选择。但习惯上我们选择仅大于待删除节点的节点，也就是节点6来取代它。
+
+于是我们复制节点6到原来节点5的位置：
+
+<div align=center><img src=DataStructure\二叉查找树删除5.jpg width=50%></div>
+
+被选中的节点6，仅大于节点5，因此一定没有左孩子。所以我们按照情况1或情况2的方式，删除多余的节点6:
+
+<div align=center><img src=DataStructure\二叉查找树删除6.jpg width=50%></div>
+
+
+### 二叉查找树的缺陷
+
+**二叉查找树的缺陷**体现在插入新节点的时候：
+
+假设初始的二叉查找树只有三个节点，根节点值为9，左孩子值为8，右孩子值为12。接下来我们依次插入如下五个节点：7,6,5,4,3：
+
+<div align=center><img src=DataStructure\二叉查找树的缺陷.jpg width=40%></div>
+
+二叉查找树多次插入新节点可能会导致**不平衡**，此时查找的性能大打折扣，机会变成了线性查找。
+
+
+## RedBlackTree规则
+
+红黑树是一种自平衡的二叉查找树，除了符合二叉查找树的基本特性外，它还具备以下特点：
+
+1. 根结点是黑色。
+2. 结点是红色或黑色。
+3. 每个叶子结点都是黑色的空结点（NIL结点）。
+4. 每个红色结点的两个子结点都是黑色。(从每个叶子到根的所有路径上不能有两个连续的红色结点)
+5. 从任一结点到其每个叶子的所有路径都包含相同数目的黑色结点。
+
+<div align=center><img src=DataStructure\红黑树.jpg></div>
+
+正是因为这些规则限制，才保证了红黑树的自平衡。**红黑树从根节点到叶子的最长路径不会超过最短路径的2倍**。
+
+当插入或删除节点时，红黑树的规则有可能被打破。这时候就需要做出一些调整，从而继续满足红黑树的规则。
+
+## 红黑树调整方法
+
+向原红黑树插入值为14的新节点，由于父节点15是黑色节点，因此这种情况并不会破坏红黑树的规则，无需做任何调整：
+
+<div align=center><img src=DataStructure\红黑树1.jpg></div>
+
+向原红黑树插入值为21的新节点，由于父节点22是红色节点，因此这种情况打破了红黑树的规则（每个红色结点的两个子结点都是黑色），必须进行调整，使之重新符合红黑树的规则：
+
+<div align=center><img src=DataStructure\红黑树2.jpg></div>
+
+调整的方法有两种：变色和旋转，而选装又包含两种方式：左旋转和右旋转。
+
+### 变色
+
+为了重新符合红黑树的规则，尝试把红色结点变为黑色，或者把黑色结点变为红色。
+
+下图所表示的是红黑树的一部分（子树），新插入的节点Y是红色节点，它的父亲节点X也是红色的，不符合规则，因此可以把节点X从红色变成黑色：
+
+<div align=center><img src=DataStructure\红黑树3.jpg></div>
+
+但是，仅仅把一个节点变色，会导致相关路径凭空多出一个黑色节点，这样就打破了规则5。因此，需要对其他节点做进一步的调整。
+
+### 左旋转
+
+**逆时针**旋转红黑树的两个节点，使得**父节点被自己的右孩子取代，而自己成为自己的左孩子**。
+
+<div align=center><img src=DataStructure\红黑树4.jpg width=70%></div>
+
+### 右旋转
+
+顺时针旋转红黑树的两个节点，使得父节点被自己的左孩子取代，而自己成为自己的右孩子。
+
+<div align=center><img src=DataStructure\红黑树5.jpg width=70%></div>
+
+### 插入新节点出现的情形
+
+在红黑树插入新节点时，可以分为5种不同的情形：
+
+**情形一：新节点（A）位于树根，没有父结点**
+
+<div align=center><img src=DataStructure\红黑树6.jpg width=20%></div>
+
+上图中，空心三角形代表节点下面的子树。
+
+出现这种情形时，直接让新节点变色为黑色，规则1得到满足。同时，黑色的根节点使得每条路径上的黑色节点数目都增加了1，所以并没有打破规则5。
+
+<div align=center><img src=DataStructure\红黑树7.jpg width=50%></div>
+
+**情形二：新节点（B）的父节点是黑色**
+
+出现这种情形时，新插入的红色结点B并没有打破红黑树的规则，所以不需要做任何调整。
+
+<div align=center><img src=DataStructure\红黑树8.jpg width=20%></div>
+
+**情形三：新节点D的父节点和叔叔节点都是红色**
+
+<div align=center><img src=DataStructure\红黑树9.jpg width=30%></div>
+
+出现这种情形时，两个红色节点B和D连续，违反了规则4。因此我们先让节点B变为黑色：
+
+<div align=center><img src=DataStructure\红黑树10.jpg width=60%></div>
+
+这样一来，节点B所在路径凭空多了一个黑色节点，打破了规则5。因此我们让节点A变为红色：
+
+<div align=center><img src=DataStructure\红黑树11.jpg width=60%></div>
+
+这时候，节点A和C又成为了连续的红色节点，我们再让节点C变为黑色：
+
+<div align=center><img src=DataStructure\红黑树12.jpg width=60%></div>
+
+经过上面的调整，**这一局部**重新符合了红黑树的规则。
+
+**情形四：新节点（D）的父节点是红色，叔叔节点是黑色或者没有叔叔，且新节点是父节点的右孩子，父节点（B）是祖父节点的左孩子。**
+
+<div align=center><img src=DataStructure\红黑树13.jpg width=30%></div>
+
+我们以节点B为轴，做一次**左旋转**，使得新节点D成为父节点，原来的父节点B成为D的左孩子：
+
+<div align=center><img src=DataStructure\红黑树14.jpg width=60%></div>
+
+这样一来，就变成了情形五。
+
+**情形五：新节点（D）的父节点是红色，叔叔节点是黑色或者没有叔叔，且新节点是父节点的左孩子，父节点（B）是祖父节点的左孩子。**
+
+<div align=center><img src=DataStructure\红黑树15.jpg width=30%></div>
+
+以结点A为轴，做一次右旋转，使得节点B成为祖父节点，节点A成为节点B的右孩子：
+
+<div align=center><img src=DataStructure\红黑树16.jpg width=65%></div>
+
+接下来，我们让节点B变为黑色，节点A变为红色：
+
+<div align=center><img src=DataStructure\红黑树17.jpg width=65%></div>
+
+经过上面的调整，**这一局部**重新符合了红黑树的规则。
+
+如果情形4和情形5当中的父节点B是祖父节点A的右孩子该怎么办呢？
+
+很简单，如果情形4中的父节点B是右孩子，则成为了情形5的镜像，原本的右旋操作改为左旋；如果情形5中的父节点B是右孩子，则成为了情形4的镜像，原本的左旋操作改为右旋。
+
+
+### 红黑树插入示例
+
+给定下面这颗红黑树，新插入的节点是21：
+
+<div align=center><img src=DataStructure\红黑树18.jpg></div>
+
+显然，新节点21和它的父节点22是连续的红色节点，违背了规则4，我们应该如何调整呢？
+
+当前的情况符合情形3：“新结点的父结点和叔叔结点都是红色。”
+
+于是经过三次变色，22变为黑色，25变为红色，27变为黑色：
+
+<div align=center><img src=DataStructure\红黑树19.jpg></div>
+
+经过上面的调整，以节点25为根的子树符合了红黑树规则，但节点25和节点17成为了连续的红色节点，违背规则4。
+
+于是，我们把节点25看做一个新节点，正好符合情形5的镜像：“新节点的父节点是红色，叔叔节点是黑色或者没有叔叔，且新节点是父节点的右孩子，父节点是祖父节点的右孩子”
+
+于是我们以根节点13为轴进行左旋转，使得节点17成为了新的根节点：
+
+<div align=center><img src=DataStructure\红黑树20.jpg></div>
+
+接下来，让节点17变为黑色，节点13变为红色：
+
+<div align=center><img src=DataStructure\红黑树21.jpg></div>
+
+如此一来，调整后的红黑树变得重新符合规则。
+
+
+
+### 红黑树删除步骤
+
+待删除的是黑色节点1，有一个右孩子：
+
+<div align=center><img src=DataStructure\红黑树22.jpg></div>
+
+根据二叉查找树的删除流程，让右孩子节点6直接取代结点1：
+
+<div align=center><img src=DataStructure\红黑树23.jpg></div>
+
+显然，这棵新的二叉树打破了两个规则：规则4.每个红色节点的两个子节点都是黑色。规则5.从任一节点到其每个叶子的所有路径都包含相同数目的黑色节点。
+
+
+**第一步：如果待删除节点有两个非空的孩子节点，转化成待删除节点只有一个孩子（或没有孩子）的情况。**
+
+<div align=center><img src=DataStructure\红黑树24.jpg width=30%></div>
+
+上面例子是一颗红黑树的局部，标数字的三角形代表任意形态的子树，假设结点8是待删除节点。
+
+根据二叉查找树删除流程，由于节点8有两个孩子，我们选择仅大于8的节点10复制到8的位置，节点颜色变成待删除节点的颜色：
+
+<div align=center><img src=DataStructure\红黑树25.jpg width=30%></div>
+
+接下来我们需要删除节点10。节点10能成为仅大于8的节点，必定没有左孩子节点，所以问题转换成了待删除节点只有一个右孩子（或没有孩子）的情况。接下来我们进入第二步。
+
+
+**第二步：根据待删除节点和其唯一子节点的颜色，分情况处理。**
+
+- **情况1，自身是红色，子节点是黑色：**
+
+<div align=center><img src=DataStructure\红黑树26.jpg width=20%></div>
+
+这种情况最简单，按照二叉查找树的删除操作，删除节点1即可：
+
+<div align=center><img src=DataStructure\红黑树27.jpg width=15%></div>
+
+- **情况2，自身是黑色，子节点是红色：**
+
+<div align=center><img src=DataStructure\红黑树28.jpg width=20%></div>
+
+首先按照二叉查找树的删除操作，删除节点1。此时，这条路径凭空减少了一个黑色节点，那么我们把节点2变成黑色即可：
+
+<div align=center><img src=DataStructure\红黑树27.jpg width=15%></div>
+
+- **情况3，自身是黑色，子节点也是黑色，或者子节点是空叶子节点：**
+
+<div align=center><img src=DataStructure\红黑树29.jpg width=20%></div>
+
+这种情况最复杂，涉及到很多变化。首先我们还是按照二叉查找树的删除操作，删除结点1：
+
+<div align=center><img src=DataStructure\红黑树27.jpg width=15%></div>
+
+显然，这条路径上减少了一个黑色节点，而且节点2再怎么变色也解决不了。
+
+这时候我们进入第三步，专门**解决父子双黑的情况**。
+
+**第三步：遇到双黑节点，在子节点顶替父节点之后，分成6种子情况处理。**
+
+- **子情况1，节点2是红黑树的根节点：**
+
+<div align=center><img src=DataStructure\红黑树30.jpg width=20%></div>
+
+此时所有路径都减少了一个黑色节点，并未打破规则，不需要调整。
+
+- **子情况2，节点2的父亲、兄弟、侄子节点都是黑色：**
+
+<div align=center><img src=DataStructure\红黑树31.jpg width=40%></div>
+
+此时，我们直接把节点2的兄弟节点B改为红色：
+
+<div align=center><img src=DataStructure\红黑树32.jpg width=40%></div>
+
+这样一来，原本节点2所在的路径少了一个黑色节点，现在节点B所在的路径也少了一个黑色节点，两边“扯平”了。可是，**节点A以下的每一条路径都减少了一个黑色节点，与节点A之外的其他路径又造成了新的不平衡**！
+
+此时，让节点A扮演原先节点2的角色，进行递归操作，重新判断各种情况。
+
+
+- **子情况3，节点2的兄弟节点是红色：**
+
+<div align=center><img src=DataStructure\红黑树32.jpg width=40%></div>
+
+首先以节点2的父节点A为轴，进行左旋：
+
+<div align=center><img src=DataStructure\红黑树33.jpg width=40%></div>
+
+然后节点A变成红色、节点B变成黑色：
+
+<div align=center><img src=DataStructure\红黑树34.jpg width=40%></div>
+
+这样的意义是什么呢？节点2所在的路径仍然少一个黑色节点呀？
+
+这样的变化有可能转换成子情况4、5、6中的任意一种，在子情况4、5、6当中会进一步解决。
+
+- **子情况4，节点2的父节点是红色，兄弟和侄子节点是黑色：**
+
+<div align=center><img src=DataStructure\红黑树35.jpg width=40%></div>
+
+遇到这种情况，我们直接让节点2的父节点A变成黑色，兄弟节点B变成红色：
+
+<div align=center><img src=DataStructure\红黑树36.jpg width=40%></div>
+
+这样一来，节点2的路径补充了黑色节点，而节点B的路径并没有减少黑色节点，重新符合了红黑树的规则。
+
+- **子情况5，节点2的父节点随意，兄弟节点B是黑色右孩子，左侄子节点是红色，右侄子节点是黑色：**
+
+<div align=center><img src=DataStructure\红黑树37.jpg width=40%></div>
+
+这种情况下，首先以节点2的兄弟节点B为轴进行右旋：
+
+<div align=center><img src=DataStructure\红黑树38.jpg width=40%></div>
+
+接下来节点B变为红色，节点C变为黑色：
+
+<div align=center><img src=DataStructure\红黑树39.jpg width=40%></div>
+
+这样的变化转换成了子情况6。
+
+- **子情况6，节点2的父节点随意，兄弟节点B是黑色右孩子，右侄子节点是红色：**
+
+<div align=center><img src=DataStructure\红黑树40.jpg width=40%></div>
+
+首先以节点2的父节点A为轴左旋：
+
+<div align=center><img src=DataStructure\红黑树41.jpg width=40%></div>
+
+接下来让节点A和节点B的颜色交换，并且节点D变为黑色：
+
+<div align=center><img src=DataStructure\红黑树42.jpg width=40%></div>
+
+经过结点2的路径由（随意+黑）变成了（随意+黑+黑），补充了一个黑色结点；
+
+经过结点D的路径由（随意+黑+红）变成了（随意+黑），黑色结点并没有减少。
+
+所以，这时候重新符合了红黑树的规则。
+
+
+### 红黑树删除示例
+
+给定下面这颗红黑树，待删除的是节点17：
+
+<div align=center><img src=DataStructure\红黑树43.jpg width=70%></div>
+
+第一步，由于节点17有两个孩子，子树当中仅大于17的节点是25，所以把节点25复制到17位置，保持黑色：
+
+<div align=center><img src=DataStructure\红黑树44.jpg width=70%></div>
+
+接下来，我们需要删除原本的节点25。这个情况正好对应于第二步的情况三，即待删除节点是黑色，子节点是空叶子节点。
+
+于是我们删除原来的节点25，进入第三步：
+
+<div align=center><img src=DataStructure\红黑树45.jpg width=70%></div>
+
+此时，框框中的节点虽然是空叶子节点，但仍然可以用于判断局面，当前局面符合子情况5的镜像：
+
+<div align=center><img src=DataStructure\红黑树46.jpg width=70%></div>
+
+<div align=center><img src=DataStructure\红黑树47.jpg width=70%></div>
+
+于是我们通过左旋和变色，把子树转换成情况6的镜像：
+
+<div align=center><img src=DataStructure\红黑树48.jpg width=70%></div>
+
+再经过右旋、变色，子树最终成为了下面的样子：
+
+<div align=center><img src=DataStructure\红黑树49.jpg width=70%></div>
+
+
+## AVL树与红黑树的区别
+
+AVL树也是一种自平衡的二叉树，它和红黑树有什么差别呢？
+
+AVL树是严格平衡的二叉树，要求每个节点的左右子树高度差不超过1；而红黑树要宽松一些，要求任何一条；路径的长度不超过其他路径长度的2倍。
+
+正是因为这个差别，**AVL树的查找效率更高，但平衡调整的成本也更高**。在需要**频繁查找**时，选用AVL树更合适。在需要**频繁插入删除**时，选用红黑树更合适！
