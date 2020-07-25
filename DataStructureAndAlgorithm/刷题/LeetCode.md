@@ -2236,6 +2236,28 @@ public class LongestConsecutiveSequence {
 
 # 链表
 
+```java
+package solution;
+
+/**
+ * Definition for singly-linked list.
+ */
+
+public class ListNode {
+    int val;
+    ListNode next;
+    
+    ListNode() {}
+    ListNode(int val) {
+        this.val = val;
+    }
+    ListNode(int val, ListNode next) {
+        this.val = val;
+        this.next = next;
+    }
+}
+```
+
 ## 2. 两数相加(中等)
 
 给出两个**非空**的链表用来表示两个**非负的整数**。其中，它们各自的位数是按照**逆序**的方式存储的，并且它们的每个节点只能存储**一位**数字。
@@ -2256,11 +2278,11 @@ public class LongestConsecutiveSequence {
 
 <div align=center><img src=LeetCode\2预先指针.png></div>
 
-测试用例 | 说明 | 
-:- | :-: | 
-$l1=[0,1]，l2=[0,1,2]$ | 当一个列表比另一个列表长时 | 
-$l1=[]，l2=[0,1]$ | 当一个列表为空时，即出现空列表 | 
-$l1=[9,9]，l2=[1]$ | 求和运算最后可能出现额外的进位，这一点很容易被遗忘 | 
+| 测试用例               |                        说明                        |
+| :--------------------- | :------------------------------------------------: |
+| $l1=[0,1]，l2=[0,1,2]$ |             当一个列表比另一个列表长时             |
+| $l1=[]，l2=[0,1]$      |           当一个列表为空时，即出现空列表           |
+| $l1=[9,9]，l2=[1]$     | 求和运算最后可能出现额外的进位，这一点很容易被遗忘 |
 
 **代码：**
 
@@ -2390,7 +2412,7 @@ public class RemoveNthNodeFromEndofList {
 空间复杂度：$O(1)$，只用了常量级的额外空间。
 
 
-## 21. 合并两个有序链表
+## 21. 合并两个有序链表(简单)
 
 **题目：**
 
@@ -2403,41 +2425,204 @@ public class RemoveNthNodeFromEndofList {
 输出：1->1->2->3->4->4
 ```
 
-**思路与算法：递归**
+### 递归
 
 ```java
-/*
- * [21] 合并两个有序链表 (简单)
- */
+package solution;
 
 /**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode() {}
- *     ListNode(int val) { this.val = val; }
- *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
- * }
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0 递归
  */
-class Solution {
-    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {  // l1和l2是链表的头结点
-        if (l1 == null) {
-            return l2;
-        } else if (l2 == null) {
-            return l1;
-        } else if (l1.val < l2.val) {
-            l1.next = mergeTwoLists(l1.next, l2);
-            return l1;
+
+public class MergeTwoSortedList {
+    public ListNode mergeTwoLists(ListNode listNode1, ListNode listNode2) {
+        if (listNode1 == null) {
+            return listNode2;
+        } else if (listNode2 == null) {
+            return listNode1;
+        } else if (listNode1.val < listNode2.val) {
+            listNode1.next = mergeTwoLists(listNode1.next, listNode2);
+            return listNode1;
         } else {
-            l2.next = mergeTwoLists(l1, l2.next);
-            return l2;
+            listNode2.next = mergeTwoLists(listNode1, listNode2.next);
+            return listNode2;
         }
     }
 }
 ```
 
-## 206. 反转链表
+**复杂度分析**
+
+- 时间复杂度：$O(n + m)$，其中$n$和$m$分别为两个链表的长度。因为每次调用递归都会去掉`listNode1`或者`listNode2`的头节点（直到至少有一个链表为空），函数`mergeTwoList`至多只会递归调用每个节点一次。因此，**时间复杂度取决于合并后的链表长度**，即$O(n+m)$。
+
+- 空间复杂度：$O(n + m)$，其中$n$和$m$分别为两个链表的长度。**递归调用`mergeTwoList`函数时需要消耗栈空间，栈空间的大小取决于递归调用的深度**。结束递归调用时`mergeTwoList`函数最多调用$n+m$次，因此空间复杂度为$O(n+m)$。
+
+
+### 迭代
+
+- 首先，我们设定一个哨兵节点`prehead`，这可以在最后让我们比较容易地返回合并后的链表。
+- 我们维护一个`prev`指针，我们需要做的是调整它的`next`指针。
+- 然后，我们重复以下过程，直到`l1`或者`l2`指向了`null`：
+  - 如果`l1`当前节点的值小于等于`l2`，我们就把`l1`当前的节点接在`prev`节点的后面，同时将`l1`指针往后移一位。
+  - 否则，我们对`l2`做同样的操作。
+  - 不管我们将哪一个元素接在了后面，我们都需要把`prev`向后移一位。
+
+在循环终止的时候，`l1`和`l2`至多有一个是非空的。由于输入的两个链表都是有序的，所以不管哪个链表是非空的，它包含的所有元素都比前面已经合并链表中的所有元素都要大。这意味着我们只需要简单地将非空链表接在合并链表的后面，并返回合并链表即可。
+
+<div align=center><img src=LeetCode\21.gif></div>
+
+```java
+package solution;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 2.0 迭代
+ */
+
+public class MergeTwoSortedList_v2 {
+    public ListNode mergeTwoLists(ListNode listNode1, ListNode listNode2) {
+        ListNode preHead = new ListNode(-1);
+        ListNode prev = preHead;
+
+        while (listNode1 != null && listNode2 != null) {
+            if (listNode1.val <= listNode2.val) {
+                prev.next = listNode1;
+                listNode1 = listNode1.next;
+            } else {
+                prev.next = listNode2;
+                listNode2 = listNode2.next;
+            }
+
+            prev = prev.next;
+        }
+
+        // 此时l1和l2只有一个还未被合并完，我们直接将链表末尾指向未合并完的链表即可
+        prev.next = (listNode1 == null) ? listNode2 : listNode1;
+        
+        return preHead.next;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n + m)$，其中$n$和$m$分别为两个链表的长度。因为每次循环迭代中，`listNode1`和`listNode2`只有一个元素会被放进合并链表中， 因此`while`循环的次数不会超过两个链表的长度之和。所有其他操作的时间复杂度都是常数级别的，因此总的时间复杂度为$O(n+m)$。
+
+- 空间复杂度：$O(1)$。我们只需要常数的空间存放若干变量。
+
+
+## 25. K个一组翻转链表(困难)
+
+**题目描述：**
+
+给你一个链表，每k个节点一组进行翻转，请你返回翻转后的链表。
+
+k是一个正整数，它的值小于或等于链表的长度。如果节点总数不是k的整数倍，那么请将最后剩余的节点保持原有顺序。
+
+ 
+```
+示例：
+
+给你这个链表：1->2->3->4->5
+
+当 k = 2 时，应当返回: 2->1->4->3->5
+
+当 k = 3 时，应当返回: 3->2->1->4->5
+```
+ 
+
+说明：
+- 你的算法只能使用常数的额外空间。
+- 你不能只是单纯的改变节点内部的值，而是需要实际进行节点交换。
+
+
+**思路与算法：**
+
+https://leetcode-cn.com/problems/reverse-nodes-in-k-group/solution/tu-jie-kge-yi-zu-fan-zhuan-lian-biao-by-user7208t/
+
+- 链表分区为**已翻转部分+待翻转部分+未翻转部分**
+- 每次翻转前，要确定翻转链表的范围，这个必须通过k次循环来确定
+- 需记录翻转链表前驱和后继，方便翻转完成后把已翻转部分和未翻转部分连接起来
+- 初始需要两个变量pre和end，pre代表待翻转链表的前驱，end代表待翻转链表的末尾
+- 经过k次循环，end到达末尾，记录待翻转链表的后继`next = end.next`
+- 翻转链表，然后将三部分链表连接起来，重置pre和end指针，然后进入下一次循环
+- 特殊情况，当翻转部分长度不足k时，在定位end完成后，`end==null`，已经到达末尾，说明已完成，直接返回即可
+
+<div align=center><img src=LeetCode\25.png></div>
+
+```java
+package solution;
+
+/**
+ * leetcode_25. K个一组翻转链表
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0
+ */
+
+public class ReverseKGroup {
+    public ListNode reverseKGroup(ListNode head, int k) {
+        ListNode dummy = new ListNode(-1);
+        dummy.next = head;
+        ListNode prev = dummy;
+        ListNode end = dummy;
+
+        while (end.next != null) {
+            for (int i = 0; i < k && end != null; i++) {
+                end = end.next;
+            }
+            if (end == null) {
+                break;
+            }
+
+            ListNode start = prev.next;
+            // 下一组的开始
+            ListNode nextNode = end.next;
+            // 一组结束
+            end.next = null;
+            // 此时prev指向反转后的链表头
+            prev.next = reverse(start);
+            
+            start.next = nextNode;
+            prev = start;
+            // 此时end在下一组的开始
+            end = prev;
+        }
+        
+        return dummy.next;
+    }
+
+    /**
+     * 链表反转leetcode_206
+     */
+    private ListNode reverse(ListNode head) {
+        ListNode prev = null;
+        ListNode curr = head;
+        
+        while (curr != null) {
+            ListNode nextNode = curr.next;
+            curr.next = prev;
+            prev = curr;
+            curr = nextNode;
+        }
+
+        return prev;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度为：$O(n*K)$；最好的情况为$O(n)$；最差的情况为$O(n^2)$
+- 空间复杂度为：$O(1)$除了几个必须的节点指针外，没有占用其他空间。
+
+
+
+
+## 206. 反转链表(简单)
 
 **题目：**
 
@@ -2450,7 +2635,7 @@ class Solution {
 
 **思路与算法：**
 
-- **双指针迭代**
+### 双指针迭代
 <div align=center><img src=LeetCode\206.gif></div>
 
 ```java
@@ -2462,37 +2647,49 @@ class Solution {
  *     ListNode(int x) { val = x; }
  * }
  */
-class ReverseLinkedList {
-    public ListNode reverseList(ListNode head) {
-        ListNode pre = null;
-        ListNode cur = head;
-        ListNode temp = null;
 
-        while(cur != null){
-            temp = cur.next;
-            cur.next = pre;
-            pre = cur;
-            cur = temp;
+package solution;
+
+/**
+ * leetcode_206_反转链表
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0 迭代
+ */
+
+public class ReverseLinkedList {
+    public ListNode reverseList(ListNode head) {
+        ListNode prev = null;
+        ListNode curr = head;
+
+        while (curr != null) {
+            ListNode nextNode = curr.next;
+            curr.next = prev;
+            prev = curr;
+            curr = nextNode;
         }
 
-        return pre;
+        return prev;
     }
 }
+
 ```
 
 时间复杂度：$O(n)$，假设$n$是列表的长度，时间复杂度是$O(n)$。
 空间复杂度：$O(1)$。
 
 
-- **递归**
+### 递归
 
-递归版本稍微复杂一些，其关键在于反向工作。**假设列表的其余部分已经被反转，现在我该如何反转它前面的部分**？
+递归版本稍微复杂一些，其关键在于反向工作。
+
+**假设列表的其余部分已经被反转，现在我该如何反转它前面的部分**？
 
 假设列表为：$n_{1}\rightarrow ... \rightarrow n_{k-1} \rightarrow n_{k} \rightarrow n_{k+1} \rightarrow ... \rightarrow n_{m} \rightarrow \varnothing$
 
 若从节点$n_{k+1}$到$n_{m}$已经被反转，而我们正处于$n_{k}$：$n_{1}\rightarrow ... \rightarrow n_{k-1} \rightarrow n_{k} \rightarrow n_{k+1} \leftarrow ... \leftarrow n_{m}$
 
-我们希望$n_{k+1}$的下一个节点指向$n_{k}$。所以，$n_{k}.next.next = n_{k}$。
+我们希望$n_{k+1}$的下一个节点指向$n_{k}$，所以，$n_{k}.next.next = n_{k}$($n_{k}.next => n_{k+1}$)。
 
 要小心的是$n_{1}$的下一个必须指向$Ø$。如果你忽略了这一点，你的链表中可能会产生循环。如果使用大小为2的链表测试代码，则可能会捕获此错误。
 
@@ -2513,7 +2710,7 @@ class ReverseLinkedList {
 ```
 
 时间复杂度：$O(n)$，假设$n$是列表的长度，那么时间复杂度为$O(n)$。
-空间复杂度：$O(n)$，由于使用递归，将会使用隐式栈空间。递归深度可能会达到$n$层。
+空间复杂度：$O(n)$，由于使用递归，将会**使用隐式栈空间**。递归深度可能会达到$n$层。
 
 
 # 二分查找
@@ -2645,8 +2842,8 @@ class Solution {
 
 [1, 2, 3]的字典序排列：
 
-| 排列 | 123 | 132 | 213 | 231 | 312 | 321 |
-|:----:|-----|-----|-----|-----|-----|-----|
+| 排列  | 123 | 132 | 213 | 231 | 312 | 321 |
+| :---: | --- | --- | --- | --- | --- | --- |
 
 字典序就是保持左边不变（变得最慢），右边依次从正序到逆序的排列过程。
 
@@ -2915,6 +3112,95 @@ public class TestKthLargestInArray {
 
 
 **方法二：基于堆排序的选择方法**
+
+建立一个**大根堆**，做$k - 1$次删除操作后堆顶元素就是要找的答案。
+
+在很多语言中，都有优先队列或者堆的的容器可以直接使用，但是在面试中，面试官更倾向于让更面试者自己实现一个堆。所以建议读者掌握这里大根堆的实现方法，在这道题中尤其要搞懂**建堆**、**调整**和**删除**的过程。
+
+
+<div align=center><img src=LeetCode\215.jpg></div>
+
+<div align=center><img src=LeetCode\215_1.jpg></div>
+
+<div align=center><img src=LeetCode\215_2.jpg></div>
+
+```java
+package solution;
+
+/**
+ * leetcode_215_数组中的第k个最大元素
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 2.0 基于堆排序的选择方法
+ */
+
+public class KthLargestInArray_v2 {
+    public static int findKthLargest(int[] nums, int k) {
+        // heapSize->lastIndex
+        int heapSize = nums.length;
+        // 创建堆
+        buildMaxHeap(nums, heapSize);
+
+        /*
+        将堆的最大值与最后一个值交换后，形成树与有序部分
+        欲找第k个最大元素，就是需要k次maxHeapify，k-1次将堆中最大值移至有序部分
+         (nums.length - 1)-(k-1) + 1=nums.length - k + 1
+         */
+        for (int i = nums.length - 1; i >= nums.length - k + 1; i--) {
+            // 交换k-1次
+            swap(nums, 0, i);
+            heapSize--;
+            maxHeapify(nums, 0, heapSize);
+        }
+        // 第k个最大元素尚未交换
+        return nums[0];
+    }
+
+    /**
+     * 将数组转化为堆
+     * 从最靠近数组末尾的第一个非叶子结点开始。
+     * 这个非叶子结点在下标lastIndex/2处，因为它是树中的最后一个叶子结点的父结点。
+     * 然后一直执行到heap[1]
+     * @param heapSize -> lastIndex
+     */
+    private static void buildMaxHeap(int[] array, int heapSize) {
+        for (int i = heapSize / 2; i >= 0; i--) {
+            maxHeapify(array, i, heapSize);
+        }
+    }
+
+    /**
+     * 将半堆转换为堆
+     * 沿着从根到叶子结点的路径执行
+     * @param heapSize -> lastIndex
+     */
+    private static void maxHeapify(int[] array, int index, int heapSize) {
+        int leftIndex = index * 2 + 1, rightIndex = index * 2 + 2, largestIndex = index;
+        if (leftIndex < heapSize && array[leftIndex] > array[largestIndex]) {
+            largestIndex = leftIndex;
+        }
+        if (rightIndex < heapSize && array[rightIndex] > array[largestIndex]) {
+            largestIndex = rightIndex;
+        }
+        if (largestIndex != index) {
+            swap(array, index, largestIndex);
+            maxHeapify(array, largestIndex, heapSize);
+        }
+    }
+
+    private static void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$O(n \log n)$，建堆的时间代价是$O(n)$，删除的总代价是$O(k \log n)$，因为 $k < n$，故渐进时间复杂为$O(n + k \log n) = O(n \log n)$。
+- 空间复杂度：$O(\log n)$，即递归使用栈空间的空间代价。
+
 
 
 # 双指针
@@ -4106,6 +4392,30 @@ class LRUCache {
 
 # 树
 
+```java
+package solution;
+
+/**
+ * Definition for a binary tree node.
+ */
+
+public class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+
+    TreeNode(int val) {
+        this.val = val;
+    }
+
+    TreeNode(int val, TreeNode left, TreeNode right) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+}
+```
+
 ## 98. 验证二叉搜索树(中等)
 
 **题目描述：**
@@ -4371,6 +4681,139 @@ final class TreeInfo {
 
 - 时间复杂度：$\mathcal{O}(n)$，计算每棵子树的高度和判断平衡操作都在恒定时间内完成。
 - 空间复杂度：$\mathcal{O}(n)$，如果树不平衡，递归栈可能达到$\mathcal{O}(n)$。
+
+
+## 236. 二叉树的最近公共祖先(中等)
+
+**题目描述：**
+
+给定一个二叉树，找到该树中两个指定节点的最近公共祖先。
+
+公共祖先的定义为：“对于有根树T的两个结点p、q，最近公共祖先表示为一个结点x，满足x是 p、q的祖先且**x的深度尽可能大**（一个节点也可以是它自己的祖先）。”
+
+例如，给定如下二叉树:  root = [3,5,1,6,2,0,8,null,null,7,4]
+
+<div align=center><img src=LeetCode\236.png></div>
+
+```
+示例 1:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+输出: 3
+解释: 节点5和节点1的最近公共祖先是节点3。
+
+示例 2:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+输出: 5
+解释: 节点5和节点4的最近公共祖先是节点5。因为根据定义最近公共祖先节点可以为节点本身。
+```
+
+说明:
+- 所有节点的值都是唯一的。
+- p、q为不同节点且均存在于给定的二叉树中。
+
+
+**思路与算法：**
+
+- **方法一：递归**
+
+递归遍历整棵二叉树，定义$f_x$**表示**$x$**节点的子树中是否包含$p$节点或$q$节点**，如果包含为`true`，否则为`false`。
+
+那么符合条件的最近公共祖先$x$一定满足如下条件：
+$(f_{\text{lson}}\ \&\&\ f_{\text{rson}})\ ||\ ((x\ =\ p\ ||\ x\ =\ q)\ \&\&\ (f_{\text{lson}}\ ||\ f_{\text{rson}}))$
+其中$\text{lson}$和$\text{rson}$分别代表$x$节点的左孩子和右孩子。
+
+- $f_{\text{lson}}\ \&\&\ f_{\text{rson}}$说明**左子树和右子树均包含$p$节点或$q$节点**，如果左子树包含的是$p$节点，那么右子树只能包含$q$节点，反之亦然。因为$p$节点和$q$节点都是不同且唯一的节点，因此如果满足这个判断条件即可说明$x$**就是我们要找的最近公共祖先**。
+
+- $((x\ =\ p\ ||\ x\ =\ q)\ \&\&\ (f_{\text{lson}}\ ||\ f_{\text{rson}}))$考虑了**节点$x$恰好是$p$节点或$q$节点且它的左子树或右子树有一个包含了另一个节点**的情况，因此如果满足这个判断条件亦可说明$x$就是我们要找的最近公共祖先。
+
+你可能会疑惑这样找出来的公共祖先深度是否是最大的。其实是最大的，因为我们是自底向上从叶子节点开始更新的，所以在所有满足条件的公共祖先中一定是深度最大的祖先先被访问到，且由于$f_x$本身的定义很巧妙，在找到最近公共祖先$x$以后，$f_x$按定义被设置为`true`，即假定了这个子树中只有一个$p$节点或$q$节点，因此其他公共祖先不会再被判断为符合条件。
+
+下图展示了一个示例，搜索树中两个节点 9 和 11 的最近公共祖先。
+
+https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/solution/er-cha-shu-de-zui-jin-gong-gong-zu-xian-by-leetc-2/
+
+
+- **方法二：存储父节点**
+
+可以**用哈希表存储所有节点的父节点**，然后我们就可以**利用节点的父节点信息从$p$结点开始不断往上跳，并记录已经访问过的节点；再从$q$节点开始不断往上跳，如果碰到已经访问过的节点，那么这个节点就是我们要找的最近公共祖先**。
+
+**算法**
+- 从根节点开始遍历整棵二叉树，**用哈希表记录每个节点的父节点指针**。
+- 从$p$节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点。
+- 同样，我们再从$q$节点开始不断往它的祖先移动，如果有祖先已经被访问过，即意味着这是$p$和$q$的深度最深的公共祖先，即`LCA节点`。
+
+
+```java
+package solution;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * leetcode_236_二叉树的最近公共祖先
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0 用哈希表存储所有节点的父节点
+ */
+
+public class LowestCommonAncestor {
+    Map<Integer, TreeNode> parent = new HashMap<>();
+    Set<Integer> visited = new HashSet<>();
+
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        // 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+        deepFirstSearch(root);
+
+        // 从p节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点
+        while (p != null) {
+            visited.add(p.val);
+            // 得到p节点所对应的父节点
+            p = parent.get(p.val);
+        }
+
+        // 再从q节点开始不断往它的祖先移动
+        // 如果有祖先已经被访问过，即意味着这是p和q的深度最深的公共祖先
+        while (q != null) {
+            if (visited.contains(q.val)) {
+                return q;
+            }
+            q = parent.get(q.val);
+        }
+
+        return null;
+    }
+
+    /**
+     * 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+     */
+    public void deepFirstSearch(TreeNode root) {
+        if (root.left != null) {
+            parent.put(root.left.val, root);
+            deepFirstSearch(root.left);
+        }
+        if (root.right != null) {
+            parent.put(root.right.val, root);
+            deepFirstSearch(root.right);
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是二叉树的节点数。二叉树的所有节点有且只会被访问一次，从$p$和$q$节点往上跳经过的祖先节点个数不会超过$N$，因此总的时间复杂度为$O(N)$。
+
+- 空间复杂度：$O(N)$，其中$N$是二叉树的节点数。
+  - **递归调用的栈深度取决于二叉树的高度**，二叉树最坏情况下为一条链，此时高度为$N$，因此空间复杂度为$O(N)$。
+  - 哈希表存储每个节点的父节点也需要$O(N)$的空间复杂度
+  - 因此最后总的空间复杂度为$O(N)$。
+
+
+
+
+
 
 
 
