@@ -594,9 +594,9 @@ public class TestMergeSort {
 
 
 # 快速排序
-在数组中选择一个称为`主元(pivot)`的元素，将数组分为两部分，使得第一部分中的所有元素都小于或等于主元，而笫二部分中的所有元素都大于主元。对第一部分递归地应用快速排序算法，然后对笫二部分递归地应用快速排序算法。
+在数组中选择一个称为`主元(pivot)`的元素，将数组分为两部分，**使得第一部分中的所有元素都小于或等于主元，而笫二部分中的所有元素都大于主元**。对第一部分递归地应用快速排序算法，然后对笫二部分递归地应用快速排序算法。
 
-主元的选择会影响算法的性能。在理想情况下，应该选择能平均划分两部分的主元。为了简单起见，假定将数组的第一个元素选为主元。
+**主元的选择会影响算法的性能**。在理想情况下，应该选择能平均划分两部分的主元。为了简单起见，假定将数组的第一个元素选为主元。
 
 一次快速排序：
 <div align=center><img src=Pictures/QuickSort.png width=70%></div>
@@ -717,6 +717,154 @@ public class TestQuickSort {
 快速排序在平均情形下是$O(nlogn)$，但在最坏情况下是$O(n^2)$。`pivot`(枢轴)的选择对快速排序的效率有影响！
 
 
+# 堆排序
+
+可以使用堆来排序一个数组。如果**将数组项放在最大堆中**，然后**每次删除一个，则可以得到降序排列的项**。
+
+从项的数组创建堆时，使用reheap比使用add的效率高。如果`myArray`是项(例如字符串)的数组，就可以使用`MaxHeap`构造方法来创建堆：
+```java
+    public MaxHeap(T[] entries) {
+        // Call other constructor
+        this(entries.length);
+        assert initialized = true;
+
+        // Copy given array to data field
+        for (int index = 0; index < entries.length; index++) {
+            heap[index + 1] = entries[index];
+        }
+
+        // Create heap；数组下标从0开始
+        for (int index = lastIndex / 2; index > 0; index--) {
+            reheap(index);
+        }
+    }
+```
+
+`MaxHeapInterface<String> myHeap = new MaxHeap<>(myArray);`
+
+当从`myHeap`中删除项时，可以将它按反序放回到`myArray`中。这个方法的问题是需要额外的内存，因为堆在所给数组之外还使用了一个数组。但是，模仿**堆的基于数组的实现**，可以不使用类`MaxHeap`来提高这个方法的效率。得到的算法称为堆排序(`heap sort`)。
+
+**要从给定的数组创建初始堆．可以重复调用`reheap`**。图a和b分别显示了一个数组及执行当前创建初始堆步骤后得到的一个堆。因为数组要从下标0开始保存数据，但在构造方法中堆从下标1开始，所以必须调整`reheap`。
+
+<div align=center><img src=Pictures\最大堆.jpg></div>
+
+图b所示的数组中的最大项现在位于数组的第一个位置，所以**将它与数组的最后一项相交换**，如图c所示数组现在分为**树部分**和**有序部分**。交换后，**在树部分调用reheap(将其转换为堆）并执行另一次交换**，如图d和e所示。重复这些操作直到树部分只含有一个项为止（见图k)。数组现在按升序排序。注意实际上数组在图g中已经是有序的，但该算法并没发现这个事实。
+
+heap的数组部分表示从下标0到下标lastlndex的堆。半堆的根在下标rootIndex处。因为堆从下标0而不是1开始，所以下标$i$处结点的左孩子在下标$2i+1$而不是$2i$处。
+
+数组下标$i$的节点：
+- 其父节点在下标$(i-1)/2$处，除非该节点是根($i$是0)；
+- 其孩子节点在下标$2i+1$和$2i+2$处。
+
+```java
+package sort;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0
+ */
+
+public class HeapSort {
+    /**
+     * @param n 数组有n项，从下标0开始
+     */
+    public static <T extends Comparable<? super T>> void heapSort(T[] array, int n) {
+        // Create first heap；数组下标从0开始；利用reheap调整各项，变成堆
+        for (int index = (n / 2) - 1; index >= 0; index--) {
+            reheap(array, index, n - 1);
+        }
+
+        swap(array, 0, n - 1);
+
+        for (int lastIndex = n - 2; lastIndex > 0; lastIndex--) {
+            // 调用reheap后，根节点为最大值
+            reheap(array, 0, lastIndex);
+            swap(array, 0, lastIndex);
+        }
+    }
+
+    /**
+     * 将最后一位数移至根节点处，再与其左右节点对象比较，大的上浮
+     * 只要小于其孩子结点，就将它与其较大的孩子相交换
+     * @param orphanIndex 以orphanIndex为根节点的半堆
+     */
+    private static <T extends Comparable<? super T>> void reheap(T[] heap, int orphanIndex, int lastIndex) {
+        boolean done = false;
+        T orphan = heap[orphanIndex];
+        int leftChildIndex = 2 * orphanIndex + 1;
+
+        // leftChildIndex <= lastIndex是因为定位到的最后一个节点可能没有叶子节点
+        while (! done && (leftChildIndex <= lastIndex)) {
+            int largerChildIndex = leftChildIndex;
+            int rightChildIndex = leftChildIndex + 1;
+
+            if ((rightChildIndex <= lastIndex) && heap[rightChildIndex].compareTo(heap[largerChildIndex]) > 0) {
+                largerChildIndex = rightChildIndex;
+            }
+
+            if (orphan.compareTo(heap[largerChildIndex]) < 0) {
+                heap[orphanIndex] = heap[largerChildIndex];
+                orphanIndex = largerChildIndex;
+                leftChildIndex = 2 * orphanIndex + 1;
+            } else {
+                done = true;
+            }
+        }
+
+        heap[orphanIndex] = orphan;
+    }
+
+    private static void swap(Object[] array, int i, int j) {
+        Object temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+```
+
+```java
+package sort;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/25
+ */
+
+public class TestHeapSort {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待排序的各项：");
+            String[] strings = reader.readLine().split(" ");
+            Integer[] array = new Integer[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                array[i] = Integer.parseInt(strings[i]);
+            }
+
+            HeapSort.heapSort(array, array.length);
+
+            System.out.println("排序后：");
+            for (Integer integer : array) {
+                System.out.print(integer + " ");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+## 算法效率
+
+**与归并排序和快速排序一样，堆排序是$O(nlogn)$的算法**。在这里给出的实现中，**堆排序不需要第二个数组**，但归并排序需要。在大多数情况下快速排序是$O(nlogn)$的，但最坏情况是$O(n^2)$的。通常选择合适的枢轴可以避免快速排序的最坏情形．所以一般来讲，**快速排序是首选的排序方法**。
+
+
 # 计数排序
 
 前面所讨论的所有排序算法都是可以用在任何键值类型(例如，整数、字符串以及任何可比较的对象)上的**通用排序算法**。这些算法都是通过**比较它们的键值**来对元素排序的。已经证明，**基于比较的排序算法**的复杂度不会好于$O(nlogn)$。
@@ -756,7 +904,7 @@ public class TestQuickSort {
 <div align=center><img src=Pictures\计数排序1.png width=80%></div>
 
 
-## 遇到相同的数——稳定排序
+## 遇到相同的数—稳定排序
 
 给出一个学生成绩表，要求按成绩从低到高进行排序，**如果成绩相同，则遵循原表固有顺序**。
 
@@ -901,3 +1049,5 @@ public class TestCountSort {
 
 1. 当数列最大和最小值差距过大时，并不适合用计数排序。
 2. 当数列元素不是整数时，也不适合用计数排序。
+
+

@@ -152,7 +152,7 @@ public class TestLongestSubstringWithoutRepeatingCharacter {
 <div align=center><img src=LeetCode\3滑动窗口.png></div>
 
 
-# 67. 二进制求和(简单)
+## 67. 二进制求和(简单)
 
 **题目描述：**
 
@@ -245,6 +245,215 @@ public class TestAddBinary {
     }
 }
 ```
+
+## 165. 比较版本号(中等)
+
+**题目描述：**
+
+比较两个版本号version1和version2。
+
+如果`version1 > version2`返回1，如果`version1 < version2`返回-1， 除此之外返回0。
+
+你可以假设版本字符串非空，并且只包含数字和`.`字符。`.`字符不代表小数点，而是用于分隔数字序列。
+
+例如，2.5 不是“两个半”，也不是“差一半到三”，而是第二版中的第五个小版本。
+
+你可以假设版本号的每一级的默认修订版号为0。例如，版本号3.4的第一级（大版本）和第二级（小版本）修订号分别为3和4。其第三级和第四级修订号均为0。
+
+**示例：**
+
+```
+示例 1:
+输入: version1 = "0.1", version2 = "1.1"
+输出: -1
+
+示例 2:
+输入: version1 = "1.0.1", version2 = "1"
+输出: 1
+
+示例 3:
+输入: version1 = "7.5.2.4", version2 = "7.5.3"
+输出: -1
+
+示例 4：
+输入：version1 = "1.01", version2 = "1.001"
+输出：0
+解释：忽略前导零，“01” 和 “001” 表示相同的数字 “1”。
+
+示例 5：
+输入：version1 = "1.0", version2 = "1.0.0"
+输出：0
+解释：version1 没有第三级修订号，这意味着它的第三级修订号默认为 “0”。
+```
+提示：
+- 版本字符串由以点`.`分隔的数字字符串组成。这个数字字符串可能有前导零。
+- 版本字符串不以点开始或结束，并且其中不会有两个连续的点。
+
+**思路与算法：**
+
+**方法一：分割+解析，两次遍历，线性空间**
+
+将两个字符串按点字符分割成块，然后逐个比较这些块：
+
+<div align=center><img src=LeetCode\165.jpg></div>
+
+如果两个版本号的块数相同，则可以有效工作。如果不同，则需要**在较短字符串末尾补充相应的`.0`块数使得块数相同**：
+
+<div align=center><img src=LeetCode\165_1.jpg></div>
+
+- 根据点分割两个字符串将分割的结果存储到数组中。
+- 遍历较长数组并逐个比较块。如果其中一个数组结束了，实际上可以根据需要添加尽可能多的零，以继续与较长的数组进行比较。
+    - 如果两个版本号不同，则返回1或-1。
+- 版本号相同，返回0。
+
+```java
+package solution;
+
+/**
+ * leetcode_165_比较版本号
+ * @author Chenzf
+ * @date 2020/7/21
+ * @version 1.0
+ */
+
+public class CompareVersionNumbers {
+    public int compareVersion(String version1, String version2) {
+        String[] nums1 = version1.split("\\.");
+        String[] nums2 = version2.split("\\.");
+        int length1 = nums1.length, length2 = nums2.length;
+
+        int i1, i2;
+        for (int i = 0; i < Math.max(length1, length2); i++) {
+            i1 = (i < length1) ? Integer.parseInt(nums1[i]) : 0;
+            i2 = (i < length2) ? Integer.parseInt(nums2[i]) : 0;
+
+            if (i1 != i2) {
+                return i1 > i2 ? 1 : -1;
+            }
+        }
+
+        // 相等
+        return 0;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N + M + \max(N, M))$。其中$N$和$M$指的是输入字符串的长度。
+- 空间复杂度：$\mathcal{O}(N + M)$，使用了两个数组nums1和nums2存储两个字符串的块。
+
+
+**方法二：双指针，一次遍历，常数空间**
+
+方法一有两个缺点：
+- 是两次遍历的解决方法。
+- 消耗线性空间。
+- 
+我们能否实现一个只有一次遍历和消耗常数空间的解决方法呢？
+
+其思想是**在每个字符串上使用两个指针，跟踪每个数组的开始和结束**。
+
+这样，可以并行地沿着两个字符串移动，检索并比较相应的块。一旦两个字符串都被解析，比较也就完成了。
+
+**算法：**
+
+首先，我们定义了一个名为`get_next_chunk(version, n, p)`的函数，用于检索字符串中的下一个块。这个函数有三个参数：输入字符串version，它的长度n，以及指针p为要检索块的第一个字符。它在指针p和下一个点之间返回一个整数块。为了帮助迭代，返回的是下一个块的第一个字符的指针。
+
+下面是如何使用此函数解决问题的方法：
+
+- 指针p1和p2分别指向version1和version2的起始位置：p1=p2=0。
+- 并行遍历两个字符串。当`p1 < n1 or p2 < n2`：
+    - 使用`get_next_chunk`函数获取version1和version2的下一个块i1和i2。
+    - 比较i1和i2。如果不相同，则返回1或-1。
+- 如果到了这里，说明版本号相同，则返回0。
+  
+
+下面实现`get_next_chunk(version, n, p)`函数：
+
+- 块的开头由指针p标记。如果p设置为字符串的结尾，则字符串解析完成。若要继续比较，则在添加`.0`返回。
+- 如果p不在字符串的末尾，则沿字符串移动指针p_end以查找**块的结尾**。
+- 返回块`version.substring(p, p_end)`。
+
+<div align=center><img src=LeetCode\165_2.jpg></div>
+
+```java
+package solution;
+
+import javafx.util.Pair;
+
+/**
+ * leetcode_165_比较版本号
+ * @author Chenzf
+ * @date 2020/7/21
+ * @version 2.0
+ */
+
+public class CompareVersionNumbers_v2 {
+    public int compareVersion(String version1, String version2) {
+        int point1 = 0, point2 = 0;
+        int length1 = version1.length(), length2 = version2.length();
+
+        int i1, i2;
+        Pair<Integer, Integer> pair;
+        while (point1 < length1 || point2 < length2) {
+            pair = getNextChunk(version1, length1, point1);
+            i1 = pair.getKey();
+            point1 = pair.getValue();
+
+            pair = getNextChunk(version2, length2, point2);
+            i2 = pair.getKey();
+            point2 = pair.getValue();
+
+            if (i1 != i2) {
+                return i1 > i2 ? 1 : -1;
+            }
+        }
+
+        // 版本相等
+        return 0;
+    }
+
+    /**
+     * Map对象是key, value 可以多对
+     *
+     * Pair对象是 object, object 只能一对
+     */
+    public Pair<Integer, Integer> getNextChunk(String version, int StringLength, int point) {
+        // if pointer is set to the end of string, return 0
+        // i1 = pair.getKey(); point1 = pair.getValue();
+        if (point > StringLength - 1) {
+            return new Pair<>(0, point);
+        }
+
+        // find the end of chunk
+        int i, pointEnd = point;
+        while (pointEnd < StringLength && version.charAt(pointEnd) != '.') {
+            pointEnd++;
+        }
+
+        //retrieve the chunk
+        if (pointEnd != StringLength - 1) {
+            i = Integer.parseInt(version.substring(point, pointEnd));
+        } else {
+            i = Integer.parseInt(version.substring(point, StringLength));
+        }
+
+        // find the beginning of next chunk
+        point = pointEnd + 1;
+
+        return new Pair(i, point);
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：$\mathcal{O}(\max(N, M))$。其中$N$和$M$指的是输入字符串的长度。
+空间复杂度：$\mathcal{O}(1)$，**没有使用额外的数据结构**。
+
+
+
 
 
 # 动态规划
@@ -373,7 +582,7 @@ public class LongestPalindromicSubstring {
 - 时间复杂度： $O(n^2)$ 两个for循环
 - 空间复杂度： $O(n^2)$ dp数组的大小
 
-## 53. 最大子序和（*）
+## 53. 最大子序和（简单）
 
 给定一个整数数组`nums`，找到一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
 
@@ -445,6 +654,78 @@ public class MaximumSubArray {
         for (int i = 0; i < len; i++)
             nums[i] = input.nextInt();
         System.out.println("最大子序和：" + maxSubArray(nums));
+    }
+}
+```
+
+```java
+package solution;
+
+/**
+ * leetcode_53_最大子序和
+ * @author Chenzf
+ * @date 2020/7/23
+ * @version 1.0
+ */
+
+public class MaximumSubarray {
+    public static int maxSubArray(int[] nums) {
+        if (nums == null) {
+            return 0;
+        }
+
+        int[] dp = new int[nums.length];
+        int result = nums[0];
+        dp[0] = nums[0];
+
+        for (int i = 1; i < nums.length; i++) {
+            if (dp[i - 1] > 0) {
+                dp[i] = dp[i - 1] + nums[i];
+            } else {
+                dp[i] = nums[i];
+            }
+
+            // 摒弃前面出现的衰减因素
+            result = Math.max(result, dp[i]);
+        }
+
+        return result;
+    }
+}
+```
+
+```java
+package test;
+
+import solution.MaximumSubarray;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * leetcode_53_最大子序和
+ * @author Chenzf
+ */
+
+public class TestMaxSubArray {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待测数组：");
+            String[] strings = reader.readLine().split(" ");
+            int[] nums = new int[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                nums[i] = Integer.parseInt(strings[i]);
+            }
+
+            int result = MaximumSubarray.maxSubArray(nums);
+
+            System.out.println("最大子序和为：" + result);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 ```
@@ -1781,7 +2062,7 @@ class Solution {
 
 通过**以空间换取速度**的方式，我们可以将查找时间从$O(n)$降低到$O(1)$。哈希表正是为此目的而构建的，它支持**以近似恒定的时间进行快速查找**。用“近似”来描述，是因为一旦出现冲突，查找用时可能会退化到$O(n)$。但只要你仔细地挑选哈希函数，在哈希表中进行查找的用时应当被摊销为$O(1)$。
 
-一个简单的实现使用了**两次迭代**。在第一次迭代中，我们**将每个元素的值和它的索引添加到表中**。然后，在第二次迭代中，我们将**检查**每个元素所对应的目标元素$(target - nums[i])$是否存在于表中。注意，**该目标元素不能是$nums[i]$本身**！
+一个简单的实现使用了**两次迭代**。在**第一次迭代**中，我们**将每个元素的值和它的索引添加到表中**。然后，在**第二次迭代**中，我们将**检查**每个元素所对应的目标元素$(target - nums[i])$是否存在于表中。注意，**该目标元素不能是$nums[i]$本身**！
 
 
 **代码：**
@@ -2485,7 +2766,155 @@ public class TestNextPermutation {
 }
 ```
 
+## 215. 数组中的第K个最大元素(中等)
 
+题目描述：
+在未排序的数组中找到第k个最大的元素。请注意，你**需要找的是数组排序后的第k个最大的元素**，而不是第k个不同的元素。
+
+示例：
+
+```
+示例 1:
+输入: [3,2,1,5,6,4] 和 k = 2
+输出: 5
+
+示例 2:
+输入: [3,2,3,1,2,4,5,5,6] 和 k = 4
+输出: 4
+```
+
+本题希望我们返回**数组排序之后**的**倒数第$k$个位置**。
+
+**方法一：基于快速排序的选择方法**
+
+快速排序是一个典型的分治算法。我们对数组$a[l \cdots r]$做快速排序的过程是：
+
+- 分解：将数组$a[l \cdots r]$「划分」成两个子数组$a[l \cdots q - 1]$、$a[q + 1 \cdots r]$，使得$a[l \cdots q - 1]$中的每个元素小于等于$a[q]$，且$a[q]$小于等于$a[q + 1 \cdots r]$中的每个元素。其中，计算下标$q$也是「划分」过程的一部分。
+
+- 解决：通过递归调用快速排序，对子数组$a[l \cdots q - 1]$和$a[q + 1 \cdots r]$进行排序。
+
+- 合并：**因为子数组都是原址排序的，所以不需要进行合并操作**，$a[l \cdots r]$已经有序。
+
+- 上文中提到的「划分」过程是：从子数组$a[l \cdots r]$中选择任意一个元素$x$作为主元，调整子数组的元素使得左边的元素都小于等于它，右边的元素都大于等于它，$x$的最终位置就是$q$。
+
+由此可以发现**每次经过「划分」操作后，我们一定可以确定一个元素的最终位置，即$x$的最终位置为$q$，并且保证$a[l \cdots q - 1]$中的每个元素小于等于$a[q]$，且$a[q]$小于等于$a[q + 1 \cdots r]$中的每个元素。所以<font color=red>只要某次划分的$q$为倒数第$k$个下标的时候，我们就已经找到了答案</font>。我们只关心这一点，至于$a[l \cdots q - 1]$和$a[q+1 \cdots r]$是否是有序的，我们不关心**。
+
+因此我们可以改进快速排序算法来解决这个问题：**在分解的过程当中，我们会对子数组进行划分，如果划分得到的$q$正好就是我们需要的下标，就直接返回$a[q]$；否则，如果$q$比目标下标小，就递归右子区间，否则递归左子区间。这样就可以把原来递归两个区间变成只递归一个区间，提高了时间效率**。这就是「快速选择」算法。
+
+快速排序的性能和「划分」出的子数组的长度密切相关。直观地理解如果每次规模为$n$的问题我们都划分成$1$和$n - 1$，每次递归的时候又向$n - 1$的集合中递归，这种情况是最坏的，时间代价是$O(n ^ 2)$。我们可以引入随机化来加速这个过程，它的时间代价的期望是$O(n)$。
+
+
+```java
+package solution;
+
+import java.util.Random;
+
+/**
+ * leetcode_215_数组中的第k个最大元素
+ * @author Chenzf
+ * @date 2020/7/23
+ * @version 1.0 基于快速排序的选择方法
+ */
+
+public class KthLargestInArray {
+    static Random random = new Random();
+
+    public static int findKthLargest(int[] nums, int k) {
+        // 返回数组排序之后的倒数第k个位置
+        return quickSelect(nums, 0, nums.length - 1, nums.length - k);
+    }
+
+    public static int quickSelect(int[] array, int left, int right, int index) {
+        // 随机找一个分隔值
+        int q = randomPartition(array, left, right);
+        if (q == index) {
+            return array[q];
+        } else {
+            return q < index ? quickSelect(array, q + 1, right, index) : quickSelect(array, left, q - 1, index);
+        }
+    }
+
+    public static int randomPartition(int[] array, int left, int right) {
+        // 随机选择一个范围内的数
+        int i = random.nextInt(right - left + 1) + left;
+        // 将找到的partition先与最后一位数交换
+        swap(array, i, right);
+        return partition(array, left, right);
+    }
+
+    public static int partition(int[] array, int left, int right) {
+        // x为分隔值
+        int x = array[right], i = left - 1;
+        // 注意这里的j的最大值
+        for (int j = left; j < right; j++) {
+            if (array[j] <= x) {
+                // 因为i是从left - 1开始，所以需++i
+                swap(array, ++i, j);
+            }
+        }
+
+        // 数组中从left到i的数都是小于分隔值的
+        swap(array, i + 1, right);
+        return i + 1;
+    }
+
+    public static void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+```
+
+```java
+package test;
+
+import solution.KthLargestInArray;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * leetcode_215_数组中的第k个最大元素
+ * @author Chenzf
+ * @date 2020/7/23
+ * @version 1.0 基于快速排序的选择方法
+ */
+
+public class TestKthLargestInArray {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+            System.out.println("请输入待测数组：");
+            String[] strings = reader.readLine().split(" ");
+            int[] nums = new int[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                nums[i] = Integer.parseInt(strings[i]);
+            }
+
+            System.out.println("请输入需要找第几个最大值：");
+            int k = Integer.parseInt(reader.readLine());
+
+            System.out.printf("数组中第%d个最大的值是：%d", k, KthLargestInArray.findKthLargest(nums, k));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+```
+
+
+**复杂度分析**
+
+时间复杂度：$O(n)$。
+空间复杂度：$O(\log n)$，递归使用栈空间的空间代价的期望为$O(\log n)$。
+
+
+**方法二：基于堆排序的选择方法**
 
 
 # 双指针
@@ -4250,6 +4679,57 @@ public class SearchInBinarySearchTree {
 
 - 递归：**重复调用函数自身**实现循环称为递归；
 - 迭代：利用变量的**原值推出新值**称为迭代，或者说迭代是**函数内某段代码实现循环**；
+
+
+## 958. 二叉树的完全性检验(中等)
+
+题目描述：给定一个二叉树，确定它是否是一个完全二叉树。
+
+完全二叉树的定义如下：
+
+若设二叉树的深度为h，**除第h层外，其它各层 (1～h-1) 的结点数都达到最大个数**，**第h层所有的结点都连续集中在最左边**，这就是完全二叉树。（注：第h层可能包含 $1-2^h$ 个节点。）
+
+<div align=center><img src=LeetCode\958.png></div>
+
+```
+输入：[1,2,3,4,5,6]
+输出：true
+解释：最后一层前的每一层都是满的（即，结点值为 {1} 和 {2,3} 的两层），且最后一层中的所有结点（{4,5,6}）都尽可能地向左。
+```
+<div align=center><img src=LeetCode\958_1.png></div>
+
+```
+输入：[1,2,3,4,5,null,7]
+输出：false
+解释：值为 7 的结点没有尽可能靠向左侧。
+```
+
+
+### 广度优先搜索
+
+这个问题可以简化成两个小问题：
+- 用`(depth, position) 元组`表示**每个节点的“位置”**；
+- 确定如何定义所有节点都是在最左边的。
+
+假如我们在深度为3的行有4个节点，位置为`0，1，2，3`；那么就有8个深度为4的新节点位置在`0，1，2，3，4，5，6，7`。
+
+所以我们可以找到规律：
+
+对于一个节点，它的左孩子为：`(depth, position) -> (depth + 1, position * 2)`，右孩子为 `(depth, position) -> (depth + 1, position * 2 + 1)`。所以，**对于深度为d的行恰好含有$2^{d-1}$个节点，所有节点都是靠左边排列的当他们的位置编号是 0, 1, ... 且没有间隙**。
+
+一个更简单的表示深度和位置的方法是：**用1表示根节点，对于任意一个节点v，它的左孩子为`2*v`，右孩子为`2*v + 1`。**
+
+这就是我们用的规则，在这个规则下，一颗二叉树是完全二叉树当且仅当节点编号依次为`1, 2, 3,...`且没有间隙。
+
+**算法：**
+
+对于根节点，我们定义其编号为1。然后，对于每个节点v，我们将其左节点编号为`2*v`，将其右节点编号为`2 * v + 1`。
+
+我们可以发现，树中所有节点的编号按照广度优先搜索顺序正好是升序。（也可以使用深度优先搜索，之后对序列排序）。
+
+然后，我们检测编号序列是否为无间隔的 1, 2, 3, …，事实上，我们只需要检查最后一个编号是否正确，因为最后一个编号的值最大。
+
+
 
 
 ## 968. 监控二叉树(困难)
