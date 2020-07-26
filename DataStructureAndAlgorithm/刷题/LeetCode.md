@@ -3330,6 +3330,84 @@ class LRUCache {
 
 
 
+# 151. 翻转字符串里的单词(中等)
+
+给定一个字符串，逐个翻转字符串中的每个单词。
+
+```
+示例 1：
+输入: "the sky is blue"
+输出: "blue is sky the"
+
+示例 2：
+输入: "  hello world!  "
+输出: "world! hello"
+
+解释: 输入字符串可以在前面或者后面包含多余的空格，但是反转后的字符不能包括。
+
+示例 3：
+输入: "a good   example"
+输出: "example good a"
+解释: 如果两个单词间有多余的空格，将反转后单词间的空格减少到只含一个。
+```
+
+## 双端队列
+
+由于双端队列支持从队列头部插入的方法，因此我们可以沿着字符串一个一个单词处理，然后**将单词压入队列的头部**，再将队列转成字符串即可。
+
+<div align=center><img src=LeetCode\151.png width=80%></div>
+
+```java
+package solution;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class ReverseWords {
+    public String reverseWords(String string) {
+        int left = 0, right = string.length() - 1;
+
+        // 去掉字符串开头的空白字符
+        while (left <= right && string.charAt(left) == ' ') {
+            left++;
+        }
+
+        // 去掉字符串末尾的空白字符
+        while (left <= right && string.charAt(right) == ' ') {
+            right--;
+        }
+
+        Deque<String> deque = new ArrayDeque<>();
+        StringBuilder word = new StringBuilder();
+
+        while (left <= right) {
+            char ch = string.charAt(left);
+            if ((word.length() != 0) && (ch == ' ')) {
+                // 将单词 push 到队列的头部
+                deque.offerFirst(word.toString());
+                word.setLength(0);
+            } else if (ch != ' ') {
+                word.append(ch);
+            }
+            left++;
+        }
+
+        // 将最后一个单词压入队列的头部
+        deque.offerFirst(word.toString());
+
+        // 将队列转成字符串
+        return String.join(" ", deque);
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$为输入字符串的长度。
+- 空间复杂度：$O(N)$，双端队列存储单词需要$O(N)$的空间。
+
+
+
 
 # 155. 最小栈(简单)
 
@@ -3707,6 +3785,88 @@ public class CompareVersionNumbers_v2 {
 
 时间复杂度：$\mathcal{O}(\max(N, M))$。其中$N$和$M$指的是输入字符串的长度。
 空间复杂度：$\mathcal{O}(1)$，**没有使用额外的数据结构**。
+
+
+
+# 189. 旋转数组(简单)
+
+给定一个数组，将数组中的元素向右移动k个位置，其中k是非负数。
+
+```
+示例 1:
+输入: [1,2,3,4,5,6,7] 和 k = 3
+输出: [5,6,7,1,2,3,4]
+
+解释:
+向右旋转 1 步: [7,1,2,3,4,5,6]
+向右旋转 2 步: [6,7,1,2,3,4,5]
+向右旋转 3 步: [5,6,7,1,2,3,4]
+
+示例 2:
+输入: [-1,-100,3,99] 和 k = 2
+输出: [3,99,-1,-100]
+
+解释: 
+向右旋转 1 步: [99,-1,-100,3]
+向右旋转 2 步: [3,99,-1,-100]
+```
+
+**思路与算法：**
+
+如果我们直接**把每一个数字放到它最后的位置**，但这样的后果是遗失原来的元素。因此，我们需要把被替换的数字保存在变量`temp`里面。然后，我们将被替换数字(`temp`)放到它正确的位置，并继续这个过程$n$次，$n$是数组的长度。这是因为我们需要将数组里所有的元素都移动。
+
+但是，这种方法可能会有个问题，如果$n\%k==0$，其中$k=k\%n$（因为如果$k$大于$n$，移动$k$次实际上相当于移动$k\%n$次）。这种情况下，我们会发现在没有遍历所有数字的情况下回到出发数字。此时，我们应该从下一个数字开始再重复相同的过程。
+
+<div align=center><img src=LeetCode\189.png></div>
+
+```java
+package solution;
+
+/**
+ * leetcode_189_旋转数组
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 1.0
+ */
+
+public class RotateArray {
+    public void rotate(int[] nums, int k) {
+        k = k % nums.length;
+        int count = 0;
+        for (int start = 0; count < nums.length; start++) {
+            int current = start;
+            int prev = nums[start];
+            do {
+                int next = (current + k) % nums.length;
+                int temp = nums[next];
+                nums[next] = prev;
+                prev = temp;
+                current = next;
+                count++;
+            } while (start != current);
+        }
+    }
+}
+```
+
+**使用额外的数组：**
+
+可以用一个额外的数组来将每个元素放到正确的位置上。
+即，原本数组里下标为$i$的，我们把它放到$(i+k)\%数组长度$的位置。然后把新的数组拷贝到原数组中。
+
+```java
+public class Solution {
+    public void rotate(int[] nums, int k) {
+        int[] a = new int[nums.length];
+        for (int i = 0; i < nums.length; i++) {
+            a[(i + k) % nums.length] = nums[i];
+        }
+        for (int i = 0; i < nums.length; i++) {
+            nums[i] = a[i];
+        }
+    }
+}
+```
 
 
 
