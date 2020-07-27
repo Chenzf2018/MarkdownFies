@@ -705,6 +705,416 @@ value >> 8：
 无符号右移运算符>>的运算规则也很简单，丢弃右边指定位数，左边补上0。
 
 
+## Java四种引用方式
+
+https://juejin.im/post/5a5129f5f265da3e317dfc08
+
+https://blog.csdn.net/Light_makeup/article/details/107301647
+
+Java的内存回收不需要程序员负责，JVM会在必要时启动Java GC完成垃圾回收。Java以便我们**控制对象的生存周期**，提供给了我们四种引用方式，引用强度从强到弱分别为：强引用、软引用、弱引用、虚引用。
+
+### 强引用
+
+StrongReference是Java的**默认引用形式**，使用时不需要显示定义。任何通过强引用所使用的对象不管系统资源有多紧张， Java虚拟机宁愿抛出`OutOfMemoryError`错误，使程序异常终止，Java GC都**不会主动回收具有强引用的对象**。
+
+强引用：`A a = new A()`
+
+```java
+/**
+ * 强引用
+ * @author Chenzf
+ * @date 2020/07/27
+ */
+
+public class StrongReferenceTest {
+    public static int M = 1024*1024;
+
+    public static void printlnMemory(String tag) {
+        Runtime runtime = Runtime.getRuntime();
+        int M = StrongReferenceTest.M;
+        System.out.println("\n" + tag + ":");
+        System.out.println(runtime.freeMemory()/M + "M(free)/" + runtime.totalMemory()/M + "M(total)");
+    }
+
+    public static void main(String[] args) {
+        StrongReferenceTest.printlnMemory("1.原可用内存和总内存");
+
+        //实例化10M的数组并与strongReference建立强引用
+        byte[] strongReference = new byte[10 * StrongReferenceTest.M];
+        StrongReferenceTest.printlnMemory("2.实例化10M的数组，并建立强引用");
+        System.out.println("strongReference : " + strongReference);
+
+        System.gc();
+        StrongReferenceTest.printlnMemory("3.GC后");
+        System.out.println("strongReference : " + strongReference);
+
+        // strongReference = null;后，强引用断开了
+        strongReference = null;
+        StrongReferenceTest.printlnMemory("4.强引用断开后");
+        System.out.println("strongReference : " + strongReference);
+
+        System.gc();
+        StrongReferenceTest.printlnMemory("5.GC后");
+        System.out.println("strongReference : " + strongReference);
+    }
+}
+```
+
+```
+D:\WinSoftware\Java1.8\jdk1.8.0_65\bin\java.exe
+
+1.原可用内存和总内存:
+13M(free)/15M(total)
+
+2.实例化10M的数组，并建立强引用:
+3M(free)/15M(total)
+strongReference : [B@10bedb4
+
+3.GC后:
+14M(free)/25M(total)
+strongReference : [B@10bedb4
+
+4.强引用断开后:
+14M(free)/25M(total)
+strongReference : null
+
+5.GC后:
+24M(free)/25M(total)
+strongReference : null
+
+Process finished with exit code 0
+```
+
+<div align=center><img src=Pictures\StrongReference.png></div>
+
+
+## 弱引用
+
+如果一个对象只具有弱引用，**无论内存充足与否，Java GC后对象如果只有弱引用将会被自动回收**。
+
+```java
+import java.lang.ref.WeakReference;
+
+/**
+ * 弱引用
+ * @author Chenzf
+ * @date 2020/07/27
+ */
+
+public class WeakReferenceTest {
+    public static int M = 1024*1024;
+
+    public static void printlnMemory(String tag) {
+        Runtime runtime = Runtime.getRuntime();
+        int M = WeakReferenceTest.M;
+        System.out.println("\n" + tag + ":");
+        System.out.println(runtime.freeMemory()/M + "M(free)/" + runtime.totalMemory()/M + "M(total)");
+    }
+
+    public static void main(String[] args) {
+        WeakReferenceTest.printlnMemory("1.原可用内存和总内存");
+
+        //创建弱引用
+        WeakReference<Object> weakRerference = new WeakReference<>(new byte[10 * WeakReferenceTest.M]);
+        WeakReferenceTest.printlnMemory("2.实例化10M的数组，并建立弱引用");
+        System.out.println("weakRerference.get() : " + weakRerference.get());
+
+        System.gc();
+        StrongReferenceTest.printlnMemory("3.GC后");
+        System.out.println("weakRerference.get() : " + weakRerference.get());
+    }
+}
+```
+
+``` {.line-numbers highlight=8-10}
+1.原可用内存和总内存:
+13M(free)/15M(total)
+
+2.实例化10M的数组，并建立弱引用:
+3M(free)/15M(total)
+weakRerference.get() : [B@10bedb4
+
+3.GC后:
+14M(free)/15M(total)
+weakRerference.get() : null
+
+Process finished with exit code 0
+```
+
+## 软引用
+
+软引用和弱引用的特性基本一致，主要的区别在于软引用在内存不足时才会被回收。**如果一个对象只具有软引用，Java GC在内存充足的时候不会回收它，内存不足时才会被回收**。
+
+```java
+import java.lang.ref.SoftReference;
+
+/**
+ * 软引用
+ * @author Chenzf
+ * @date 2020/07/27
+ * @version 1.0
+ */
+
+public class SoftReferenceTest {
+
+    public static int M = 1024 * 1024;
+
+    public static void printlnMemory(String tag) {
+        Runtime runtime = Runtime.getRuntime();
+        int M = StrongReferenceTest.M;
+        System.out.println("\n" + tag + ":");
+        System.out.println(runtime.freeMemory()/M + "M(free)/" + runtime.totalMemory()/M + "M(total)");
+    }
+
+    public static void main(String[] args) {
+        SoftReferenceTest.printlnMemory("1.原可用内存和总内存");
+
+        //建立软引用
+        SoftReference<Object> softRerference = new SoftReference<>(new byte[10 * SoftReferenceTest.M]);
+        SoftReferenceTest.printlnMemory("2.实例化10M的数组，并建立软引用");
+        System.out.println("softRerference.get() : " + softRerference.get());
+
+        System.gc();
+        SoftReferenceTest.printlnMemory("3.内存可用容量充足，GC后");
+        System.out.println("softRerference.get() : " + softRerference.get());
+
+        //实例化一个4M的数组,使内存不够用,并建立软引用
+        //free=10M=4M+10M-4M,证明内存可用量不足时，GC后byte[10*m]被回收
+        SoftReference<Object> softRerference2 = new SoftReference<>(new byte[170 * SoftReferenceTest.M]);
+        SoftReferenceTest.printlnMemory("4.实例化一个170M的数组后");
+        System.out.println("softRerference.get() : " + softRerference.get());
+        System.out.println("softRerference2.get() : " + softRerference2.get());
+    }
+}
+```
+
+``` {.line-numbers highlight=12-15}
+1.原可用内存和总内存:
+13M(free)/15M(total)
+
+2.实例化10M的数组，并建立软引用:
+3M(free)/15M(total)
+softRerference.get() : [B@10bedb4
+
+3.内存可用容量充足，GC后:
+14M(free)/25M(total)
+softRerference.get() : [B@10bedb4
+
+4.实例化一个170M的数组后:
+75M(free)/247M(total)
+softRerference.get() : null
+softRerference2.get() : [B@103dbd3
+
+Process finished with exit code 0
+```
+
+## 虚引用 PhantomReference
+
+从PhantomReference类的源代码可以知道，**它的`get()`方法无论何时返回的都只会是null。所以单独使用虚引用时，没有什么意义，需要和引用队列`ReferenceQueue`类联合使用**。**当执行Java GC时如果一个对象只有虚引用，就会把这个对象加入到与之关联的`ReferenceQueue`中**。
+
+```java
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
+
+/**
+ * 虚引用
+ * @author Chenzf
+ * @date 2020/07/27
+ * @version 1.0
+ */
+
+public class PhantomReferenceTest {
+
+    public static int M = 1024*1024;
+
+    public static void printlnMemory(String tag){
+        Runtime runtime = Runtime.getRuntime();
+        int M = PhantomReferenceTest.M;
+        System.out.println("\n" + tag + ":");
+        System.out.println(runtime.freeMemory()/M + "M(free)/" + runtime.totalMemory()/M + "M(total)");
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+
+        PhantomReferenceTest.printlnMemory("1.原可用内存和总内存");
+
+        byte[] object = new byte[10 * PhantomReferenceTest.M];
+        PhantomReferenceTest.printlnMemory("2.实例化10M的数组后");
+
+        //建立虚引用
+        ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
+        PhantomReference<Object> phantomReference = new PhantomReference<>(object, referenceQueue);
+
+        PhantomReferenceTest.printlnMemory("3.建立虚引用后");
+        System.out.println("phantomReference : " + phantomReference);
+        System.out.println("phantomReference.get() : " + phantomReference.get());
+        System.out.println("referenceQueue.poll() : " + referenceQueue.poll());
+
+        //断开byte[10*PhantomReferenceTest.M]的强引用
+        object = null;
+        PhantomReferenceTest.printlnMemory("4.执行object = null;强引用断开后");
+
+        System.gc();
+        PhantomReferenceTest.printlnMemory("5.GC后");
+        System.out.println("phantomReference : " + phantomReference);
+        System.out.println("phantomReference.get() : " + phantomReference.get());
+        System.out.println("referenceQueue.poll() : " + referenceQueue.poll());
+
+        //断开虚引用
+        phantomReference = null;
+        System.gc();
+        PhantomReferenceTest.printlnMemory("6.断开虚引用后GC");
+        System.out.println("phantomReference : " + phantomReference);
+        System.out.println("referenceQueue.poll() : " + referenceQueue.poll());
+    }
+}
+```
+
+```java
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
+
+/**
+ * 虚引用
+ * @author Chenzf
+ * @date 2020/07/27
+ * @version 1.0
+ */
+
+public class PhantomReferenceTest {
+
+    public static int M = 1024 * 1024;
+
+    public static void printlnMemory(String tag){
+        Runtime runtime = Runtime.getRuntime();
+        int M = PhantomReferenceTest.M;
+        System.out.println("\n" + tag + ":");
+        System.out.println(runtime.freeMemory()/M + "M(free)/" + runtime.totalMemory()/M + "M(total)");
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+
+        PhantomReferenceTest.printlnMemory("1.原可用内存和总内存");
+
+        byte[] object = new byte[10 * PhantomReferenceTest.M];
+        PhantomReferenceTest.printlnMemory("2.实例化10M的数组后");
+
+        //建立虚引用
+        ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
+        PhantomReference<Object> phantomReference = new PhantomReference<>(object, referenceQueue);
+
+        PhantomReferenceTest.printlnMemory("3.建立虚引用后");
+        System.out.println("phantomReference : " + phantomReference);
+        System.out.println("phantomReference.get() : " + phantomReference.get());
+        System.out.println("referenceQueue.poll() : " + referenceQueue.poll());
+
+        //断开byte[10*PhantomReferenceTest.M]的强引用
+        object = null;
+        PhantomReferenceTest.printlnMemory("4.执行object = null;强引用断开后");
+
+        System.gc();
+        PhantomReferenceTest.printlnMemory("5.GC后");
+        System.out.println("phantomReference : " + phantomReference);
+        System.out.println("phantomReference.get() : " + phantomReference.get());
+        System.out.println("referenceQueue.poll() : " + referenceQueue.poll());
+
+        //断开虚引用
+        phantomReference = null;
+        System.gc();
+        PhantomReferenceTest.printlnMemory("6.断开虚引用后GC");
+        System.out.println("phantomReference : " + phantomReference);
+        System.out.println("referenceQueue.poll() : " + referenceQueue.poll());
+    }
+}
+```
+
+- PhantomReference的`get()`方法无论何时返回的都只会是null。
+- 当执行Java GC时如果一个对象只有虚引用，就会把这个对象加入到与之关联的`ReferenceQueue`中。
+
+```
+1.原可用内存和总内存:
+13M(free)/15M(total)
+
+2.实例化10M的数组后:
+3M(free)/15M(total)
+
+3.建立虚引用后:
+3M(free)/15M(total)
+phantomReference : java.lang.ref.PhantomReference@10bedb4
+phantomReference.get() : null
+referenceQueue.poll() : null
+
+4.执行object = null;强引用断开后:
+3M(free)/15M(total)
+
+5.GC后:
+14M(free)/25M(total)
+phantomReference : java.lang.ref.PhantomReference@10bedb4
+phantomReference.get() : null
+referenceQueue.poll() : java.lang.ref.PhantomReference@10bedb4
+
+6.断开虚引用后GC:
+24M(free)/25M(total)
+phantomReference : null
+referenceQueue.poll() : null
+
+Process finished with exit code 0
+```
+
+
+## 可达性
+
+不同的引用类型其实都是逻辑上的，而对于虚拟机来说，主要体现的是对象的不同的**可达性(reachable)状态**和**对垃圾收集(garbage collector)的影响**。
+
+
+可以通过下面的流程来对对象的生命周期做一个总结：
+
+<div align=center><img src=Pictures\对象的生命周期.png></div>
+
+对象被创建并初始化，对象在运行时被使用，然后离开对象的作用域，对象会变成不可达并会被垃圾收集器回收。图中**用红色标明的区域表示对象处于强可达阶段**。
+
+如果只讨论**符合垃圾回收条件的对象**，那么只有三种：软可达、弱可达和虚可达。
+
+- 软可达：只能通过软引用才能访问的状态，软可达的对象是由`SoftReference`引用的对象，并且没有强引用的对象。
+    - 软引用是用来描述一些**还有用但是非必须的对象**。
+    - 垃圾收集器会尽可能长时间的保留软引用的对象，但是会在发生`OutOfMemoryError`之前，回收软引用的对象。如果回收完软引用的对象，内存还是不够分配的话，就会直接抛出`OutOfMemoryError`。
+
+- 弱可达：弱可达的对象是`WeakReference`引用的对象。
+    - 垃圾收集器可以**随时收集弱引用的对象，不会尝试保留软引用的对象**。
+
+- 虚可达：虚可达是由`PhantomReference`引用的对象，虚可达就是没有强、软、弱引用进行关联，并且已经被`finalize`过了，只有虚引用指向这个对象的时候。
+
+
+除此之外，还有强可达和不可达的两种可达性判断条件
+
+- 强可达：就是一个对象刚被创建、初始化、使用中的对象都是处于强可达的状态
+
+- 不可达(unreachable)：处于不可达的对象就意味着对象可以被清除了。
+
+不同可达性状态的转换图：
+
+<div align=center><img src=Pictures\可达性状态转换图.png width=70%></div>
+
+
+## 总结
+
+- 强引用是Java的默认引用形式，使用时不需要显示定义，是我们平时最常使用到的引用方式。**不管系统资源有多紧张，Java GC都不会主动回收具有强引用的对象**。 
+
+- 弱引用和软引用一般在引用对象为非必需对象的时候使用，它们的区别是
+    - **被弱引用关联的对象在垃圾回收时总是会被回收**
+    - **被软引用关联的对象只有在内存不足时才会被回收**。 
+
+- 虚引用的get()方法获取的永远是null，无法获取对象实例。**Java GC会把虚引用的对象放到引用队列里面**。可用来在对象被回收时做额外的一些资源清理或事物回滚等处理。 
+
+由于无法从虚引获取到引用对象的实例。它的使用情况比较特别，所以这里不把虚引用放入表格进行对比。这里对强引用、弱引用、软引用进行对比：
+
+| 引用类型 | GC时JVM内存充足 | GC时JVM内存不足 |
+|:--------:|:---------------:|:---------------:|
+|  强引用  |     不被回收    |     不被回收    |
+|  弱引用  |      被回收     |      被回收     |
+|  软引用  |     不被回收    |      被回收     |
+
+
 # 多线程
 
 ## Thread.Sleep(0)的作用
@@ -756,4 +1166,3 @@ value >> 8：
 因此，`Thread.Sleep(0)`的作用，就是“**触发操作系统立刻重新进行一次CPU竞争**”。**竞争的结果也许是当前线程仍然获得CPU控制权，也许会换成别的线程获得CPU控制权**。
 
 
-## 线程池
