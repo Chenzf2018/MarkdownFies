@@ -1,4 +1,4 @@
-# 合集
+# 集合
 
 数据结构(data structure) 是以某种形式将数据组织在一起的`合集`(collection) 。数据结构不仅存储数据，还支持访问和处理数据的操作。
 
@@ -12,16 +12,19 @@ Java是一门面向对象的语言，就免不了**处理对象**；为了方便
 
 - 长度的区别
   - 数组的长度固定；
-  - 集合的长度可变。
+  - 合集的长度可变。
 
 - 元素的数据类型
   - 数组可以存储**基本数据类型**，也可以存储**引用类型**；
-  - **集合只能存储引用类型**(你存储的是简单的`int`，它会**自动装箱**成`Integer`)。
+  - <font color=red>合集只能存储引用类型</font>(存储的是简单的`int`，它会**自动装箱**成`Integer`)。
 
 
-## Java合集框架
+## Java集合框架
 
-Java合集框架支持以下两种类型的容器：
+Java集合，也称作容器，主要是由两大接口(Interface)派生出来的：`Collection`和`Map`。
+
+Java集合框架支持以下两种类型的容器：
+
 - 为了存储**键/值对**，称为**映射表(map)**。
   - 如果要**保持插入顺序**的，我们可以选择`LinkedHashMap`；
   - 如果不需要则选择`HashMap`；
@@ -29,11 +32,15 @@ Java合集框架支持以下两种类型的容器：
 - 为了存储**一个元素**合集，简称为**合集(collection)**；
   - `Set`用于存储一组**不重复**的元素。
   - `List`用于存储一个**有序**元素合集。
-  - `Stack`用千存储采用**后进先出**方式处理的对象。
+    - `Stack`用千存储采用**后进先出**方式处理的对象。
   - `Queue`用于存储采用**先进先出**方式处理的对象。
-  - `Priority Queue`用于存储按照**优先级顺序**处理的对象。
+    - `Priority Queue`用于存储按照**优先级顺序**处理的对象。
+
+<div align=center><img src=DataStructure\容器1.png></div>
 
 <div align=center><img src=DataStructure\容器.jpg></div>
+
+### API(增删查)
 
 `Collection接口`为线性表、向量、栈、队列，优先队列以及集合定义了共同的操作。在Java合集框架中定义的所有接口和类都分组在`java.util`包中。
 
@@ -117,6 +124,10 @@ The statement in line 23 uses a `lambda expression` in (a), which is equivalent 
 
 # 线性表List
 
+**<font color=red>有序！可重复！</font>**
+
+<div align=center><img src=DataStructure\Collection.jpg></div>
+
 `List`集合常用的子类有三个：
 - ArrayList
     底层数据结构是**数组**。线程**不安全**。
@@ -129,6 +140,8 @@ The statement in line 23 uses a `lambda expression` in (a), which is equivalent 
 
 `Arraylist`和`Linkedlist`定义在`List`接口下。`List`接口继承`Collection`接口，定义了一个**允许重复**的**有序**合集。
 
+List接口中的通用方法：
+
 <div align=center><img src=DataStructure\List.jpg width=90%></div>
 
 `Collection`返回的是`Iterator`迭代器接口，而`List`中又有它自己对应的实现`ListIterator`接口。该接口比普通的Iterator接口多了几个方法：`previous(), add(E e), set(E e)`等。
@@ -140,9 +153,17 @@ The statement in line 23 uses a `lambda expression` in (a), which is equivalent 
 
 ## 数组线性表类ArrayList
 
+<div align=center><img src=DataStructure\Collection.jpg></div>
+
+<div align=center><img src=DataStructure\ArrayList.png></div>
+
 `ArrayList`用数组存储元素，这个数组是**动态创建**的。<font color=red>如果元素个数超过了数组的容量，就创建一个更大的新数组，并将当前数组中的所有元素都复制到新数组中</font>。`LinkedList`在一个链表(linked list)中存储元素。
 
-要选用这两种类中的哪一个，依赖于特定需求。如果需要通过**下标随机访问元素**，而不会在线性表起始位置插入或删除元素，那么**ArrayList**提供了最高效率的合集。但是，如果应用程序需要在线性表的**起始位置上插入或删除元素**，就应该选择`LinkedList`类。
+要选用这两种类中的哪一个，依赖于特定需求。
+
+- 如果需要通过**下标随机访问元素**，而不会在线性表起始位置插入或删除元素，那么**ArrayList**提供了最高效率的合集。
+
+- 但是，如果应用程序需要在线性表的**起始位置上插入或删除元素**，就应该选择`LinkedList`类。
 
 **线性表的大小**是可以**动态增大或减小**的。然而**数组**一旦被创建，它的大小就是**固定**的。如果应用程序不需要在线性表中插入或删除元素，那么数组是效率最高的数据结构。
 
@@ -167,16 +188,38 @@ public class ArrayList<E> extends AbstractList<E>
 
 `ArrayList`**底层其实就是一个数组**，`ArrayList`中有**扩容**这么一个概念，正因为它扩容，所以它能够实现“动态”增长。
 
-<div align=center><img src=DataStructure\ArrayList.png></div>
+```java {.line-numbers highlight=10}
+    /**
+     * Increases the capacity to ensure that it can hold at least the
+     * number of elements specified by the minimum capacity argument.
+     *
+     * @param minCapacity the desired minimum capacity
+     */
+    private void grow(int minCapacity) {
+        // overflow-conscious code
+        int oldCapacity = elementData.length;
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+        // minCapacity is usually close to size, so this is a win:
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+```
+
+
 
 **小结：**
 - `ArrayList`是基于**动态数组**实现的，在增删时候，需要数组的**拷贝复制**(`navite`方法由C/C++实现)。
-- `ArrayList`的默认初始化容量是10，每次扩容时候增加原先容量的一半，也就是变为原来的**1.5倍**。
+- `ArrayList`的**默认初始化容量是10，每次扩容时候增加原先容量的一半**，也就是变为原来的**1.5倍**。
 - 删除元素时不会减少容量，若希望减少容量则调用`trimToSize()`。
 - 它**不是线程安全的**。它能存放`null`值。
 
 
 ## 链表类LinkedList
+
+<div align=center><img src=DataStructure\Collection.jpg></div>
 
 `LinkedList`使用**双向链表**实现`List`接口。除了实现`List`接口外，这个类还提供**从线性表两端**提取、插入和删除元素的方法：
 
@@ -239,7 +282,12 @@ public class TestArrayAndLinkedList
 }
 ```
 
-## 向量类和栈类
+
+
+
+## 向量类
+
+<div align=center><img src=DataStructure\Collection.jpg></div>
 
 Java合集框架是在Java 2中引入的。Java 2之前的版本也支持一些数据结构，其中就有`向量类Vector`与`栈类Stack`。为了适应Java合集框架，Java 2对这些类进行了重新设计，但是为了向后兼容，保留了它们所有的以前形式的方法。
 
@@ -249,14 +297,43 @@ Java合集框架是在Java 2中引入的。Java 2之前的版本也支持一些�
 
 方法`elements()`返回一个`Enumeration`对象（枚举型对象）。`Enumeration`接口是在Java 2之前引入的，已经被`Iterator`接口所取代。
 
-在Java合集框架中，栈类Stack是作为Vector类的扩展来实现的：
-<div align=center><img src=DataStructure\Stack.jpg width=70%></div>
+```java {.line-numbers highlight=4-5}
+    private void grow(int minCapacity) {
+        // overflow-conscious code
+        int oldCapacity = elementData.length;
+        int newCapacity = oldCapacity + ((capacityIncrement > 0) ?
+                                         capacityIncrement : oldCapacity);
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+```
+
+因为通常`capacityIncrement`并不定义，所以默认情况下它是**扩容两倍**。
+
+
 
 ### Vector与ArrayList区别
 
 - `Vector`底层也是数组，与`ArrayLis`t最大的区别就是：同步(**线程安全**)。如果想要`ArrayList`实现同步，可以使用`Collections`的方法：`List list = Collections.synchronizedList(new ArrayList(...));`，就可以实现同步。
 
-- ArrayList在底层数组不够用时在原来的基础上扩展`0.5`倍，Vector是扩展`1`倍。
+- ArrayList在底层数组不够用时在原来的基础上扩展`0.5`倍，即新容量是原容量的1.5倍；Vector是扩展`1`倍，即新容量是原容量的2倍。
+
+
+## 栈类
+
+<div align=center><img src=DataStructure\容器1.png></div>
+
+在Java合集框架中，栈类Stack是作为Vector类的扩展来实现的，所以官方文档都说不让用了：
+<div align=center><img src=DataStructure\Stack.jpg width=70%></div>
+
+Stack是**后进先出**(LIFO)的线性数据结构。leetcode中“**有效的括号**”、“**二叉树的遍历**”都会使用它。
+
+**浏览器“回退”功能的实现，底层使用的就是栈存储结构**。当你关闭页面A时，浏览器会将页面A入栈；同样，当你关闭页面B时，浏览器也会将B入栈。因此，当你执行回退操作时，才会首先看到的是页面B，然后是页面A，这是栈中数据依次出栈的效果。
+
+想实现Stack的语义，就用`ArrayDeque`：`Deque<Integer> stack = new ArrayDeque<>();`
 
 
 ## 总结
@@ -325,9 +402,9 @@ public class TestComparator
 }
 ```
 
-**`Comparable`用于比较实现`Comparable`的类的对象；`Comparator`用于比较没有实现`Comparable`的类的对象**。
+**<font color=red>`Comparable`用于比较实现`Comparable`的类的对象；`Comparator`用于比较没有实现`Comparable`的类的对象**。
 
-使用`Comparable`接口来比较元素称为使用**自然顺序**(natural order)进行比较，使用`Comparator`接口来比较元素被称为使用**比较器**来进行比较。
+使用`Comparable`接口来比较元素称为使用**自然顺序**(natural order)进行比较，使用`Comparator`接口来比较元素被称为使用**比较器**来进行比较</font>。
 
 ```java
 // SortStringByLength.java
@@ -397,9 +474,32 @@ public class SortStringIgnoreCase
 
 # 队列和优先队列
 
-队列(queue)是一种先进先出的数据结构。元素被追加到队列末尾，然后从队列头删除。在优先队列(priority queue)中，元素被赋予优先级。<font color=red>当访问元素时，拥有最高优先级的元素首先被删除</font>。
+<div align=center><img src=DataStructure\容器1.png></div>
+
+<div align=center><img src=DataStructure\Collection.jpg></div>
+
+队列(queue)是一种**先进先出**的数据结构。元素被追加到队列末尾，然后从队列头删除。在优先队列(priority queue)中，元素被赋予优先级。<font color=red>当访问元素时，拥有最高优先级的元素首先被删除</font>。
 
 <div align=center><img src=DataStructure\Queue.jpg width=70%></div>
+
+队列(queue)有两组API，基本功能是一样的，但是，一组是会抛异常的；另一组会返回一个特殊值：
+
+| 功能 |   抛异常  |  返回值  |
+|:----:|:---------:|:--------:|
+|  增  |   add(e)  | offer(e) |
+|  删  |  remove() |  poll()  |
+|  瞧  | element() |  peek()  |
+
+如果**队列空了**，那`remove()`就会抛异常，但是`poll()`就返回`null`；`element()`就会抛异常，而`peek()`就返回`null`。
+
+`add(e)`怎么会抛异常呢？
+
+有些Queue它会**有容量的限制**，比如`BlockingQueue`，如果已经**达到了它最大的容量且不会扩容**，就会抛异常；但使用`offer(e)`，就会返回`false`。
+
+那怎么选择呢？
+
+- 首先，要用就用同一组 API，前后要统一；
+- 其次，根据需求。如果你需要它抛异常，那就是用抛异常的；不过做算法题时基本不用，所以选那组返回特殊值的就好了。
 
 
 ## 双端队列Deque和链表LinkedList
@@ -408,7 +508,18 @@ public class SortStringIgnoreCase
 
 <div align=center><img src=DataStructure\Linkedlist实现了List和Deque.jpg width=50%></div>
 
-Linkedlist类实现了Deque接口，Deque又继承自Queue接口。因此，**可以使用LinkedList创建一个队列**。LinkedList很适合用于进行队列操作，因为它可以高效地在线性表的两端插入和移除元素。
+Deque是两端都可以进出的，那自然是有针对First端的操作和对Last端的操作，那每端都有两组，一组抛异常，一组返回特殊值：
+
+| 功能 | 抛异常                      | 返回值                      |
+|------|-----------------------------|-----------------------------|
+| 增   | addFirst(e)/ addLast(e)     | offerFirst(e)/ offerLast(e) |
+| 删   | removeFirst()/ removeLast() | pollFirst()/ pollLast()     |
+| 瞧   | getFirst()/ getLast()       | peekFirst()/ peekLast()     |
+
+LinkedList类实现了Deque接口，Deque又继承自Queue接口。因此，**<font color=red>可以使用LinkedList创建一个队列</font>**。LinkedList很适合用于进行队列操作，因为它可以高效地在线性表的两端插入和移除元素。
+
+
+
 
 ```java
 public class TestQueue
@@ -469,7 +580,16 @@ public class PriorityQueueDemo
 ```
 
 
+## 实现类：LinkedList, ArrayDeque, PriorityQueue
+
+
+
+
 # 集合Set
+
+**<font color=red>无序！不可重复！</font>**
+
+<div align=center><img src=DataStructure\Collection.jpg></div>
 
 集合(set)是一个用于存储和处理**无重复元素**的高效数据结构。
 
