@@ -49,7 +49,7 @@ public class AutoUnboxingTest
 }
 ```
 
-## ==/equals()
+## ==与equals()
 
 ```java
 public class Equivalence
@@ -169,19 +169,19 @@ public static Integer valueOf(int i) {
 }
 ```
 
-## 为什么重写equals()方法为什么要重写hashCode()方法
+## 重写equals()方法为什么要重写hashCode()方法
 
 **参考：**
 https://www.jianshu.com/p/3819388ff2f4
 https://zhuanlan.zhihu.com/p/43001449
 
-equals()用于**判断两个对象是否相等**；hashCode()被设计是用来**使得哈希容器能高效的工作**。
+equals()用于**判断两个对象是否相等**；hashCode()<font color=red>对不同的object会返回唯一的哈希值</font>，被设计是用来**使得哈希容器能高效的工作**。
 
 在Java中，有一些哈希容器，比如Hashtable、HashMap等等，当我们调用这些容器的诸如`get(Object obj)`方法时，**容器的内部肯定需要判断一下当前obj对象在容器中是否存在**，然后再进行后续的操作。一般来说，判断是够存在，肯定是要将obj对象和容器中的每个元素一一进行比较，要使用equals()才是正确的。
 
-但是**如果哈希容器中的元素有很多的时候，使用equals()必然会很慢**。这个时候我们想到一种替代方案就是`hashCode()`：当我们调用哈希容器的`get(Object obj)`方法时，它会**首先利用查看当前容器中是否存在有相同哈希值的对象**，如果不存在，那么直接返回null；如果存在，**再调用当前对象的equals()方法比较一下看哈希处的对象是否和要查找的对象相同**；如果不相同，那么返回null。如果相同，则返回该哈希处的对象。
+但是<font color=red>如果哈希容器中的元素有很多的时候，使用equals()必然会很慢</font>。这个时候我们想到一种替代方案就是`hashCode()`：当我们调用哈希容器的`get(Object obj)`方法时，它会<font color=red>首先利用查看当前容器中是否存在有相同哈希值的对象</font>，如果不存在，那么直接返回null；如果存在，<font color=red>再调用当前对象的equals()方法比较一下看哈希处的对象是否和要查找的对象相同</font>；如果不相同，那么返回null。如果相同，则返回该哈希处的对象。
 
-**`hashCode()`返回一个int类型，两个int类型比较起来要快很多**。所以说，`hashCode()`被设计用来使得哈希容器能高效的工作。也**只有在哈希容器中，才使用hashCode()来比较对象是否相等**，但要注意这种比较是一种弱的比较，还要利用equals()方法最终确认。
+**`hashCode()`返回一个int类型，两个int类型比较起来要快很多**。所以说，`hashCode()`被设计用来使得哈希容器能高效的工作。也<font color=red>只有在哈希容器中，才使用hashCode()来比较对象是否相等，但要注意这种比较是一种弱的比较，还要利用equals()方法最终确认</font>。
 
 equals方法和hashCode方法都是Object类中的方法：
 ```java
@@ -192,13 +192,13 @@ public boolean equals(Object obj) {
 public native int hashCode();
 ```
 
-equals方法在其内部是调用了"=="，所以说**在不重写equals方法的情况下，equals方法是比较两个对象是否具有相同的引用**，即是否指向了同一个内存地址。
+**equals方法在其内部是调用了"=="**，所以说**在不重写equals方法的情况下，equals方法是比较两个对象是否具有相同的引用**，即是否指向了同一个内存地址。
 
 而hashCode是一个本地方法，他返回的是这个**对象的内存地址**。
 
 hashCode的通用规定：
 
-- 在应用程序的执行期间，只要对象的equals方法的比较操作所用到的信息没有被修改，那么对同一个对象的多次调用，hashCode方法都必须始终返回同一个值。在一个应用程序与另一个应用程序的执行过程中，执行hashCode方法所返回的值可以不一致。
+- 在应用程序的执行期间，只要对象的equals方法的比较操作所用到的信息没有被修改，那么<font color=red>对同一个对象的多次调用，hashCode方法都必须始终返回同一个值</font>。在一个应用程序与另一个应用程序的执行过程中，执行hashCode方法所返回的值可以不一致。
 
 - 如果两个对象根据equals(Object)方法比较是相等的，那么调用这两个对象中的hashCode方法都必须产生同样的整数结果。即：**如果两个对象的equals()相等，那么他们的hashCode()必定相等**。**如果两个对象的hashCode()不相等，那么他们的equals()必定不等**。
 
@@ -255,7 +255,7 @@ public class Test {
 
 但是为什么第二个为什么输出的是false呢？
 
-就是因为我们没有重写hashCode方法。所以我们得到一个结论：**如果一个类重写了equals方法但是没有重写hashCode方法，那么该类无法结合所有基于散列的集合（HashMap，HashSet）一起正常运作**。
+就是因为我们没有重写hashCode方法。所以我们得到一个结论：**<font color=red>如果一个类重写了equals方法但是没有重写hashCode方法，那么该类无法结合所有基于散列的集合（HashMap，HashSet）一起正常运作</font>**。
 
 ```java {.line-numbers highlight=28-31}
 import java.util.HashMap;
@@ -352,7 +352,63 @@ public class Test {
 
 ## `String`和`StringBuffer`, `StringBuilder`的区别
 
-它们可以储存和操作`字符串`，即包含`多个字符`的字符数据。`String`类提供了数值<font color=red>不可改变的字符串</font>。而`StringBuffer`和`StringBuilder`类的<font color=red>对象能够被多次的修改，并且不产生新的未使用对象</font>。
+### String
+
+char类型只能表示一个字符。为了表示一串字符，使用称为String (字符串)的数据类型。String类型不是基本类型，而是**引用类型(reference type)**。
+
+`String`方法：
+
+<div align=center><img src=Pictures\String方法.png></div>
+
+### 从控制台读取字符串
+
+- `next()`方法读取以空白字符结束的字符串(即’ ’、’\t’、'\f’、’\r’或’\n')。
+
+```java
+import java.util.Scanner;
+
+public class ReadingString
+{
+    public static void main(String[] args)
+    {
+        Scanner input = new Scanner(System.in);
+        System.out.print("Enter three words separated by spaces: ");
+        String s1 = input.next();  
+        String s2 = input.next();
+        String s3 = input.next();
+        System.out.println("s1 is " + s1);
+        System.out.println("s2 is " + s2);
+        System.out.println("s3 is " + s3);
+    }
+}
+
+/*
+Output:
+Enter three words separated by spaces: Welcome To Java
+s1 is Welcome
+s2 is To
+s3 is Java
+*/
+```
+
+- `nextLine()`方法读取一整行文本。`nextLine()`方法读取以**按下回车键**为结束标志的字符串。
+
+```java
+System.out.print("Enter a line: ");
+String s = input.nextLine(); 
+System.out.println("The line entered is " + s);
+
+Enter a line: Welcome to Java
+The line entered is Welcome to Java
+```
+
+- 为了避免输入错误，不要在`nextByte()、nextShort()、nextInt()、nextLong()、nextFloat、nextDouble()`和`next()`之后使用`nextLine()`
+
+
+
+
+- `String`类提供了数值<font color=red>不可改变的字符串</font>。
+- 而`StringBuffer`和`StringBuilder`类的<font color=red>对象能够被多次的修改，并且不产生新的未使用对象</font>。
 
 `StringBuilder`类在Java5中被提出，它和`StringBuffer`之间的最大不同在于<font color=red>`StringBuilder`的方法不是线程安全的（不能同步访问）</font>。但由于` StringBuilder`相较于`StringBuffer`有<font color=red>速度优势</font>，所以多数情况下建议使用`StringBuilder`类。然而在应用程序要求线程安全的情况下，则必须使用`StringBuffer`类。
 
@@ -589,6 +645,215 @@ print in main , user is User{name='Hollis', gender='Male'}
 Java中其实还是**值传递**的，只不过对于**对象参数**，值的内容是**对象的引用**。
 
 
+
+## 基本数据类型和引用数据类型的区别
+
+Java中的数据类型分为两大类，**基本数据类型**和**引用数据类型**。
+
+基本数据类型只有8种，引用数据类型非常多，大致包括：类、 接口类型、 数组类型、 枚举类型、 注解类型、 字符串型。例如，`String`类型就是引用类型。简单来说，**所有的非基本数据类型都是引用数据类型**。
+
+
+
+每个**变量**都代表一个存储值的**内存位置**。声明一个变量时，就是在告诉编译器这个变量可以存放什么类型的值。对**基本类型变量**来说，对应内存所存储的值是**基本类型值**。对**引用类型变量**来说，对应内存所存储的值是一个**引用**，是**对象的存储地址**。
+
+<div align=center><img src=Pictures\PrimitiveAndReferenceType.jpg></div>
+
+将一个变量赋值给另一个变量时，另一个变量就被赋予同样的值。
+- 对**基本类型变量**而言，就是将一个变量的**实际值**赋给另一个变量。
+- 对**引用类型变量**而言，就是将一个变量的**引用**赋给另一个变量。
+
+<div align=center><img src=Pictures\基本类型赋值.jpg></div>
+
+<div align=center><img src=Pictures\引用类型赋值.jpg></div>
+
+执行完赋值语句`c1 = c2`后，`c1`指向`c2`所指向的同一对象。`c1`以前引用的对象就不再有用。现在它就成为垃圾（garbage)。垃圾会占用内存空间。Java运行系统会检测垃圾并自动回收它所占的空间，这个过程称为**垃圾回收**（garbage collection)。
+
+
+
+### 存储位置
+
+- 基本变量类型
+在方法中定义的非全局基本数据类型变量的具体内容是存储在**栈**中的。
+
+- 引用变量类型
+只要是引用数据类型变量，其**具体内容**都是存放在**堆**中的，而**栈**中存放的是其具体内容所在内存的**地址**。
+
+<div align=center><img src=Pictures\基本数据与引用数据类型.png width=40%></div>
+
+### 传递方式
+
+```java
+public class Test
+{
+    public static void main(String[] args)
+    {
+        int msg = 100;
+        System.out.println("调用方法前msg的值："+ msg);    //100
+        fun(msg);  // 无返回
+        System.out.println("调用方法后msg的值："+ msg);    //100
+        msg = func(msg);
+        System.out.println("调用方法后msg的值："+ msg);
+    }
+
+    public static void fun(int temp)
+    {
+        temp = 0;
+    }
+
+    // public static int fun(int temp)
+    public static int func(int temp)
+    {
+        return temp = 0;
+    }
+}
+```
+
+```java
+class Book
+{
+    String name;
+    double price;
+
+    public Book(String name, double price)
+    {
+        this.name = name;
+        this.price = price;
+    }
+
+    public void getInfo()
+    {
+        System.out.println("图书名称："+ name + "，价格：" + price);
+    }
+
+    public void setPrice(double price)
+    {
+        this.price = price;
+    }
+}
+
+public class Test
+{
+    public static void main(String[] args)
+    {
+        Book book = new Book("Java开发指南", 66.6);
+        book.getInfo();  //图书名称：Java开发指南，价格：66.6
+        fun(book);
+        book.getInfo();  //图书名称：Java开发指南，价格：99.9
+    }
+
+    public static void fun(Book temp)
+    {
+        temp.setPrice(99.9);
+    }
+}
+/*
+图书名称：Java开发指南，价格：66.6
+图书名称：Java开发指南，价格：99.9
+ */
+```
+
+**调用时为temp在栈中开辟新空间，并指向book的具体内容**，方法执行完毕后temp在栈中的内存被释放掉。
+
+<div align=center><img src=Pictures\传递引用.png width=70%></div>
+
+### 向方法传递对象参数
+
+Java只有一种参数传递方式：**值传递**（pass-by-value)。**传递对象实际上是传递对象的引用**。
+
+```java
+public class TestPassObject
+{
+    public static void main(String[] args)
+    {
+        // Create a Circle object with radius 1
+        CircleWithPrivateDataFields myCircle =
+                new CircleWithPrivateDataFields(1);
+
+        // Print areas for radius 1, 2.
+        int n = 2;
+        printAreas(myCircle, n);
+
+        // See myCircle.radius and times
+        System.out.println("\n" + "Radius is " + myCircle.getRadius());
+        System.out.println("n is " + n);
+    }
+
+    /** Print a table of areas for radius */
+    public static void printAreas(
+            CircleWithPrivateDataFields c, int times)
+    {
+        System.out.println("Radius \t\tArea");
+        while (times >= 1)
+        {
+            System.out.println(c.getRadius() + "\t\t" + c.getArea());
+            c.setRadius(c.getRadius() + 1);
+            times--;
+        }
+    }
+}
+/*
+Radius 		Area
+1.0		3.141592653589793
+2.0		12.566370614359172
+
+Radius is 3.0
+n is 2
+ */
+```
+
+当传递**基本数据类型**参数时，传递的是**实参的值**。传递**引用类型**的参数时，传递的是**对象的引用**。
+
+<div align=center><img src=Pictures\TestPassObject.jpg></div>
+
+
+
+## 重载Overload与重写Override
+
+重栽方法使得你可以使用**同样的名字**来定义**不同方法**，只要它们的**签名（参数）是不同的**。
+
+```java
+public class TestMethodOverloading
+{
+    public static void main(String[] args) 
+    {
+        // Invoke the max method with int parameters
+        System.out.println("The maximum between 3 and 4 is " + max(3, 4));
+
+        // Invoke the max method with the double parameters
+        System.out.println("The maximum between 3.0 and 5.4 is " + max(3.0, 5.4));
+
+        // Invoke the max method with three double parameters
+        System.out.println("The maximum between 3.0, 5.4, and 10.14 is " + max(3.0, 5.4, 10.14));    
+    }
+
+    /** Return the max between two int values */
+    public static int max(int num1, int num2)
+    {
+        if (num1 > num2)
+            return num1;
+        else
+            return num2;
+    }
+
+    /** Find the max between two double values */
+    public static double max(double num1, double num2) 
+    {
+        if (num1 > num2)
+            return num1;
+        else
+            return num2;
+    }
+
+    /** Return the max among three double values */
+    public static double max(double num1, double num2, double num3) 
+    {
+        return max(max(num1, num2), num3);
+    }
+}
+```
+
+
+
 ## 为什么会出现4.0-3.6=0.40000001？
 
 **二进制的小数**无法精确的表达**十进制小数**，计算机在计算十进制小数的过程中要先转换为二进制进行计算，这个过程中出现了误差。（就像十进制无法精确表达1/3一样。）
@@ -711,11 +976,41 @@ https://juejin.im/post/5a5129f5f265da3e317dfc08
 
 https://blog.csdn.net/Light_makeup/article/details/107301647
 
+https://www.cnblogs.com/mfrank/p/10154535.html
+
 Java的内存回收不需要程序员负责，JVM会在必要时启动Java GC完成垃圾回收。Java以便我们**控制对象的生存周期**，提供给了我们四种引用方式，引用强度从强到弱分别为：强引用、软引用、弱引用、虚引用。
+
+
+### 为什么需要回收
+
+每一个Java程序中的对象都会占用一定的计算机资源，最常见的，如：每个对象都会在堆空间上申请一定的内存空间。但是除了内存之外，对象还会占用其它资源，如文件句柄，端口，socket等等。**当你创建一个对象的时候，必须保证它在销毁的时候会释放它占用的资源。否则程序将会在OOM中结束它的使命**。
+
+在Java中不需要程序员来管理内存的分配和释放，Java有自动进行内存管理的神器——垃圾回收器，垃圾回收器会自动回收那些不再使用的对象。
+
+在Java中，不必像C或者C++那样显式去释放内存，不需要了解其中回收的细节，也不需要担心会将同一个对象释放两次而导致内存损坏。所有这些，垃圾回收器都自动帮你处理好了。你只需要保证那些不再被使用的对象的所有引用都已经被释放掉了，否则，你的程序就会像在C++中那样结束在内存泄漏中。
+
+虽然垃圾回收器确实让Java中的内存管理比C、C++中的内存管理容易许多，但是你不能对于内存完全不关心。如果你不清楚JVM到底会在什么条件下才会对对象进行回收，那么就有可能会不小心在代码中留下内存泄漏的bug。
+
+因此，关注对象的回收时机，理解JVM中垃圾收集的机制，可以提高对于这个问题的敏感度，也能在发生内存泄漏问题时更快的定位问题所在。
+
+
+### 为什么需要引用类型
+
+引用类型是与JVM密切合作的类型，有些引用类型甚至允许在其引用对象在程序中仍需要的时候被JVM释放。
+
+那么，为什么需要这些引用类型呢？
+
+在Java中，垃圾回收器线程一直在默默的努力工作着，但你却无法在代码中对其进行控制。无法要求垃圾回收器在精确的时间点对某些对象进行回收。
+
+**有了这些引用类型之后，可以一定程度上增加对垃圾回收的粒度把控，可以让垃圾回收器在更合适的时机回收掉那些可以被回收掉的对象，而并不仅仅是只回收不再使用的对象**。
+
+这些引用类型各有特点，各有各的适用场景，清楚的了解和掌握它们的用法可以帮助你写出更加健壮的代码。
+
+
 
 ### 强引用
 
-StrongReference是Java的**默认引用形式**，使用时不需要显示定义。任何通过强引用所使用的对象不管系统资源有多紧张， Java虚拟机宁愿抛出`OutOfMemoryError`错误，使程序异常终止，Java GC都**不会主动回收具有强引用的对象**。
+StrongReference是Java的**默认引用形式**，使用时不需要显示定义。任何通过强引用所使用的对象不管系统资源有多紧张，Java虚拟机宁愿抛出`OutOfMemoryError`错误，使程序异常终止，Java GC都**不会主动回收具有强引用的对象**。
 
 强引用：`A a = new A()`
 
@@ -788,7 +1083,52 @@ Process finished with exit code 0
 <div align=center><img src=Pictures\StrongReference.png></div>
 
 
-## 弱引用
+强引用过多的例子：
+
+```java {.line-numbers highlight=5-7}
+import java.util.ArrayList;
+import java.util.List;
+
+public class StrongReference {
+    // 使用静态集合对象来存储并且在代码中随处使用它们
+    // 但是这样，就会阻止垃圾回收器对集合中的对象进行回收和销毁。
+    // 从而可能导致OOM的发生
+    public static List<Integer> cachedObjs = new ArrayList<>();
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 100_000_000; i++) {
+            cachedObjs.add(i);
+        }
+    }
+}
+
+/*
+Output:
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "main"
+*/
+```
+
+
+#### 总结
+
+- 强引用就是最普通的引用
+- 可以使用强引用直接访问目标对象
+- 强引用指向的对象在任何时候都不会被系统回收
+- 强引用可能会导致**内存泄漏**
+- 过多的强引用会导致**OOM**
+
+#### 内存泄漏与内存溢出
+
+- 内存泄露本意是**申请的内存空间没有被正确释放**，导致**后续程序里这块内存被永远占用**（不可达），而且**指向这块内存空间的指针不再存在时，这块内存也就永远不可达了**，内存空间就这么一点点被蚕食
+  - 比如有10张纸，本来一人一张，画完自己擦了还回去，别人可以继续画，现在有个坏蛋要了纸不擦不还，然后还跑了找不到人了，如此就只剩下9张纸给别人用了，这样的人多起来后，最后大家一张纸都没有了。
+  
+- 内存溢出是指**存储的数据超出了指定空间的大小**，这时数据就会越界
+  - 常见的溢出，是指在栈空间里，分配了超过数组长度的数据，导致多出来的数据覆盖了栈空间其他位置的数据，这种情况发生时，可能会导致程序出现各种难排查的异常行为，或是被有心人利用，修改特定位置的变量数据达到溢出攻击的目的。
+  - Java中的内存溢出，一般指(OOM)这种Error，它更像是一种内存空间不足时发生的错误，并且也不会导致溢出攻击这种问题
+
+
+
+### 弱引用
 
 如果一个对象只具有弱引用，**无论内存充足与否，Java GC后对象如果只有弱引用将会被自动回收**。
 
@@ -841,9 +1181,15 @@ weakRerference.get() : null
 Process finished with exit code 0
 ```
 
-## 软引用
+### 软引用
 
 软引用和弱引用的特性基本一致，主要的区别在于软引用在内存不足时才会被回收。**如果一个对象只具有软引用，Java GC在内存充足的时候不会回收它，内存不足时才会被回收**。
+
+垃圾回收器会在内存不足，经过一次垃圾回收后，内存仍旧不足的时候回收掉软可达对象。在虚拟机抛出OOM(`OutOfMemoryError`)之前，会保证已经清除了所有指向软可达对象的软引用。
+
+如果内存足够，并没有规定回收软引用的具体时间，所以在内存充足的情况下，软引用对象也可能存活很长时间。
+
+
 
 ```java
 import java.lang.ref.SoftReference;
@@ -908,9 +1254,33 @@ softRerference2.get() : [B@103dbd3
 Process finished with exit code 0
 ```
 
-## 虚引用 PhantomReference
+#### 应用场景
+
+软引用很适合用来实现**缓存**：比如网页缓存、图片缓存等。
+
+在很多应用中，都会出现大量的默认图片，比如说QQ的默认头像，应用内的默认图标等等，这些图片很多地方会用到。
+
+**如果每次都去读取图片，由于读取文件速度较慢，大量重复的读取会导致性能下降**。所以可以考虑将图片缓存起来，**需要的时候直接从<font color=red>内存</font>中读取**。但是，由于图片占用内存空间比较大，**缓存的图片过多会占用比较多的内存**，就可能比较容易发生OOM。这时候，软引用就派得上用场了。
+
+
+#### 总结
+
+- 软引用弱于强引用
+- 软引用指向的对象会**在内存不足时被垃圾回收清理掉**
+- JVM会**优先回收长时间闲置不用的软引用对象**，对那些刚刚构建的或刚刚使用过的软引用对象会尽可能保留
+- 软引用可以有效的**解决OOM问题**
+- 软引用适合用作**非必须大对象的缓存**
+
+
+### 虚引用 PhantomReference
 
 从PhantomReference类的源代码可以知道，**它的`get()`方法无论何时返回的都只会是null。所以单独使用虚引用时，没有什么意义，需要和引用队列`ReferenceQueue`类联合使用**。**当执行Java GC时如果一个对象只有虚引用，就会把这个对象加入到与之关联的`ReferenceQueue`中**。
+
+它的作用在于**跟踪垃圾回收过程**，在对象被收集器回收时收到一个系统通知。 
+
+当垃圾回收器准备回收一个对象时，如果发现它还有虚引用，就会在垃圾回收后，**将这个虚引用加入引用队列，在其关联的虚引用出队前，不会彻底销毁该对象**。 
+
+所以可以通过检查引用队列中是否有相应的虚引用来**判断对象是否已经被回收了——作为对象是否存活的监控**。
 
 ```java
 import java.lang.ref.PhantomReference;
@@ -1062,7 +1432,7 @@ Process finished with exit code 0
 ```
 
 
-## 可达性
+### 可达性
 
 不同的引用类型其实都是逻辑上的，而对于虚拟机来说，主要体现的是对象的不同的**可达性(reachable)状态**和**对垃圾收集(garbage collector)的影响**。
 
@@ -1096,7 +1466,7 @@ Process finished with exit code 0
 <div align=center><img src=Pictures\可达性状态转换图.png width=70%></div>
 
 
-## 总结
+### 总结
 
 - 强引用是Java的默认引用形式，使用时不需要显示定义，是我们平时最常使用到的引用方式。**不管系统资源有多紧张，Java GC都不会主动回收具有强引用的对象**。 
 
@@ -1113,6 +1483,28 @@ Process finished with exit code 0
 |  强引用  |     不被回收    |     不被回收    |
 |  弱引用  |      被回收     |      被回收     |
 |  软引用  |     不被回收    |      被回收     |
+
+设置四种引用类型，是为了更好的**控制对象的生命周期**，让代码能够一定程度上干涉GC过程，所以引用类型主要就是跟垃圾回收有关了。
+
+对于JVM、GC和内存，可以这样理解，**内存**好比你的**抽屉**，这个抽屉有一定大小，并不能无限存放东西。
+
+**JVM**好比**你自己**，会时不时来整理抽屉。那些申请的对象好比放在抽屉里的东西，生活中的必需品就好比强引用，而那些可能用到的东西（非必需品）就好比软引用或者弱引用。
+
+当抽屉还很空的时候，放一些非必须品你也不会在意，但是随着买的东西越来越多，抽屉里快放不下的时候，就需要根据重要程度来选择一些东西扔出抽屉，这个过程就好比GC。
+
+JVM在内存够用的时候，不会对软引用的对象进行回收，但是当内存紧张的时候，就会对它们进行清理。
+
+| 引用类型 | 引用对象被垃圾回收的时间                        | 用途                                       | 是否可以转为强引用 | 对应的类                  |
+|----------|-------------------------------------------------|--------------------------------------------|--------------------|---------------------------|
+| 强引用   | 从来不会                                        | 一般用途，保持对象不被回收                 | 可以               | 默认                      |
+| 软引用   | 发生一次GC后，JVM决定还需要进一步回收更多空间时 | 缓存，保持对象在内存足够时不被回收         | 可以               | SoftReference             |
+| 弱引用   | 进行垃圾回收时，如果对象只存在弱引用            | 缓存，仅仅在对象仍被使用时保持其不被回收   | 可以               | WeakReference WeakHashMap |
+| 虚引用   | 进行垃圾回收时                                  | 跟踪GC过程，在对象被回收前进行一些清理工作 | 不可以             | PhantomReference          |
+
+
+
+
+
 
 
 # 多线程

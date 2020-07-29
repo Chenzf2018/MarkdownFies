@@ -466,6 +466,11 @@ public class TestArrayAndLinkedList
 
 ## `ArrayList`与`LinkedList`对比
 
+两者在实现层面的区别是：
+
+- ArrayList是用一个**可扩容的数组**来实现的(re-sizing array)；
+- LinkedList是用doubly-linked list来实现的。
+
 
 **查询**多用`ArrayList`，**增删**多用`LinkedList`。
 
@@ -473,7 +478,8 @@ public class TestArrayAndLinkedList
 - 如果增加元素一直是使用`add()`(**增加到末尾**)的话，那是`ArrayList`要快；
 - 一直**删除末尾**的元素也是`ArrayList`要快(不用复制移动位置)；
 - 至于如果删除的是**中间的位置**的话，还是`ArrayList`要快！
-    - 如果删除的是中间的位置的话，需要两个步骤：1.遍历找到这个元素；2.进行删除增加操作。大样本时，`ArrayList`的第一步操作会快很多。
+    - 如果删除的是中间的位置的话，需要两个步骤：1.遍历**找到这个元素**；2.进行删除增加操作。**大样本时，`ArrayList`的第一步操作会快很多**。
+- 如果**不考虑找到这个元素的时间**，数组因为物理上的连续性，当要增删元素时，在尾部还好，但是其他地方就会导致**后续元素都要移动**，所以效率较低；而链表则可以轻松的断开和下一个元素的连接，直接插入新元素或者移除旧元素。
 
 但一般来说：增删多还是用`LinkedList`。
 
@@ -485,6 +491,8 @@ ArrayList的最大特点就是能**随机访问**，因为元素在物理上是�
 <div align=center><img src=DataStructure\LinkedList插入.png width=80%></div>
 
 <div align=center><img src=DataStructure\LinkedList插入2.png width=90%></div>
+
+
 ## 向量类
 
 <div align=center><img src=DataStructure\Collection.jpg></div>
@@ -797,14 +805,15 @@ public class PriorityQueueDemo
 
 Set集合常用子类：
 - HashSet集合
-    底层数据结构是**哈希表**(是一个元素为链表的数组)
+    采用Hashmap的key来储存元素，主要特点是**无序**的，基本操作都是$O(1)$的时间复杂度，很快。
 
 - TreeSet集合
     - 底层数据结构是**红黑树**(是一个自平衡的二叉树)
     - 保证元素的**排序**方式
+    - 可以用**自然排序**或者**自定义比较器**来排序
 
 - LinkedHashSet集合
-    底层数据结构由**哈希表和链表**组成。
+    是一个`HashSet + LinkedList的`结构，特点就是既拥有了$O(1)$的时间复杂度，又能够**保留插入的顺序**。
 
 `Set`接口扩展了`Collection`合集接口：
 <div align=center><img src=DataStructure\集合类.jpg width=80%></div>
@@ -1317,6 +1326,10 @@ Map有三种遍历方式：
 1. 通过遍历**KeySet**来遍历所有键值对
 2. 通过遍历**EntrySe**t来实现
 3. 通过**EntrySet的Iterator**来遍历。
+
+对于HashMap中的每个key，首先通过`hash function`计算出**一个hash值**，这个hash值就代表了在buckets里的编号，而buckets实际上是用**数组**来实现的，由于**桶有可能比数组大**，所以**把这个数值模上数组的长度**得到它**在数组的index**，就这样把它放在了数组里。
+
+<div align=center><img src=DataStructure\HashMap18.webp></div>
 
 参考资料：
 https://www.cnblogs.com/duodushuduokanbao/p/9492952.html
@@ -2601,9 +2614,9 @@ HashMap中的**key若Object类型**，则需实现哪些方法？
 **区别：**
 
 - 从层级结构上看，HashMap、HashTable有一个共用的Map接口。另外，HashTable还单独继承了一个抽象类Dictionary(已废弃)；
-- HashTable线程安全，HashMap线程不安全；
+- **HashTable线程安全，HashMap线程不安全**；
 - 初始值和扩容方式不同。HashTable的初始值为11，扩容为原大小的2*d+1。容量大小都采用奇数且为素数，且采用取模法，这种方式散列更均匀。但有个缺点就是对素数取模的性能较低（涉及到除法运算）；而HashTable的长度都是2的次幂，这种方式的取模都是直接做位运算，性能较好。
-- HashMap的key、value都可为null，且value可多次为null，key多次为null时会覆盖。但HashTable的key、value都不可为null，否则直接NPE(NullPointException)。
+- **HashMap的key、value都可为null**，且value可多次为null，key多次为null时会覆盖。但**HashTable的key、value都不可为null**，否则直接NPE(NullPointException)。
 
 ```java
 /**
@@ -2635,6 +2648,147 @@ public synchronized V put(K key, V value) {
     return null;
 }
 ```
+
+
+
+### 重写equals()方法为什么要重写hashCode()方法
+
+**参考：**
+https://www.jianshu.com/p/3819388ff2f4
+https://zhuanlan.zhihu.com/p/43001449
+
+equals()用于**判断两个对象是否相等**；hashCode()<font color=red>对不同的object会返回唯一的哈希值</font>，被设计是用来**使得哈希容器能高效的工作**。
+
+在Java中，有一些哈希容器，比如Hashtable、HashMap等等，当我们调用这些容器的诸如`get(Object obj)`方法时，**容器的内部肯定需要判断一下当前obj对象在容器中是否存在**，然后再进行后续的操作。一般来说，判断是够存在，肯定是要将obj对象和容器中的每个元素一一进行比较，要使用equals()才是正确的。
+
+但是<font color=red>如果哈希容器中的元素有很多的时候，使用equals()必然会很慢</font>。这个时候我们想到一种替代方案就是`hashCode()`：当我们调用哈希容器的`get(Object obj)`方法时，它会<font color=red>首先利用查看当前容器中是否存在有相同哈希值的对象</font>，如果不存在，那么直接返回null；如果存在，<font color=red>再调用当前对象的equals()方法比较一下看哈希处的对象是否和要查找的对象相同</font>；如果不相同，那么返回null。如果相同，则返回该哈希处的对象。
+
+**`hashCode()`返回一个int类型，两个int类型比较起来要快很多**。所以说，`hashCode()`被设计用来使得哈希容器能高效的工作。也<font color=red>只有在哈希容器中，才使用hashCode()来比较对象是否相等，但要注意这种比较是一种弱的比较，还要利用equals()方法最终确认</font>。
+
+equals方法和hashCode方法都是Object类中的方法：
+```java
+public boolean equals(Object obj) {
+    return (this == obj);
+}
+
+public native int hashCode();
+```
+
+**equals方法在其内部是调用了"=="**，所以说**在不重写equals方法的情况下，equals方法是比较两个对象是否具有相同的引用**，即是否指向了同一个内存地址。
+
+而hashCode是一个本地方法，他返回的是这个**对象的内存地址**。
+
+hashCode的通用规定：
+
+- 在应用程序的执行期间，只要对象的equals方法的比较操作所用到的信息没有被修改，那么<font color=red>对同一个对象的多次调用，hashCode方法都必须始终返回同一个值</font>。在一个应用程序与另一个应用程序的执行过程中，执行hashCode方法所返回的值可以不一致。
+
+- 如果两个对象根据equals(Object)方法比较是相等的，那么调用这两个对象中的hashCode方法都必须产生同样的整数结果。即：**如果两个对象的equals()相等，那么他们的hashCode()必定相等**。**如果两个对象的hashCode()不相等，那么他们的equals()必定不等**。
+
+- 如果两个对象根据equals(Object)方法比较是不相等的，那么调用这两个对象中的hashCode方法，则不一定要求hashCode方法必须产生不同的结果。但是程序员应该知道，给不相等的对象产生截然不同的整数结果，有可能提高散列表的性能。
+
+由上面三条规定可知，**如果重写了equals方法而没有重写hashCode方法的话，就违反了第二条规定**。**相等的对象必须拥有相等的hash code**。
+
+
+不重写hashCode方法所带来的严重后果：
+```java {.line-numbers highlight=12-25}
+import java.util.HashMap;
+import java.util.Map;
+
+public class Test {
+    static class Person {
+        private String name;
+
+        public Person (String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            // 判断是否是同一对象
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj instanceof Person) {
+                Person person = (Person) obj;
+                // 直接调用String的equals方法
+                return name.equals(person.name);
+            }
+
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        Person person1 = new Person("czf");
+        Person person2 = new Person("czf");
+
+        Map<Person, Integer> hashMap = new HashMap<>();
+        hashMap.put(person1, 1);
+
+        // true
+        System.out.println(person1.equals(person2));
+        // false
+        System.out.println(hashMap.containsKey(person2));
+    }
+}
+```
+对于第一个输出true我们很容易知道，因为我们重写了equals方法，只要两个对象的name属性相同就会返回ture。
+
+但是为什么第二个为什么输出的是false呢？
+
+就是因为我们没有重写hashCode方法。所以我们得到一个结论：**<font color=red>如果一个类重写了equals方法但是没有重写hashCode方法，那么该类无法结合所有基于散列的集合（HashMap，HashSet）一起正常运作</font>**。
+
+```java {.line-numbers highlight=28-31}
+import java.util.HashMap;
+import java.util.Map;
+
+public class Test {
+    static class Person {
+        private String name;
+
+        public Person (String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            // 判断是否是同一对象
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj instanceof Person) {
+                Person person = (Person) obj;
+                // 直接调用String的equals方法
+                return name.equals(person.name);
+            }
+
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            // 直接调用String的hashCode方法
+            return name.hashCode();
+        }
+    }
+
+    public static void main(String[] args) {
+        Person person1 = new Person("czf");
+        Person person2 = new Person("czf");
+
+        Map<Person, Integer> hashMap = new HashMap<>();
+        hashMap.put(person1, 1);
+
+        // true
+        System.out.println(person1.equals(person2));
+        // true
+        System.out.println(hashMap.containsKey(person2));
+    }
+}
+```
+
 
 
 ## ConcurrentHashMap

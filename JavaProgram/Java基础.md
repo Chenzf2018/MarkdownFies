@@ -495,7 +495,7 @@ i: 3
  */
 ```
 
-## ==/equals()
+## ==与equals()
 ```java
 package Operator;
 
@@ -625,6 +625,18 @@ public class Literals {
 
 ## 类型转换操作符
 
+<div align=center><img src=Basic\基本类型转换.jpg></div>
+
+- 小范围类型的变量转换为大范围类型的变量称为**拓宽类型(widening a type)**
+- 大范围类型的变量转换为小范围类型的变量称为**缩窄类型(narrowing a type)**
+
+Java将自动拓宽一个类型，但是，缩窄类型必须显式完成：
+```java
+System.out.println((int)1.7);
+System.out.println((double)1 / 2);  // displays 0.5
+System.out.println(1 / 2);  // displays 0
+```
+
 &emsp;&emsp;`类型转换(Casting)`的作用是“与一个模型匹配”。在适当的时候，Java会将一种数据类型自动转换成另一种。例如，假设我们为某浮点变量赋以一个整数值，编译器会将`int`自动转换成`float`。
 
 &emsp;&emsp;如果要执行一种名为`窄化转换(narrowing conversion)`的操作(也就是说，将能容纳更多信息的数据类型转换成无法容纳那么多信息的类型)，就有可能面临`信息丢失`的危险。<font color=red>必须显式地进行类型转换</font>。对于`扩展转换(widening conversion)`，则不必显式地进行类型转换，因为新类型肯定能容纳原来类型的信息，不会造成任何信息的丢失。
@@ -638,7 +650,7 @@ public class Literals {
 如果任何运算单元的长度都不超过`int`，那么运算结果就按照`int`来计算：
 ```
 byte a = 1;
-byte b= 2;
+byte b = 2;
 a+b -> int 类型
 ```
 
