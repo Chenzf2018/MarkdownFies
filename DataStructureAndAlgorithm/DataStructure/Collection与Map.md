@@ -1,10 +1,12 @@
-# 集合
+参考资料：
+https://www.cnblogs.com/mfrank/p/8921974.html
 
-数据结构(data structure) 是以某种形式将数据组织在一起的`合集`(collection) 。数据结构不仅存储数据，还支持访问和处理数据的操作。
+# 容器
+
 
 在面向对象思想里，一种数据结构也被认为是一个`容器`(container) 或者`容器对象`(container object)，它是一个能**存储其他对象**的对象，这里的其他对象常称为数据或者元素。
 
-## 为什么需要合集及其与数组的区别
+## 为什么需要容器及其与数组的区别
 
 Java是一门面向对象的语言，就免不了**处理对象**；为了方便操作多个对象，那么我们就得把这多个对象存储起来；想要**存储多个对象**(变量)，很容易就能想到一个**容器**；常用的容器有`StringBuffered`，`数组`(虽然有对象数组，但是数组的长度是不可变的！)；所以，Java就为我们提供了合集(`Collection`)。
 
@@ -19,9 +21,9 @@ Java是一门面向对象的语言，就免不了**处理对象**；为了方便
   - <font color=red>合集只能存储引用类型</font>(存储的是简单的`int`，它会**自动装箱**成`Integer`)。
 
 
-## Java集合框架
+## Java容器框架
 
-Java集合，也称作容器，主要是由两大接口(Interface)派生出来的：`Collection`和`Map`。
+Java容器主要是由两大接口(Interface)派生出来的：`Collection`和`Map`。
 
 Java集合框架支持以下两种类型的容器：
 
@@ -31,7 +33,7 @@ Java集合框架支持以下两种类型的容器：
   - 如果要**排序**则选择`TreeMap`。
 - 为了存储**一个元素**合集，简称为**合集(collection)**；
   - `Set`用于存储一组**不重复**的元素。
-  - `List`用于存储一个**有序**元素合集。
+  - `List`用于存储一个**有序**元素合集，List大小可以**动态扩展**。
     - `Stack`用千存储采用**后进先出**方式处理的对象。
   - `Queue`用于存储采用**先进先出**方式处理的对象。
     - `Priority Queue`用于存储按照**优先级顺序**处理的对象。
@@ -144,11 +146,197 @@ List接口中的通用方法：
 
 <div align=center><img src=DataStructure\List.jpg width=90%></div>
 
+```java
+    /**
+     * 将List转换为Object数组
+     */
+    Object[] toArray();
+
+    /**
+     * 转换为指定类型数组
+     */
+    <T> T[] toArray(T[] a);
+```
+
 `Collection`返回的是`Iterator`迭代器接口，而`List`中又有它自己对应的实现`ListIterator`接口。该接口比普通的Iterator接口多了几个方法：`previous(), add(E e), set(E e)`等。
 
 方法`listIterator()`或`listIterator(startlndex)`都会返回`ListIterator`的一个实例。`ListIterator`接口继承了`Iterator`接口，以增加对线性表的双向遍历能力。
 
 <div align=center><img src=DataStructure\ListIterator.jpg width=70%></div>
+
+```java
+public interface List<E> extends Collection<E> {
+    // 查询接口
+
+    /**
+     * 列表元素个数
+     */
+    int size();
+
+    /**
+     * 是否为空
+     */
+    boolean isEmpty();
+
+    /**
+     * 是否包含某元素
+     */
+    boolean contains(Object o);
+
+    /**
+     * 返回一个List迭代器
+     */
+    Iterator<E> iterator();
+
+    /**
+     * 将List转换为Object数组
+     */
+    Object[] toArray();
+
+    /**
+     * 转换为指定类型数组
+     */
+    <T> T[] toArray(T[] a);
+
+    // 修改操作
+
+    /**
+     * 添加元素，成功返回true
+     */
+    boolean add(E e);
+
+    /**
+     * 移除某一个元素，成功返回true
+     */
+    boolean remove(Object o);
+
+    // 批量操作
+
+    /**
+     * 判断是否包含集合C 中的所有元素
+     */
+    boolean containsAll(Collection<?> c);
+
+    /**
+     * 将集合C 中所有元素添加到列表
+     */
+    boolean addAll(Collection<? extends E> c);
+
+    /**
+     * 将集合C 中所有元素添加到列表，添加在序号为index的元素之后
+     */
+    boolean addAll(int index, Collection<? extends E> c);
+
+    /**
+     * 从列表中移除集合C 中所有元素
+     */
+    boolean removeAll(Collection<?> c);
+
+    /**
+     * 从列表中移除所有不在集合C 中的元素
+     */
+    boolean retainAll(Collection<?> c);
+
+    /**
+     * 全部替换
+     */
+    default void replaceAll(UnaryOperator<E> operator) {
+        Objects.requireNonNull(operator);
+        final ListIterator<E> li = this.listIterator();
+        while (li.hasNext()) {
+            li.set(operator.apply(li.next()));
+        }
+    }
+
+    /**
+     * 根据指定的比较器来排序，如果传入的比较器是null，则元素必须实现Comparable 接口
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    default void sort(Comparator<? super E> c) {
+        Object[] a = this.toArray();
+        Arrays.sort(a, (Comparator) c);
+        ListIterator<E> i = this.listIterator();
+        for (Object e : a) {
+            i.next();
+            i.set((E) e);
+        }
+    }
+
+    /**
+     * 移除所有元素
+     */
+    void clear();
+
+    // 比较和hash
+
+    boolean equals(Object o);
+
+    int hashCode();
+
+    // 根据序号进行的操作
+
+    /**
+     * 获取指定序号的元素
+     */
+    E get(int index);
+
+    /**
+     * 替换指定序号的元素
+     */
+    E set(int index, E element);
+
+    /**
+     * 在指定序号的元素后插入元素
+     */
+    void add(int index, E element);
+
+    /**
+     * 移除指定序号的元素
+     */
+    E remove(int index);
+
+    // 搜索操作
+
+    /**
+     * 返回元素第一次出现的位置，如果未找到则返回-1
+     */
+    int indexOf(Object o);
+
+    /**
+     * 返回元素出现的最后一个位置
+     */
+    int lastIndexOf(Object o);
+
+    // List迭代器
+
+    /**
+     * 返回一个List迭代器
+     */
+    ListIterator<E> listIterator();
+
+    /**
+     * 返回一个序号从Index开始的List迭代器
+     */
+    ListIterator<E> listIterator(int index);
+
+    // 视图
+
+    /**
+     * 返回一个子队列，序列从fromIndex到toIndex，包含fromIndex，不包含toIndex
+     * 对子队列的修改会影响原队列
+     * 如果原队列修改，那么对子队列的影响是未定义的
+     */
+    java.util.List<E> subList(int fromIndex, int toIndex);
+
+    /**
+     * 创建一个可分割的迭代器（用于并行计算）
+     */
+    @Override
+    default Spliterator<E> spliterator() {
+        return Spliterators.spliterator(this, Spliterator.ORDERED);
+    }
+}
+```
 
 
 ## 数组线性表类ArrayList
@@ -221,7 +409,12 @@ public class ArrayList<E> extends AbstractList<E>
 
 <div align=center><img src=DataStructure\Collection.jpg></div>
 
-`LinkedList`使用**双向链表**实现`List`接口。除了实现`List`接口外，这个类还提供**从线性表两端**提取、插入和删除元素的方法：
+`LinkedList`使用**双向链表**实现`List`接口：
+
+<div align=center><img src=DataStructure\LinkedList1.png></div>
+
+
+除了实现`List`接口外，这个类还提供**从线性表两端**提取、插入和删除元素的方法：
 
 <div align=center><img src=DataStructure\LinkedList.jpg width=70%></div>
 
@@ -234,18 +427,6 @@ public class LinkedList<E>
 <div align=center><img src=DataStructure\LinkedList.png></div>
 
 `LinkedList`实现了`Deque`接口，因此，我们可以操作`LinkedList`像操作队列和栈一样。
-
-**总结：**
-
-**查询**多用`ArrayList`，**增删**多用`LinkedList`。
-
-`ArrayList`增删慢不是绝对的(在数量大的情况下，已测试)：
-- 如果增加元素一直是使用`add()`(**增加到末尾**)的话，那是`ArrayList`要快；
-- 一直**删除末尾**的元素也是`ArrayList`要快(不用复制移动位置)；
-- 至于如果删除的是**中间的位置**的话，还是`ArrayList`要快！
-    - 如果删除的是中间的位置的话，需要两个步骤：1.遍历找到这个元素；2.进行删除增加操作。大样本时，`ArrayList`的第一步操作会快很多。
-
-但一般来说：增删多还是用`LinkedList`。
 
 ```java
 import java.util.*;
@@ -283,8 +464,27 @@ public class TestArrayAndLinkedList
 ```
 
 
+## `ArrayList`与`LinkedList`对比
 
 
+**查询**多用`ArrayList`，**增删**多用`LinkedList`。
+
+`ArrayList`增删慢不是绝对的(在数量大的情况下，已测试)：
+- 如果增加元素一直是使用`add()`(**增加到末尾**)的话，那是`ArrayList`要快；
+- 一直**删除末尾**的元素也是`ArrayList`要快(不用复制移动位置)；
+- 至于如果删除的是**中间的位置**的话，还是`ArrayList`要快！
+    - 如果删除的是中间的位置的话，需要两个步骤：1.遍历找到这个元素；2.进行删除增加操作。大样本时，`ArrayList`的第一步操作会快很多。
+
+但一般来说：增删多还是用`LinkedList`。
+
+
+ArrayList的最大特点就是能**随机访问**，因为元素在物理上是连续存储的，所以访问的时候，可以通过简单的算法直接定位到指定位置，所以不管队列的元素数量有多少，总能在$O(1)$的时间里定位到指定位置，但是**连续存储也是它的缺点，导致要在中间插入一个元素的时候，所有之后的元素都要往后挪动**。而LinkedList的插入只需要调整前后元素的引用即可。
+
+<div align=center><img src=DataStructure\ArrayList插入.png></div>
+
+<div align=center><img src=DataStructure\LinkedList插入.png width=80%></div>
+
+<div align=center><img src=DataStructure\LinkedList插入2.png width=90%></div>
 ## 向量类
 
 <div align=center><img src=DataStructure\Collection.jpg></div>
@@ -492,11 +692,11 @@ public class SortStringIgnoreCase
 
 如果**队列空了**，那`remove()`就会抛异常，但是`poll()`就返回`null`；`element()`就会抛异常，而`peek()`就返回`null`。
 
-`add(e)`怎么会抛异常呢？
+**`add(e)`怎么会抛异常呢？**
 
 有些Queue它会**有容量的限制**，比如`BlockingQueue`，如果已经**达到了它最大的容量且不会扩容**，就会抛异常；但使用`offer(e)`，就会返回`false`。
 
-那怎么选择呢？
+**那怎么选择呢？**
 
 - 首先，要用就用同一组 API，前后要统一；
 - 其次，根据需求。如果你需要它抛异常，那就是用抛异常的；不过做算法题时基本不用，所以选那组返回特殊值的就好了。
@@ -582,7 +782,9 @@ public class PriorityQueueDemo
 
 ## 实现类：LinkedList, ArrayDeque, PriorityQueue
 
-
+- 如果想实现「普通队列 - 先进先出」的语义，就使用 LinkedList 或者 ArrayDeque 来实现；
+如果想实现「优先队列」的语义，就使用 PriorityQueue；
+如果想实现「栈」的语义，就使用 ArrayDeque。
 
 
 # 集合Set
@@ -1054,6 +1256,11 @@ The number of keywords in D:\Learning_Java\Java_Code\Inheritance\src\inheritance
 
 **链表**和**数组**都可以按照人们的意愿来排列元素的次序，他们可以说是有序的(存储的顺序和取出的顺序是一致的)。但同时，这会带来缺点：想要获取某个元素，就要访问所有的元素，直到找到为止。而**散列表**不在意元素的顺序，能够快速的查找元素的数据。
 
+Map有三种遍历方式：
+1. 通过遍历**KeySet**来遍历所有键值对
+2. 通过遍历**EntrySe**t来实现
+3. 通过**EntrySet的Iterator**来遍历。
+
 
 ## 散列表Hash Table工作原理
 
@@ -1093,6 +1300,24 @@ The number of keywords in D:\Learning_Java\Java_Code\Inheritance\src\inheritance
 
 ## HashMap
 
+```java
+public class Test {
+    public static void main(String[] args){
+        Map<String, Integer> map = new HashMap();
+        map.put("小明", 66);
+        map.put("小李", 77);
+        for(Map.Entry<String, Integer> entry : map.entrySet()){
+            System.out.println(entry.getKey() + ":" + entry.getValue());
+        }
+    }
+}
+```
+
+Map有三种遍历方式：
+1. 通过遍历**KeySet**来遍历所有键值对
+2. 通过遍历**EntrySe**t来实现
+3. 通过**EntrySet的Iterator**来遍历。
+
 参考资料：
 https://www.cnblogs.com/duodushuduokanbao/p/9492952.html
 https://www.jianshu.com/p/8324a34577a0
@@ -1109,7 +1334,7 @@ https://www.jianshu.com/p/8324a34577a0
 
 HashMap存储的是key-value的键值对，允许key为null，也允许value为null。
 
-HashMap内部为数组+链表的结构，会**根据key的hashCode值来确定数组的索引**(确认放在哪个桶里)。遇到索引相同的key，那么他们就会被分到一个桶中(hash冲突)。**如果发生hash冲突，HashMap会将同一个桶中的数据以链表的形式存储**，但是如果发生hash冲突的概率比较高，就会导致**同一个桶中的链表长度过长**，遍历效率降低，所以在JDK1.8中**如果链表长度到达阀值(默认是8)，就会将链表转换成红黑二叉树**。
+HashMap内部为**数组+链表**的结构，会**根据key的hashCode值来确定数组的索引**(确认放在哪个桶里)。**遇到索引相同的key，那么他们就会被分到一个桶中(hash冲突)**。**如果发生hash冲突，HashMap会将同一个桶中的数据以链表的形式存储**，但是如果发生hash冲突的概率比较高，就会导致**同一个桶中的链表长度过长**，遍历效率降低，所以在JDK1.8中**如果链表长度到达阀值(默认是8)，就会将链表转换成红黑二叉树**。
 
 
 - 无序，允许为`null`，**非同步**；
@@ -1138,7 +1363,9 @@ HashMap数组每一个元素的初始值都是`Null`：
 
 常用的哈希函数的冲突解决办法中有一种方法叫做**链地址法**，其实就是将数组和链表组合在一起，发挥了两者的优势，我们可以将其理解为链表的数组。
 
-链式哈希表从根本上说是由一组链表构成。**每个链表都可以看做是一个“桶”**，我们将所有的元素通过散列的方式放到具体的不同的桶中。插入元素时，首先将其键传入一个哈希函数（该过程称为哈希键），函数通过散列的方式告知元素属于哪个“桶”，然后在相应的链表头插入元素。查找或删除元素时，用同样的方式先找到元素的“桶”，然后遍历相应的链表，直到发现我们想要的元素。因为每个“桶”都是一个链表，所以链式哈希表并不限制包含元素的个数。然而，如果表变得太大，它的性能将会降低。
+链式哈希表从根本上说是由一组链表构成，**数组并不是顺序往里存的**，中间有很多空的桶(**<font color=red>每个格子称为一个bin</font>**)。我们将所有的元素通过散列的方式放到具体的不同的桶中。
+
+插入元素时，首先将其键传入一个哈希函数（该过程称为哈希键），函数通过散列的方式告知元素属于哪个“桶”，然后在相应的**链表头插入元素**(JDK1.7)。查找或删除元素时，用同样的方式先找到元素的“桶”，然后遍历相应的链表，直到发现我们想要的元素。因为每个“桶”都是一个链表，所以链式哈希表并不限制包含元素的个数。然而，如果表变得太大，它的性能将会降低。
 
 在JDK1.7中，**当Hash冲突严重时，在桶上形成的链表会变的越来越长**，这样在查询时的效率就会越来越低；时间复杂度为$O(N)$。JDK1.8中对大链表做了优化，修改为红黑树之后查询效率直接提高到了$O(logN)$。
 
@@ -1331,12 +1558,15 @@ static final int MIN_TREEIFY_CAPACITY = 64;
 
 <div align=center><img src=DataStructure\HashMap5.webp></div>
 
+##### 树化阈值
+
 **为什么在JDK1.8中进行对HashMap优化的时候，把链表转化为红黑树的阈值是8,而不是7或者不是20呢？**
 
 - 如果选择6和8（如果链表小于等于6树还原转为链表，大于等于8转为树），中间有个差值7可以**有效防止链表和树频繁转换**。
   假设设计成链表个数超过8则链表转换成树结构，链表个数小于8则树结构转换成链表，如果一个HashMap不停的插入、删除元素，链表个数在8左右徘徊，就会频繁的发生树转链表、链表转树，效率会很低。
   
 - 由于TreeNodes的大小大约是常规节点的两倍，因此我们仅在容器包含足够的节点以保证使用时才使用它们，当它们变得太小（由于移除或调整大小）时，它们会被转换回普通的node节点，**容器中节点分布在hash桶中的频率遵循泊松分布，桶的长度超过8的概率非常非常小**。所以作者应该是根据概率统计而选择了8作为阀值。
+  - 理想情况下，HashCode随机分布，当负载因子设置成0.75时，那么在桶中元素个数的概率大致符合0.5的泊松分布，**桶中元素个数达到8的概率小于千万分之一**，因为转化为红黑树还是比较耗时耗力的操作，自然不希望经常进行，但如果设置得过大，将失去设置该值的意义。 
 
 ```
 Because TreeNodes are about twice the size of regular nodes, we use them only when bins contain enough nodes to warrant use (see TREEIFY_THRESHOLD). 
@@ -1573,8 +1803,8 @@ static int indexFor(int h, int length) {
 
 1. 判断表或key是否是null，如果是直接返回null
 2. 判断索引处第一个key与传入key是否相等，如果相等直接返回
-3. 如果不相等，**判断链表是否是红黑二叉树，如果是，直接从树中取值**
-4. **如果不是树，就遍历链表查找**
+3. 如果不相等，**判断链表是否是红黑二叉树，如果是，直接从树中取值，时间复杂度为$O(logn)$**
+4. **如果不是树，就遍历链表查找，时间复杂度为$O(n)$**
 
 ```java
 /**
@@ -1736,10 +1966,8 @@ final Node<K,V> getNode(int hash, Object key) {
 - 具体如何扩容，即**扩容机制**
 
 
-##### 如何存放数据
 
-
-调用Put方法的时候发生了什么呢？
+**JDK1.7中**调用Put方法的时候发生了什么呢？
 
 
 比如调用`hashMap.put("apple", 0)`，插入一个Key为“apple"的元素。这时候我们需要利用一个**哈希函数**来确定Entry的插入位置（index）：`index = Hash("apple")`。假定最后计算出的index是2，那么结果如下：
@@ -1760,13 +1988,14 @@ final Node<K,V> getNode(int hash, Object key) {
 
 新来的Entry节点插入链表时，使用的是**头插法(JDK1.7)**。
 
-JDK1.8中HashMap的put方法实现思路：
+**JDK1.8中**HashMap的put方法实现思路：
 
-1. table[]是否为空
-2. 判断table[i]处是否插入过值
-3. **判断链表长度是否大于8，如果大于就转换为红黑二叉树(JDK1.8)**，并插入树中
-4. 判断key是否和原有key相同，如果相同就覆盖原有key的value，并返回原有value
-5. 如果key不相同，就插入一个key，记录结构变化一次
+- 对key的hashCode()做一次**散列**(hash函数)，然后根据这个**散列值计算插入位置**`index = (n - 1) & hash`；
+- 如果没有发生碰撞（哈希冲突），则**直接放到桶里**；
+- 如果碰撞了，以链表的形式挂在桶后；
+- 如果因为碰撞导致链表过长(大于等于TREEIFY_THRESHOLD)，就把链表转换成红黑树；
+- 如果节点已经存在就替换old value(保证key的唯一性)
+- 如果桶满了(超过负载因子*当前容量)，就要resize(重新调整大小并**重新散列**)。
 
 ```java {.line-numbers highlight=62-64}
 /**
@@ -1843,7 +2072,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
 <div align=center><img src=DataStructure\HashMap6.webp></div>
 
 
-##### JDK1.7 ReHash
+#### JDK1.7 ReHash
 
 HashMap的容量是有限的。当经过多次元素插入，使得HashMap达到一定饱和度时，Key映射位置发生冲突的几率会逐渐提高。这时候，HashMap需要扩展它的长度，也就是进行Resize。
 
@@ -1967,13 +2196,13 @@ Entry3.next = Entry2
 
 此时，问题还没有直接产生。**当调用Get查找一个不存在的Key**，而这个Key的Hash结果恰好等于3的时候，由于位置3带有环形链表，所以程序将会**进入死循环**！
 
-##### JDK1.8扩容机制
+#### JDK1.8扩容机制
 
 什么场景下会触发扩容？
 
 - 场景1：哈希table为null或长度为0；
-- 场景2：Map中存储的k-v对数量超过了阈值threshold；
-- 场景3：链表中的长度超过了TREEIFY_THRESHOLD，但表长度却小于MIN_TREEIFY_CAPACITY。
+- 场景2：Map中**存储的k-v对数量超过了阈值threshold**；
+- 场景3：**链表中的长度**超过了TREEIFY_THRESHOLD，但**表长度**却小于MIN_TREEIFY_CAPACITY。
 
 
 
@@ -2156,11 +2385,18 @@ https://blog.csdn.net/qq_36520235/article/details/82417949
 
 #### HashMap具备的特点
 
-**键-值(key-value)都允许为空、线程不安全、不保证有序、存储位置随时间变化**：
+- HashMap的优点是**查找速度很快**，可以在常数时间内迅速定位到某个桶以及要找的对象。
+- 缺点就是**散列算法是依赖key的hashcode**，所以如果key的hashcode设计的很烂，将会严重影响性能。
+  - 极端情况下，如果**每次计算hash值都是同一个值**，那么会造成链表中长度过长然后转化成树，扩容时再散列的效果也很差的问题。 
+  - 另一个极端情况，**每次计算hash值都是不同的值**，那么就是HashMap中的数组会不断的扩容，造成HashMap的容量不断增大。 
+
+- HashMap是线程不安全的，如果想在并发编程中使用到HashMap，就需要使用它的同步类，`Collections.synchronizedMap()`方法将普通的HashMap转化成线程安全的，或者使用Concurrent包下的`ConcurrentHashMap`进行替换。
+
+- **键-值(key-value)都允许为空、线程不安全、不保证有序、存储位置随时间变化**：
 
 <div align=center><img src=DataStructure\HashMap24.jpg></div>
 
-##### 线程不安全
+- **线程不安全**
 
 **数据覆盖问题**
 
@@ -2194,7 +2430,7 @@ void createEntry(int hash, K key, V value, int bucketIndex) {
 
 其实不光是put()操作，删除操作、修改操作，同样都会有覆盖问题。
 
-**扩容时导致死循环**
+**<font color=red>JDK1.7中HashMap扩容时导致死循环！</font>**
 
 **在并发插入元素的时候，有可能出现带环链表，让下一次读操作出现死循环**！
 
@@ -2640,6 +2876,9 @@ visit	1
 
 
 # 红黑树
+
+参考资料：
+https://www.cnblogs.com/mfrank/p/9227097.html
 
 要学习红黑树，需要先了解二叉查找树。
 
