@@ -358,9 +358,23 @@ char类型只能表示一个字符。为了表示一串字符，使用称为Stri
 
 `String`方法：
 
-<div align=center><img src=Pictures\String方法.png></div>
+<div align=left><img src=Pictures\String方法.jpg></div>
 
-### 从控制台读取字符串
+<div align=center><img src=Pictures\String方法1.jpg></div>
+
+<div align=center><img src=Pictures\String方法2.jpg></div>
+
+<div align=center><img src=Pictures\String方法3.jpg></div>
+
+#### 字符串和数字间的转换
+
+```java
+int intValue = Integer.parseInt(intString);
+double doubleValue = Double.parseDouble(doubleString);
+String s = number + "";
+```
+
+#### 从控制台读取字符串
 
 - `next()`方法读取以空白字符结束的字符串(即’ ’、’\t’、'\f’、’\r’或’\n')。
 
@@ -404,8 +418,50 @@ The line entered is Welcome to Java
 
 - 为了避免输入错误，不要在`nextByte()、nextShort()、nextInt()、nextLong()、nextFloat、nextDouble()`和`next()`之后使用`nextLine()`
 
+方法`nextByte()、nextShort()、nextInt()、nextLong()、nextFloat()、nextDouble()`和`next()`等都称为**标记读取方法(token-reading method)**，因为它们会读取用**分隔符**分隔开的标记。**默认情况下，分隔符是空格**。可以使用`useDelimiter(String regex)`方法设置新的分隔符模式。
 
 
+一个输入方法是如何工作的呢？
+
+一个标记读取方法首先**跳过任意分隔符(默认情况下是空格)**，然后读取一个以分隔符结束的标记。然后，对应`于nextByte()、nextShort()、nextInt()、nextLong()、nextFloat()`和`nextDouble()`, 这个标记就分别被自动地转换为一个`byte、short、int、long、float`或`double`型的值。对于`next()`方法而言是无须做转换的。如果标记和期望的类型不匹配，就会抛出一个运行异常`java.util.InputMismatchExceptio`n。
+
+
+方法`next()`和`nextLine()`都会读取一个字符串。`next()`方法读取一个由**分隔符**分隔的字符串，但是`nextLine()`读取一个以**换行符**结束的行。
+
+行分隔符字符串是由系统定义的，在Windows平台上`\r\n`，而在UNIX平台上是`\n`。为了得到特定平台上的行分隔符，使用`String lineSeparator = System.getProperty("line.separator");`
+如果从键盘输入，每行就以**回车键**(Enter key)结束，它对应于**`\n`字符**。
+
+
+**标记读取方法不能读取标记后面的分隔符**。如果在标记读取方法之后调用`nextLine()`，该方法**读取从这个分隔符开始，到这行的行分隔符结束的字符**。**这个行分隔符也被读取**，但是它不是`nextLine()`返回的字符串部分。
+
+假设一个名为test.txt的**文本文件**包含一行
+`34 567`
+
+在执行完下面的代码之后：
+```java
+Scanner input = new Scanner(new File("test.txt"));
+int intValue = input.nextInt();
+String line = input.nextLine();
+```
+**intValue的值为34, 而line包含的字符是`‘ ’‘5’‘6’‘7’`。**
+
+如果输入是**从键盘键入**，那会发生什么呢？
+
+假设为下面的代码**输入34，然后按回车键，接着输入567然后再按回车键**：
+```java
+Scanner input = new Scanner(System.in);
+int intValue = input.nextInt();
+String line = input.nextLine();
+```
+**将会得到intValue值是34, 而line中是一个空的宇符串**。
+
+这是为什么呢？
+
+原因如下：标记读取方法`nextInt()`读取34, 然后在分隔符处停止，这里的分隔符是**行分隔符(回车键)**。`nextLine()`方法**会在读取行分隔符之后结束，然后返回在行分隔符之前的字符串**。因为在行分隔符之前没有字符，所以line是空的。
+
+
+
+### StringBuild与StringBuffer
 
 - `String`类提供了数值<font color=red>不可改变的字符串</font>。
 - 而`StringBuffer`和`StringBuilder`类的<font color=red>对象能够被多次的修改，并且不产生新的未使用对象</font>。
@@ -464,6 +520,43 @@ public class stringBuffer
 - `Array`大小是固定的，`ArrayList`的大小是动态变化的。
 - `ArrayList`提供了更多的方法和特性，比如：`addAll()`，`removeAll()`，`iterator()`等等。
 - 对于**基本类型数据**，集合`Array`使用**自动装箱**来减少编码工作量。但是，当处理固定大小的基本数据类型的时候，这种方式相对比较慢。
+
+
+
+## 数组的复制
+
+<div align=center><img src=Pictures\数组的复制.png width=60%></div>
+
+该语句并不能将list1引用的数组内容复制给list2, 而只是将list1的**引用值**复制给了list2。在这条语句之后，list1和list2都指向同一个数组。list2原先所引用的数组不能再引用，它就变成了垃圾，会被Java虚拟机自动收回(这个过程称为垃圾回收)。
+
+在Java中，可以使用赋值语句复制基本数据类型的变量，但不能复制数组。将一个数组变量赋值给另一个数组变量，实际上是将一个数组的引用复制给另一个变量，使两个变量都指向相同的内存地址。
+
+复制数组有三种方法：
+
+- 使用循环语句逐个地复制数组的元素。
+- 使用System类中的静态方法arraycopy。
+- 使用clone方法复制数组。
+
+```java
+int[] sourceArray = {2, 3, 1, 5, 10};
+int[] targetArray = new int[sourceArray.length];
+for (int i = 0; i < sourceArray.length; i++) {
+    targetArray[i] = sourceArray[i];
+}
+```
+或者
+
+Another approach is to use the `arraycopy` method in the `java.lang.System` class to copy arrays instead of using a loop.
+
+`arraycopy(sourceArray, srcPos, targetArray, tarPos, length);`
+
+The parameters `srcPos` and `tarPos` indicate the starting positions in `sourceArray` and `targetArray`, respectively.
+
+`System.arraycopy(sourceArray, 0, targetArray, 0, sourceArray.length);`
+
+arraycopy方法没有给目标数组分配内存空间。复制前必须创建目标数组以及分配给它的内存空间。复制完成后，sourceArray和targetArray具有相同的内容，但占有独立的内存空间。
+
+
 
 
 ## 值传递和引用传递区别
