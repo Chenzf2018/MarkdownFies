@@ -1871,8 +1871,110 @@ public class TestAddBinary {
 ```
 
 
+# 86. 分隔链表(中等)
 
 
+给定一个链表和一个特定值 x，对链表进行分隔，**使得所有小于 x 的节点都在大于或等于 x 的节点之前**。
+
+你应当保留两个分区中每个节点的初始相对位置。
+
+```
+示例:
+输入: head = 1->4->3->2->5->2, x = 3
+输出: 1->2->2->4->3->5
+```
+
+## 双指针
+
+本题要求我们改变链表结构，使得值小于x的元素，位于值大于等于x元素的前面。这实质上意味着在改变后的链表中有某个点，在该点之前的元素全部小于x ，该点之后的元素全部大于等于x。
+
+我们将这个点记为JOINT：
+
+<div align=center><img src=LeetCode\86.png></div>
+
+如果我们在JOINT将改后链表拆分，我们会得到两个更小的链表，其中一个包括全部值小于x的元素，另一个包括全部值大于x的元素。在解法中，我们的主要目的是创建这两个链表，并将它们连接。
+
+以用两个指针before和after来追踪上述的两个链表。两个指针可以用于分别创建两个链表，然后将这两个链表连接即可获得所需的链表。
+
+1. 初始化两个指针before和after。我们将两个指针初始化为哑ListNode。这有助于减少条件判断。
+
+<div align=center><img src=LeetCode\86_1.png width=50%></div>
+
+2. 利用head指针遍历原链表。
+
+3. 若head指针指向的元素值小于x，该节点应当是before链表的一部分。因此我们将其移到before中：
+
+<div align=center><img src=LeetCode\86_2.png></div>
+
+4. 否则，该节点应当是after链表的一部分。因此我们将其移到after中。
+
+<div align=center><img src=LeetCode\86_3.png></div>
+
+5. 遍历完原有链表的全部元素之后，我们得到了两个链表before和after。原有链表的元素或者before中或者在after中，这取决于它们的值。
+
+<div align=center><img src=LeetCode\86_4.png></div>
+
+由于我们从左到右遍历了原有链表，故**两个链表中元素的相对顺序不会发生变化**。另外值得注意的是，在图中我们完好地保留了原有链表。事实上，**在算法实现中，我们将节点从原有链表中移除，并将它们添加到别的链表中。我们没有使用任何额外的空间，只是将原有的链表元素进行移动**。
+
+6. 现在，可以将before和after连接，组成所求的链表。
+
+<div align=center><img src=LeetCode\86_5.png></div>
+
+为了算法实现更容易，我们使用了哑结点初始化。不能让哑结点成为返回链表中的一部分，因此在组合两个链表时需要向前移动一个节点。
+
+
+```java
+package solution;
+
+/**
+ * leetcode_86_分隔链表
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 1.0
+ */
+
+public class PartitionList {
+    public ListNode partition(ListNode head, int partitionValue) {
+
+        // beforeHead and afterHead are used to save the heads of the two lists.
+        ListNode beforeHead = new ListNode(0);
+        ListNode afterHead = new ListNode(0);
+
+        // before and after are the two pointers used to create the two list
+        ListNode before = beforeHead;
+        ListNode after = afterHead;
+
+        while (head != null) {
+            // If the original list node is lesser than the given x, assign it to the before list.
+            if (head.val < partitionValue) {
+                before.next = head;
+                before = before.next;
+            } else {
+                // If the original list node is greater or equal to the given x, assign it to the after list.
+                after.next = head;
+                after = after.next;
+            }
+
+            // move ahead in the original list
+            head = head.next;
+        }
+
+        // Last node of "after" list would also be ending node of the reformed list
+        after.next = null;
+
+        // Once all the nodes are correctly assigned to the two lists,
+        // combine them to form a single list which would be returned.
+        before.next = afterHead.next;
+        
+        return beforeHead.next;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度:$O(N)$，其中$N$是原链表的长度，我们对该链表进行了遍历。
+- 空间复杂度:$O(1)$，我们没有申请任何新空间。值得注意的是，我们只移动了原有的结点，因此没有使用任何额外空间。
 
 
 
@@ -5105,6 +5207,190 @@ class ImplementQueueUsingStacks {
 ```
 
 
+# 234. 回文链表(简单)
+
+请判断一个链表是否为回文链表。
+
+```
+示例 1:
+输入: 1->2
+输出: false
+
+示例 2:
+输入: 1->2->2->1
+输出: true
+```
+
+## 将值复制到数组中后用双指针法
+
+有两种常用的列表实现，一种是**数组列表**和**链表**。如果我们想在列表中存储值，那么它们是如何保存的呢？
+
+数组列表底层是使用数组存储值，我们可以通过索引在$O(1)$的时间访问列表任何位置的值，这是由于内存寻址的方式。
+
+链表存储的是称为节点的对象，每个节点保存一个值和指向下一个节点的指针。访问某个特定索引的节点需要$O(n)$的时间，因为要通过指针获取到下一个位置的节点。
+
+确定数组列表是否为回文很简单，我们可以**使用双指针法来比较两端的元素，并向中间移动**。一个指针从起点向中间移动，另一个指针从终点向中间移动。这需要$O(n)$的时间，因为访问每个元素的时间是$O(1)$，而有$n$个元素要访问。
+
+然而，直接在链表上操作并不简单，因为不论是正向访问还是反向访问都不是$O(1)$。而**将链表的值复制到数组列表中是$O(n)$**，因此最简单的方法就是将链表的值复制到数组列表中，再使用双指针法判断。
+
+```java {.line-numbers highlight=27-29}
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_234_回文链表
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 1.0 将值复制到数组中后用双指针法
+ */
+
+public class PalindromeLinkedList {
+    public boolean isPalindrome(ListNode head) {
+        List<Integer> arrayList = new ArrayList<>();
+
+        // Convert LinkedList into ArrayList.
+        ListNode currentNode = head;
+        while (currentNode != null) {
+            arrayList.add(currentNode.val);
+            currentNode = currentNode.next;
+        }
+
+        // Use two-pointer technique to check for palindrome.
+        int left = 0, right = arrayList.size() - 1;
+        while (left < right) {
+            // Note that we must use ! .equals instead of !=
+            // because we are comparing Integer, not int.
+            if (! arrayList.get(left).equals(arrayList.get(right))) {
+                return false;
+            }
+
+            left++;
+            right--;
+        }
+
+        return true;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$指的是链表的元素个数。
+  - 第一步： 遍历链表并将值复制到数组中，$O(n)$。
+  - 第二步：双指针判断是否为回文，执行了$O(n/2)$次的判断，即$O(n)$。
+  - 总的时间复杂度：$O(2n) = O(n)$。
+- 空间复杂度：$O(n)$，其中$n$指的是链表的元素个数，我们使用了一个数组列表存放链表的元素值。
+
+
+## 将链表的后半部分反转
+
+可以将链表的后半部分反转（修改链表结构），然后将前半部分和后半部分进行比较。比较完成后我们应该将链表恢复原样。虽然不需要恢复也能通过测试用例，因为使用该函数的人不希望链表结构被更改。
+
+可以分为以下几个步骤：
+
+- 找到前半部分链表的尾节点。
+- 反转后半部分链表。
+- 判断是否为回文。
+- 恢复链表。
+- 返回结果。
+
+
+步骤一，我们可以**计算链表节点的数量**，然后遍历链表找到前半部分的尾节点。或者可以**使用快慢指针**在一次遍历中找到：**慢指针一次走一步，快指针一次走两步**，快慢指针同时出发。当快指针移动到链表的末尾时，慢指针到链表的中间。通过慢指针将链表分为两部分。若链表有奇数个节点，则中间的节点应该看作是前半部分。
+
+步骤二，可以使用在反向链表问题中找到解决方法来反转链表的后半部分。
+
+步骤三，比较两个部分的值，当后半部分到达末尾则比较完成，可以忽略计数情况中的中间节点。
+
+步骤四与步骤二使用的函数相同，再反转一次恢复链表本身。
+
+```java
+package solution;
+
+/**
+ * leetcode_234_回文链表
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 2.0 将链表的后半部分反转
+ */
+
+public class PalindromeLinkedList_v2 {
+    public boolean isPalindrome(ListNode head) {
+        if (head == null) {
+            return true;
+        }
+
+        // Find the end of first half
+        ListNode firstHalfEnd = findEndOfFirstHalf(head);
+        // Reverse second half
+        ListNode secondHalfStart = reverseList(firstHalfEnd.next);
+
+        // Check whether or not there is a palindrome.
+        ListNode point1 = head;
+        ListNode point2 = secondHalfStart;
+        boolean result = true;
+
+        while (result && point2 != null) {
+            if (point1.val != point2.val) {
+                result = false;
+            }
+
+            point1 = point1.next;
+            point2 = point2.next;
+        }
+
+        // Restore the list and return the result.
+        firstHalfEnd.next = reverseList(secondHalfStart);
+        
+        return result;
+    }
+
+    /**
+     * 使用快慢指针在一次遍历中找到：慢指针一次走一步，快指针一次走两步，快慢指针同时出发。
+     * 当快指针移动到链表的末尾时，慢指针到链表的中间。通过慢指针将链表分为两部分。
+     */
+    private ListNode findEndOfFirstHalf(ListNode head) {
+        ListNode fastPoint = head;
+        ListNode slowPoint = head;
+        while (fastPoint.next != null && fastPoint.next.next != null) {
+            fastPoint = fastPoint.next.next;
+            slowPoint = slowPoint.next;
+        }
+
+        return slowPoint;
+    }
+
+    /**
+     * 反转链表
+     */
+    private ListNode reverseList(ListNode head) {
+        ListNode prev = null;
+        ListNode curr = head;
+        ListNode temp = null;
+        while (curr != null) {
+            temp = curr.next;
+            curr.next = prev;
+            prev = curr;
+            curr = temp;
+        }
+
+        return prev;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$指的是链表的大小。
+- 空间复杂度：$O(1)$，我们是一个接着一个的改变指针，在堆栈上的堆栈帧不超过$O(1)$。
+
+该方法的缺点是，在并发环境下，函数运行时需要锁定其他线程或进程对链表的访问，因为在函数执执行过程中链表暂时断开。
+
+
+
+
+
 
 # 236. 二叉树的最近公共祖先(中等)
 
@@ -5342,6 +5628,90 @@ class IsSubsequence {
 
 参考：https://leetcode-cn.com/problems/is-subsequence/solution/javati-jie-he-hou-xu-tiao-zhan-by-lil-q/
 
+
+
+# 405. 数字转换为十六进制数(简单)
+
+给定一个整数，编写一个算法将这个数转换为十六进制数。对于负整数，我们通常使用 补码运算 方法。
+
+注意:
+- 十六进制中所有字母(a-f)都必须是小写。
+- 十六进制字符串中不能包含多余的前导零。如果要转化的数为0，那么以单个字符'0'来表示；对于其他情况，十六进制字符串中的第一个字符将不会是0字符。 
+- 给定的数确保在32位有符号整数范围内。
+- 不能使用任何由库提供的将数字直接转换或格式化为十六进制的方法。
+
+```
+示例 1：
+输入:
+26
+输出:
+"1a"
+
+示例 2：
+输入:
+-1
+输出:
+"ffffffff"
+```
+
+## 移位
+
+每4位二进制数可以转换为1位16进制数，转换关系如下：
+
+<div align=center><img src=LeetCode\405.png></div>
+
+`0111 1011B=7BH //B代表二进制结尾，H代表十六进制结尾`
+
+只要循环地将数**num的末尾4位**和1111做**与运算**就可以得到相应的二进制数：
+
+```java {.line-numbers highlight=10}
+class Solution {
+    public String toHex(int num) {
+        if(num == 0){
+            return "0";
+        }
+        char[] chrs = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+        String res="";
+        while(num != 0){
+            int temp = num & 15;//十六进制的1111刚好对应十进制的15
+            res = chrs[temp] + res;
+            num >>>= 4;//注意这里是逻辑移位，有三个大于号
+        }
+        return res;
+    }  
+}
+```
+
+```java
+package solution;
+
+/**
+ * leetcode_405_数字转换成十六进制数
+ * @author Chenzf 
+ * @date 2020/7/30
+ * @version 1.0
+ */
+
+public class ConvertNumberToHexadecimal {
+    public String toHex(int num) {
+        if (num == 0) {
+            return "0";
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        char[] chars = "0123456789abcdef".toCharArray();
+
+        while (num != 0) {
+            // 十六进制的1111刚好对应十进制的15
+            int temp = num & 15;
+            stringBuilder.append(chars[temp]);
+            num >>>= 4;
+        }
+
+        return stringBuilder.reverse().toString();
+    }
+}
+```
 
 
 
@@ -5605,6 +5975,8 @@ class AssignCookies {
 
 # 496. 下一个更大元素I(简单)
 
+https://leetcode-cn.com/problems/next-greater-element-i/solution/xia-yi-ge-geng-da-yuan-su-i-by-leetcode/
+
 **题目：**
 给定两个没有重复元素的数组`nums1`和`nums2`，其中`nums1`是`nums2`的子集。找到`nums1`中每个元素在`nums2`中的下一个比其大的值。
 
@@ -5632,9 +6004,9 @@ nums1和nums2中所有元素是唯一的。
 nums1和nums2的数组大小都不超过1000。
 ```
 
-**思路与算法：单调栈**
+## 单调栈
 
-我们可以忽略数组`nums1`，先将`nums2`中的每一个元素，求出其下一个更大的元素。随后将这些答案放入哈希映射（HashMap）中，再遍历数组`nums1`，并直接找出答案。对于`nums2`，我们可以使用**单调栈**来解决这个问题。
+我们可以忽略数组`nums1`，**先将`nums2`中的每一个元素，求出其下一个更大的元素。随后将这些答案放入哈希映射（HashMap）中，再遍历数组`nums1`，并直接找出答案**。对于`nums2`，我们可以使用**单调栈**来解决这个问题。
 
 我们首先把第一个元素`nums2[1]`放入栈，随后对于第二个元素`nums2[2]`，如果`nums2[2] > nums2[1]`，那么我们就找到了`nums2[1]`的下一个更大元素`nums2[2]`，此时就可以**把`nums2[1]`出栈并把`nums2[2]`入栈**；**如果`nums2[2] <= nums2[1]`，我们就仅把`nums2[2]`入栈**。对于第三个元素`nums2[3]`，此时栈中有若干个元素，那么所有比`nums2[3]`小的元素都找到了下一个更大元素（即`nums2[3]`），因此可以出栈，在这之后，我们将`nums2[3]`入栈，以此类推。
 
@@ -5677,6 +6049,63 @@ class NextGreaterElementI {
 时间复杂度：$O(M+N)$，其中$M$和$N$分别是数组`nums1`和`nums2`的长度。
 
 空间复杂度：$O(N)$。我们在遍历`nums2`时，需要使用栈，以及哈希映射用来临时存储答案。
+
+
+# 503. 下一个更大元素II(中等)
+
+https://leetcode-cn.com/problems/next-greater-element-ii/solution/xia-yi-ge-geng-da-yuan-su-ii-by-leetcode/
+
+给定一个**循环数组**（最后一个元素的下一个元素是数组的第一个元素），输出每个元素的下一个更大元素。数字 x 的下一个更大的元素是按数组遍历顺序，这个数字之后的第一个比它更大的数，这意味着你应该循环地搜索它的下一个更大的数。如果不存在，则输出 -1。
+
+```
+示例 1:
+输入: [1,2,1]
+输出: [2,-1,2]
+
+解释: 第一个1的下一个更大的数是2；数字2找不到下一个更大的数；第二个1的下一个最大的数需要循环搜索，结果也是2。
+
+注意: 输入数组的长度不会超过10000。
+```
+
+## 单调栈
+
+我们首先把第一个元素$A[1]$放入栈，随后对于第二个元素$A[2]$，如果$A[2] > A[1]$，那么我们就找到了$A[1]$的下一个更大元素$A[2]$，此时就可以把$A[1]$出栈并把$A[2]$入栈；如果$A[2] <= A[1]$，我们就把$A[2]$入栈。对于第三个元素$A[3]$，此时栈中有若干个元素，那么所有比$A[3]$小的元素都找到了下一个更大元素（即$A[3]$），因此可以出栈，在这之后，我们将$A[3]$入栈，以此类推。
+
+可以发现，我们维护了一个单调栈，栈中的元素从栈顶到栈底是单调不降的。当我们遇到一个新的元素$A[i]$时，我们判断栈顶元素是否小于$A[i]$，如果是，那么栈顶元素的下一个更大元素即为$A[i]$，我们将栈顶元素出栈。重复这一操作，直到栈为空或者栈顶元素大于$A[i]$。此时我们将$A[i]$入栈，保持栈的单调性，并对接下来的$A[i + 1], A[i + 2] ...$执行同样的操作。
+
+由于这道题的数组是循环数组，因此我们需要**将每个元素都入栈两次**。这样可能会有元素出栈找过一次，即得到了超过一个“下一个更大元素”，我们只需要保留第一个出栈的结果即可。
+
+```java
+package solution;
+
+import java.util.Stack;
+
+/**
+ * leetcode_503_下一个更大元素
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 1.0
+ */
+
+public class NextGreaterElement {
+    public int[] nextGreaterElements(int[] nums) {
+        int[] result = new int[nums.length];
+        Stack<Integer> stack = new Stack<>();
+
+        for (int i = 2 * nums.length - 1; i >= 0; i--) {
+            while (! stack.empty() && nums[stack.peek()] <= nums[i % nums.length]) {
+                stack.pop();
+            }
+
+            result[i % nums.length] = stack.empty() ? -1 : nums[stack.peek()];
+            stack.push(i % nums.length);
+        }
+
+        return result;
+    }
+}
+```
+
 
 
 
