@@ -444,9 +444,9 @@ public class stringBuffer
 {
     public static void main(String[] args)
     {
-        StringBuffer sBuffer = new StringBuffer("上海");
+        StringBuffer sBuffer = new StringBuffer("上海");  //上海 
         System.out.println(sBuffer);
-        sBuffer.append("交通大学");  
+        sBuffer.append("交通大学");  // 上海交通大学
         System.out.println(sBuffer);  // 不产生新的未使用对象
     }
 }

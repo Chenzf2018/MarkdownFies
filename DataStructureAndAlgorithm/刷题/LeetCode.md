@@ -34,7 +34,7 @@ class Solution {
 
 时间复杂度：$O(n^2)$，空间复杂度：$O(1)$。
 
-**两遍哈希表**：
+## HashMap
 
 为了对运行时间复杂度进行优化，我们需要一种更有效的方法来**检查数组中是否存在目标元素**。如果存在，我们需要找出它的索引。保持数组中的每个**元素**与其**索引**相互对应的最好方法是什么？哈希表。
 
@@ -42,9 +42,15 @@ class Solution {
 
 一个简单的实现使用了**两次迭代**。在**第一次迭代**中，我们**将每个元素的值和它的索引添加到表中**。然后，在**第二次迭代**中，我们将**检查**每个元素所对应的目标元素$(target - nums[i])$是否存在于表中。注意，**该目标元素不能是$nums[i]$本身**！
 
+```java
+hashMap.put(nums[i], i);
+hashMap.containsKey(complement)
+hashMap.get(complement) != i
+throw new IllegalArgumentException("No two sum solution");
+```
 
 **代码：**
-```java
+```java {.line-numbers highlight=30}
 import java.util.Map;
 import java.util.HashMap;
 
@@ -182,7 +188,7 @@ public class AddTwoNumbers {
     public ListNode addTwoNumbers(ListNode listNode1, ListNode listNode2) {
         // 进位标志
         int carry = 0;
-        ListNode dummyHead = new ListNode(0, null);
+        ListNode dummyHead = new ListNode(0);
         ListNode currentNode = dummyHead;
 
         while (listNode1 != null || listNode2 != null) {
@@ -2425,6 +2431,148 @@ public class MaximumDepthOfBinaryTree {
 
 
 
+# 105. 从前序与中序遍历序列构造二叉树(中等)
+
+根据一棵树的前序遍历与中序遍历构造二叉树。
+
+注意:你可以假设树中没有重复的元素。
+
+
+```
+前序遍历 preorder = [3,9,20,15,7]
+中序遍历 inorder = [9,3,15,20,7]
+返回如下的二叉树：
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+```
+
+## 递归
+
+对于任意一颗树而言，前序遍历的形式总是：
+`[ 根节点, [左子树的前序遍历结果], [右子树的前序遍历结果] ]`
+即**根节点总是前序遍历中的第一个节点**。
+
+而中序遍历的形式总是：
+`[ [左子树的中序遍历结果], 根节点, [右子树的中序遍历结果] ]`
+
+只要我们**在中序遍历中定位到根节点**，那么我们就**可以分别知道左子树和右子树中的节点数目**。
+
+```
+preorder = [3,9,20,15,7]
+inorder = [9,3,15,20,7]
+
+首先根据 preorder 找到根节点是 3；
+    
+然后根据根节点将 inorder 分成左子树和右子树：
+
+左子树
+inorder [9]
+
+右子树
+inorder [15,20,7]
+
+把相应的前序遍历的数组也加进来：
+
+左子树
+inorder [9] -> preorder[9] 
+
+右子树
+preorder[20 15 7] -> inorder [15,20,7]
+
+现在我们只需要构造左子树和右子树即可，成功把大问题化成了小问题。
+
+然后重复上边的步骤继续划分preorder[20 15 7] 和 inorder [15,20,7]，直到 preorder 和 inorder 都为空，返回 null 即可。
+```
+
+**在中序遍历中对根节点进行定位时**，一种简单的方法是直接扫描整个中序遍历的结果并找出根节点，但这样做的时间复杂度较高。
+
+我们可以考虑使用哈希映射（HashMap）来帮助我们快速地定位根节点。对于哈希映射中的每个键值对，**键表示一个元素（节点的值），值表示其在中序遍历中的出现位置**。
+
+在构造二叉树的过程之前，我们可以对中序遍历的列表进行一遍扫描，就可以构造出这个哈希映射。在此后构造二叉树的过程中，我们就只需要$O(1)$的时间对根节点进行定位了。
+
+<div align=center><img src=LeetCode\105.jpg></div>
+
+```java
+package solution;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * leetcode_105_从前序与后序遍历序列构造二叉树
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 1.0 递归
+ */
+
+public class ConstructBinaryTree {
+    // 便于在中序遍历中对根节点进行定位
+    private Map<Integer, Integer> indexMap;
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        int numberOfNode = preorder.length;
+        // 构造哈希映射，帮助我们快速定位根节点
+        indexMap = new HashMap<>();
+        for (int i = 0; i < numberOfNode; i++) {
+            indexMap.put(inorder[i], i);
+        }
+
+        return constructBinaryTree(preorder, inorder,
+                0, numberOfNode - 1,
+                0, numberOfNode - 1);
+    }
+
+    public TreeNode constructBinaryTree(int[] preorder, int[] inorder,
+                                        int preorderLeft, int preorderRight,
+                                        int inorderLeft, int inorderRight) {
+        if (preorderLeft > preorderRight) {
+            return null;
+        }
+
+        // 前序遍历中的第一个节点就是根节点
+        int preorderRootIndex = preorderLeft;
+        // 在中序遍历中定位根节点
+        int inorderRootIndex = indexMap.get(preorder[preorderRootIndex]);
+
+        // 先把根节点建立出来
+        TreeNode root = new TreeNode(preorder[preorderRootIndex]);
+
+        // 得到左子树中的节点数目
+        int sizeOfLeftSubtree = inorderRootIndex - inorderLeft;
+
+        // 递归地构造左子树，并连接到根节点
+        // 先序遍历中「从 左边界+1 开始的 size_left_subtree」个元素
+        // 对应了中序遍历中「从 左边界 开始到 根节点定位-1」的元素
+        root.left = constructBinaryTree(preorder, inorder,
+                preorderLeft + 1, preorderLeft + sizeOfLeftSubtree,
+                inorderLeft, inorderRootIndex - 1);
+
+        // 递归地构造右子树，并连接到根节点
+        // 先序遍历中「从 左边界+1+左子树节点数目 开始到 右边界」的元素
+        // 对应了中序遍历中「从 根节点定位+1 到 右边界」的元素
+        root.right = constructBinaryTree(preorder, inorder,
+                preorderLeft + sizeOfLeftSubtree + 1, preorderRight,
+                inorderRootIndex + 1, inorderRight);
+
+        return root;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是树中的节点个数。
+
+- 空间复杂度：$O(n)$，除去返回的答案需要的$O(n)$空间之外，我们还需要使用$O(n)$的空间**存储哈希映射**，以及$O(h)$（其中$h$是树的高度）的空间表示**递归时栈空间**。这里$h < n$，所以总空间复杂度为$O(n)$。
+
+
+
+
+
 # 108. 将有序数组转换为二叉搜索树(简单)
 
 将一个按照升序排列的有序数组，转换为一棵高度平衡二叉搜索树。
@@ -2730,6 +2878,70 @@ final class TreeInfo {
 - 空间复杂度：$\mathcal{O}(n)$，如果树不平衡，递归栈可能达到$\mathcal{O}(n)$。
 
 
+# 121. 买卖股票的最佳时机(简单)
+
+给定一个数组，它的第i个元素是一支给定股票第i天的价格。
+
+如果你**最多只允许完成一笔交易**（即买入和卖出一支股票一次），设计一个算法来计算你所能获取的最大利润。
+
+注意：你不能在买入股票前卖出股票。
+
+
+```
+示例 1:
+
+输入: [7,1,5,3,6,4]
+输出: 5
+
+解释: 在第2天（股票价格 = 1）的时候买入，在第5天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5。
+注意：利润不能是 7-1 = 6, 因为卖出价格需要大于买入价格；同时，你不能在买入前卖出股票。
+
+
+示例 2:
+
+输入: [7,6,4,3,1]
+输出: 0
+解释: 在这种情况下, 没有交易完成, 所以最大利润为0。
+```
+
+**思路与算法：滑动窗口**
+
+- 我们需要找出给定数组中两个数字之间的最大差值（即，最大利润）。此外，第二个数字（卖出价格）必须大于第一个数字（买入价格）。
+- 用一个变量记录一个历史最低价格`minPrice`，那么在第i天卖出股票能得到的利润就是`prices[i] - minprice`。
+
+```java
+package solution;
+
+/**
+ * leetcode_121_买卖股票的最佳时机
+ * @author Chenzf 
+ * @date 2020/7/29
+ * @version 1.0
+ */
+
+public class BestTimeBuySellStock {
+    public int maxProfit(int[] prices) {
+        int minPrice = Integer.MAX_VALUE;
+        int maxPrice = 0;
+        
+        for (int i = 0; i < prices.length; i++) {
+            if (prices[i] < minPrice) {
+                minPrice = prices[i];
+            } else if (prices[i] - minPrice > maxPrice) {
+                maxPrice = prices[i] - minPrice;
+            }
+        }
+        
+        return maxPrice;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，**只需要遍历一次**。
+- 空间复杂度：$O(1)$，**只使用了常数个变量**。
+
 
 # 122. 买卖股票的最佳时机II(简单)
 
@@ -2737,7 +2949,7 @@ final class TreeInfo {
 
 给定一个数组，它的第`i`个元素是一支给定股票第`i`天的价格。
 
-设计一个算法来计算你所能获取的最大利润。你可以尽可能地完成更多的交易（多次买卖一支股票）。
+设计一个算法来计算你所能获取的最大利润。你可以**尽可能地完成更多的交易**（多次买卖一支股票）。
 
 注意：你不能同时参与多笔交易（你**必须在再次购买前出售掉之前的股票**）。
 
@@ -2792,6 +3004,114 @@ class BestTimeToBuyAndSellStockII {
 **复杂度分析：**
 时间复杂度：$O(n)$，遍历一次。
 空间复杂度：$O(1)$，需要常量的空间。
+
+
+# 124. 二叉树中的最大路径和(困难)
+
+
+给定一个非空二叉树，返回其最大路径和。
+
+本题中，**路径被定义为一条从树中任意节点出发，达到任意节点的序列**。该路径至少包含一个节点，且不一定经过根节点。
+
+```
+示例 1:
+输入: [1,2,3]
+
+       1
+      / \
+     2   3
+
+输出: 6
+
+示例 2:
+输入: [-10,9,20,null,null,15,7]
+
+   -10
+   / \
+  9  20
+    /  \
+   15   7
+
+输出: 42
+```
+
+## 递归
+
+首先，考虑实现一个简化的函数`maxGain(node)`，该函数计算二叉树中的**一个节点的最大贡献值**——**在以该节点为根节点的子树中寻找<font color=red>以该节点为起点</font>的一条路径，使得该路径上的节点值之和最大**。
+
+该函数的计算如下：
+- 空节点的最大贡献值等于0。
+- 非空节点的最大贡献值等于节点值与其子节点中的最大贡献值之和（对于叶节点而言，最大贡献值等于节点值）。
+
+考虑如下二叉树：
+```
+   -10
+   / \
+  9  20
+    /  \
+   15   7
+```
+叶节点99、15、77的最大贡献值分别为99、15、77。
+
+得到叶节点的最大贡献值之后，再计算非叶节点的最大贡献值：
+
+节点$20$的最大贡献值等于$20+\max(15,7)=35$，节点$−10$的最大贡献值等于$-10+\max(9,35)=25$。
+
+上述计算过程是递归的过程，因此，对根节点调用函数`maxGain`，即可得到每个节点的最大贡献值。
+
+根据函数`maxGain`得到每个节点的最大贡献值之后，如何得到二叉树的最大路径和？
+
+对于二叉树中的一个节点，**该节点的最大路径和**取决于**该节点的值与该节点的左右子节点的最大贡献值**，如果子节点的最大贡献值为正，则计入该节点的最大路径和，否则不计入该节点的最大路径和。
+
+维护一个全局变量`maxSum`存储最大路径和，在递归过程中更新`maxSum`的值，最后得到的`maxSum`的值即为二叉树中的最大路径和。
+
+<div align=center><img src=LeetCode\124.jpg></div>
+
+```java
+package solution;
+
+/**
+ * leetcode_124_二叉树中的最大路径和
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 1.0
+ */
+
+public class MaxPathSum {
+    int maxSum = Integer.MIN_VALUE;
+
+    public int maxPathSum(TreeNode root) {
+        maxGain(root);
+        return maxSum;
+    }
+
+    public int maxGain(TreeNode node) {
+        if (node == null) {
+            return 0;
+        }
+
+        // 递归计算左右子节点的最大贡献值
+        // 只有在最大贡献值大于 0 时，才会选取对应子节点
+        int leftGain = Math.max(maxGain(node.left), 0);
+        int rightGain = Math.max(maxGain(node.right), 0);
+
+        // 节点的最大路径和取决于该节点的值与该节点的左右子节点的最大贡献值
+        int priceNewPath = node.val + leftGain + rightGain;
+
+        // 更新结果
+        maxSum = Math.max(maxSum, priceNewPath);
+
+        // 返回节点的最大贡献值——注意节点最大贡献值的定义
+        return node.val + Math.max(leftGain, rightGain);
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是二叉树中的节点个数。对每个节点访问不超过$2$次。
+
+- 空间复杂度：$O(N)$，其中$N$是二叉树中的节点个数。空间复杂度主要取决于递归调用层数，最大层数等于二叉树的高度，最坏情况下，二叉树的高度等于二叉树中的节点个数。
 
 
 
@@ -3867,6 +4187,138 @@ public class Solution {
     }
 }
 ```
+
+# 199. 二叉树的右视图(中等)
+
+
+给定一棵二叉树，想象自己站在它的右侧，按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
+
+```
+输入: [1,2,3,null,5,null,4]
+输出: [1, 3, 4]
+解释:
+
+   1            <---
+ /   \
+2     3         <---
+ \     \
+  5     4       <---
+```
+
+**思路与算法：**
+
+<div align=center><img src=LeetCode\199.png width=80%></div>
+
+## 方法一：广度优先搜索
+
+利用BFS进行层次遍历，记录下每层的最后一个元素。
+
+```java {.line-numbers highlight=40-43}
+package solution;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+/**
+ * leetcode_199_二叉树的右视图
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 2.0 广度优先
+ */
+
+public class RightSideView_v2 {
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> result = new ArrayList<>();
+        if (root == null) {
+            return result;
+        }
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+
+        while (! queue.isEmpty()) {
+            // 当前层节点个数
+            int size = queue.size();
+
+            for (int i = 0; i < size; i++) {
+                TreeNode node = queue.poll();
+
+                // 将node的子树推入队列
+                if (node.left != null) {
+                    queue.offer(node.left);
+                }
+                if (node.right != null) {
+                    queue.offer(node.right);
+                }
+
+                // 将当前层的最后一个节点放入结果列表
+                if (i == size - 1) {
+                    result.add(node.val);
+                }
+            }
+        }
+
+        return result;
+    }
+
+}
+```
+
+- 时间复杂度：$O(N)$，每个节点都入队出队了1次。
+- 空间复杂度：$O(N)$，使用了额外的队列空间。
+
+## 方法二：深度优先搜索
+
+对树进行深度优先搜索，在搜索过程中，我们**总是先访问右子树**。那么**对于每一层来说，我们在这层见到的第一个结点一定是最右边的结点**。
+
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_199_二叉树的右视图
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 1.0 深度优先
+ */
+
+public class RightSideView {
+    List<Integer> result = new ArrayList<>();
+
+    public List<Integer> rightSideView(TreeNode root) {
+        // 从根节点开始访问，根节点深度是0
+        deepFirstSearch(root, 0);
+        return result;
+    }
+
+    private void deepFirstSearch(TreeNode node, int depth) {
+        if (node == null) {
+            return;
+        }
+
+        // 先访问当前节点，再递归地访问右子树和左子树
+        // 如果当前节点所在深度还没有出现在res里，说明在该深度下当前节点是第一个被访问的节点
+        // 因此将当前节点加入res中
+        // 只要在result中这层添加过数了，就一定是最右侧的数
+        if (depth == result.size()) {
+            result.add(node.val);
+        }
+
+        depth++;
+        deepFirstSearch(node.right, depth);
+        deepFirstSearch(node.left, depth);
+    }
+}
+```
+
+- 时间复杂度：$O(N)$，**每个节点都访问了1次**。
+- 空间复杂度：$O(N)$，因为这不是一棵平衡二叉树，二叉树的深度最少是$logN$，最坏的情况下会退化成一条链表，深度就是$N$，因此**递归时使用的栈空间是$O(N)$的**。
+
 
 
 
