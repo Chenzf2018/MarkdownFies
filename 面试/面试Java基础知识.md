@@ -366,6 +366,43 @@ char类型只能表示一个字符。为了表示一串字符，使用称为Stri
 
 <div align=center><img src=Pictures\String方法3.jpg></div>
 
+一、由基本数据型态转换成String
+
+String类别中已经提供了将基本数据型态转换成**String的static方法** ，也就是`String.valueOf()`这个参数多载的方法，有以下几种：
+（1）`String.valueOf(boolean b)` : 将boolean变量b转换成字符串 
+（2）`String.valueOf(char c)` : 将 char 变量 c 转换成字符串 
+（3）`String.valueOf(char[] data)` : 将 char 数组 data 转换成字符串 
+（4）`String.valueOf(char[] data, int offset, int count)` : 将 char 数组 data 中 由 data[offset] 开始取 count 个元素 转换成字符串 
+（5）`String.valueOf(double d)` : 将 double 变量 d 转换成字符串 
+（6）`String.valueOf(float f)` : 将 float 变量 f 转换成字符串 
+（7）`String.valueOf(int i)` : 将 int 变量 i 转换成字符串 
+（8）`String.valueOf(long l)` : 将 long 变量 l 转换成字符串 
+（9）`String.valueOf(Object obj)` : 将 obj 对象转换成 字符串, 等于 obj.toString() 
+
+用法如下: 
+`int i = 10; String str = String.valueOf(i); `
+这时候str就会是"10" 
+
+ 
+
+二、由String转换成数字的基本数据型态 
+
+要将String转换成基本数据型态转，大多需要使用基本数据型态的包装类别 
+
+比如说String转换成byte ，可以使用`Byte.parseByte(String s)`，这一类的方法如果无法将s分析则会丢出`NumberFormatException `
+
+（1）`byte : Byte.parseByte(String s)`: 将s转换成byte 
+
+（2）`Byte.parseByte(String s, int radix)` : 以 radix 为基底 将 s 转换为 byte ，比如说 `Byte.parseByte("11", 16)` 会得到 17 
+
+（3）`double : Double.parseDouble(String s)` : 将 s 转换成 double 
+
+（4）`float : Double.parseFloat(String s)` : 将 s 转换成 float 
+
+（5）`int : Integer.parseInt(String s)` : 将 s 转换成 int 
+
+（6）`long : Long.parseLong(String s)`
+
 #### 字符串和数字间的转换
 
 ```java
@@ -375,6 +412,11 @@ String s = number + "";
 ```
 
 #### 从控制台读取字符串
+- `hasNex()`是检测还**有没有下一个输入**
+- `next()`是**指针移动到当前下标，并取出下一个输入**
+- `hasNextLine()`是检测**下一行有没有输入**
+- `nextLine()`把**指针移动到下一行，然后取出当前这一行的输入**
+
 
 - `next()`方法读取以空白字符结束的字符串(即’ ’、’\t’、'\f’、’\r’或’\n')。
 
