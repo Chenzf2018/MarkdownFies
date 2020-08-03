@@ -1524,3 +1524,339 @@ public class Main {
 ```
 
 # 36.字符串加密
+
+有一种技巧可以对数据进行加密，它使用一个单词作为它的密匙。下面是它的工作原理：首先，**选择一个单词作为密匙**，如TRAILBLAZERS。**如果单词中包含有重复的字母，只保留第1个，其余几个丢弃**。现在，修改过的那个单词属于字母表的下面，如下所示（密码本）：
+
+```
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+
+T R A I L B Z E S C D F G H J K M N O P Q U V W X Y
+```
+
+**上面其他用字母表中剩余的字母填充完整**。
+
+在对信息进行加密时，信息中的每个字母被固定于顶上那行，并用下面那行的对应字母一一取代原文的字母(字母字符的大小写状态应该保留)。因此，使用这个密匙，Attack AT DAWN(黎明时攻击)就会被加密为Tpptad TP ITVH（**在密码本的第一行找到明文中字母，其所对应的字母——密文，如密码本中第二行所示**）。
+
+请实现下述接口，通过指定的密匙和明文得到密文。
+
+详细描述：
+
+接口说明
+
+原型：`voidencrypt(char * key,char * data,char * encrypt);`
+
+输入参数：
+`char * key：密匙`
+`char * data：明文`
+
+输出参数：
+`char * encrypt：密文`
+
+返回值：
+`void`
+
+输入描述:
+先输入key和要加密的字符串：
+```
+nihao
+ni
+```
+
+输出描述:
+返回加密后的字符串：le
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Iterator;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        // 密钥
+        String str = "";
+        while ((str = reader.readLine()) != null) {
+            StringBuilder sb = new StringBuilder();
+            
+            // 明文
+            String str1 = reader.readLine();
+            // 密码本
+            HashSet<Character> linkedHashSet = new LinkedHashSet<>();
+            // 生成密码本
+            for (int i = 0; i < str.length(); i++) {
+                linkedHashSet.add(str.charAt(i));
+            }
+            for (int i = 0; i < 26; i++) {
+                linkedHashSet.add((char)(i + 'a'));
+            }
+            char[] ch = new char[26];
+            Iterator iter = linkedHashSet.iterator();
+            for (int i = 0; i < 26; i++) {
+                ch[i] = (Character) iter.next();
+            }
+            
+            // 加密
+            for (int i = 0; i < str1.length(); i++) {
+                if (Character.isLowerCase(str1.charAt(i))) {
+                    sb.append(Character.toLowerCase(ch[str1.charAt(i) - 'a']));
+                } else {
+                    sb.append(Character.toUpperCase(ch[str1.charAt(i) - 'A']));
+                }
+            }
+            
+            System.out.println(sb);
+        }
+        
+        reader.close();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+# 39.判断两个IP是否属于同一子网
+
+子网掩码是用来判断任意两台计算机的IP地址是否属于同一子网络的根据。
+子网掩码与IP地址结构相同，是32位二进制数，其中网络号部分全为“1”和主机号部分全为“0”。利用子网掩码可以判断两台主机是否中同一子网中。**若两台主机的IP地址分别与它们的子网掩码相“与”后的结果相同，则说明这两台主机在同一子网中**。
+
+示例：
+```
+IP 地址　  192.168.0.1
+子网掩码　 255.255.255.0
+
+转化为二进制进行运算：
+
+IP 地址 　11010000.10101000.00000000.00000001
+子网掩码　11111111.11111111.11111111.00000000
+
+AND运算
+ 　　　　11000000.10101000.00000000.00000000
+
+转化为十进制后为：
+ 　　　　192.168.0.0
+
+ 
+
+IP 地址　  192.168.0.254
+子网掩码　 255.255.255.0
+
+
+转化为二进制进行运算：
+
+I P 地址　11010000.10101000.00000000.11111110
+子网掩码　11111111.11111111.11111111.00000000
+
+AND运算
+　　　　　11000000.10101000.00000000.00000000
+
+转化为十进制后为：
+　　　　　192.168.0.0
+```
+
+通过以上对两台计算机IP地址与子网掩码的AND运算后，我们可以看到它运算结果是一样的。均为192.168.0.0，所以这二台计算机可视为是同一子网络。
+
+```
+/* 
+* 功能: 判断两台计算机IP地址是同一子网络。 
+* 输入参数：     String Mask: 子网掩码，格式：“255.255.255.0”； 
+*               String ip1: 计算机1的IP地址，格式：“192.168.0.254”；
+*               String ip2: 计算机2的IP地址，格式：“192.168.0.1”；
+*               
+* 返回值：      0：IP1与IP2属于同一子网络；     1：IP地址或子网掩码格式非法；    2：IP1与IP2不属于同一子网络
+*/ 
+public int checkNetSegment(String mask, String ip1, String ip2) 
+{     
+    /*在这里实现功能*/
+    return 0;
+}
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            String str = null;
+            
+            while ((str = reader.readLine()) != null) {
+                String[] mask = str.split("\\.");
+                String[] ip1 = reader.readLine().split("\\.");
+                String[] ip2 = reader.readLine().split("\\.");
+                // IP1与IP2属于同一子网络
+                int flag = 0;
+                for (int i = 0; i < 4; i++) {
+                    int maskValue = Integer.parseInt(mask[i]);
+                    int ip1Value = Integer.parseInt(ip1[i]);
+                    int ip2Value = Integer.parseInt(ip2[i]);
+                    if (maskValue < 0 || ip1Value < 0 || ip2Value < 0 ||
+                       maskValue > 255 || ip1Value > 255 || ip2Value > 255) {
+                        // IP1与IP2属于同一子网络
+                        flag = 1;
+                        break;
+                    }
+                    if ((ip1Value & maskValue) != (ip2Value & maskValue)) {
+                        // IP1与IP2属于同一子网络
+                        flag = 2;
+                        break;
+                    }
+                }
+                
+                System.out.println(flag);
+            }
+            
+            reader.close();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+# 40.统计字符个数
+
+输入一行字符，分别统计出包含英文字母、空格、数字和其它字符的个数。
+
+```
+    /**
+     * 统计出英文字母字符的个数。
+     * 
+     * @param str 需要输入的字符串
+     * @return 英文字母的个数
+     */
+    public static int getEnglishCharCount(String str)
+    {
+        return 0;
+    }
+    
+    /**
+     * 统计出空格字符的个数。
+     * 
+     * @param str 需要输入的字符串
+     * @return 空格的个数
+     */
+    public static int getBlankCharCount(String str)
+    {
+        return 0;
+    }
+    
+    /**
+     * 统计出数字字符的个数。
+     * 
+     * @param str 需要输入的字符串
+     * @return 英文字母的个数
+     */
+    public static int getNumberCharCount(String str)
+    {
+        return 0;
+    }
+    
+    /**
+     * 统计出其它字符的个数。
+     * 
+     * @param str 需要输入的字符串
+     * @return 英文字母的个数
+     */
+    public static int getOtherCharCount(String str)
+    {
+        return 0;
+    }
+```
+
+输入描述:
+输入一行字符串，可以有空格
+`1qazxsw23 edcvfr45tgbn hy67uj m,ki89ol.\\/;p0-=\\][`
+
+输出描述:
+统计其中英文字符，空格字符，数字字符，其他字符的个数
+```
+26
+3
+10
+12
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            String str = null;
+            
+            while ((str = reader.readLine()) != null) {
+                int englishCharCount = 0;
+                int blankCharCount = 0;
+                int numberCharCount = 0;
+                int otherCharCount = 0;
+                
+                char[] chars = str.toCharArray();
+                for (int i = 0; i < chars.length; i++) {
+                    if ((chars[i] >= 'a' && chars[i] <= 'z') || 
+                       (chars[i] >= 'A' && chars[i] <= 'Z')) {
+                        englishCharCount++;
+                    } else if (chars[i] == ' ') {
+                        blankCharCount++;
+                    } else if (chars[i] >= '0' && chars[i] <= '9') {
+                        numberCharCount++;
+                    } else {
+                        otherCharCount++;
+                    }
+                }
+                System.out.println(englishCharCount);
+                System.out.println(blankCharCount);
+                System.out.println(numberCharCount);
+                System.out.println(otherCharCount);
+            }
+            
+            reader.close();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+# 41.称砝码
+
+现有一组砝码，重量互不相等，分别为m1,m2,m3…mn；
+每种砝码对应的数量为x1,x2,x3...xn。现在要用这些砝码去称物体的重量(放在同一侧)，问能称出多少种不同的重量。
+
+注：称重重量包括0
+
+方法原型：`public static int fama(int n, int[] weight, int[] nums)`
+
+输入描述:
+输入包含多组测试数据。
+
+对于每组测试数据：
+
+第一行：n --- 砝码数(范围[1,10])
+
+第二行：m1 m2 m3 ... mn --- 每个砝码的重量(范围[1,2000])
+
+第三行：x1 x2 x3 .... xn --- 每个砝码的数量(范围[1,6])
+
+```
+2
+1 2
+2 1
+```
+
+输出描述:
+利用给定的砝码可以称出的不同的重量数
+`5`
