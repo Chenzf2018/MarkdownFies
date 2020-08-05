@@ -1831,12 +1831,12 @@ public class Main {
 }
 ```
 
-# 41.称砝码
+# 41.(未实现)称砝码
 
 现有一组砝码，重量互不相等，分别为m1,m2,m3…mn；
 每种砝码对应的数量为x1,x2,x3...xn。现在要用这些砝码去称物体的重量(放在同一侧)，问能称出多少种不同的重量。
 
-注：称重重量包括0
+注：**称重重量包括0**
 
 方法原型：`public static int fama(int n, int[] weight, int[] nums)`
 
@@ -1860,3 +1860,641 @@ public class Main {
 输出描述:
 利用给定的砝码可以称出的不同的重量数
 `5`
+
+```java
+import java.io.*;
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String str = null;
+        
+        while ((str = reader.readLine()) != null) {
+            // 砝码数
+            int n = Integer.parseInt(str);
+            String[] weightStr = reader.readLine().split(" ");
+            String[] numStr = reader.readLine().split(" ");
+            
+            int[] weight = new int[n];
+            int[] number = new int[n];
+            for (int i = 0; i < n; i++) {
+                weight[i] = Integer.parseInt(weightStr[i]);
+                number[i] = Integer.parseInt(numStr[i]);
+            }
+            
+            System.out.println(getNumber(n, weight, number));
+        }
+    }
+    
+    private static int getNumber(int n, int[] weight, int[] number) {
+        int sum = 0;
+        for (int i = 0; i < n; i++) {
+            // 砝码能称取的最大重量
+            sum += weight[i] * number[i];
+        }
+        
+        // 砝码重量种类包括0，可能有sum+1种
+        boolean[] trueWeight = new boolean[sum + 1];
+        trueWeight[0] = true;
+        trueWeight[sum] = true;
+        
+        // n种砝码
+        for (int i = 0; i < n; i++) {
+            // 每种砝码的个数
+            for (int j = 0; j < number[i]; j++) {
+                // 从砝码能称取的最大重量，到单个砝码
+                for (int k = sum; k >= weight[i]; k--) {
+                    if (trueWeight[k - weight[i]]) {
+                        trueWeight[k] = true;
+                    }
+                }
+            }
+        }
+        
+        int count = 0;
+        for (boolean result : trueWeight) {
+            if (result) {
+                count++;
+            }
+        }
+        
+        return count;
+    }
+}
+```
+
+# 42.学英语
+
+Jessi初学英语，为了快速读出一串数字，编写程序将数字转换成英文：
+
+如`22：twenty two`，`123：one hundred and twenty three`。
+
+
+说明：
+
+**数字为正整数，长度不超过九位，不考虑小数，转化结果为英文小写**；
+
+输出格式为`twenty two`；
+
+非法数据请返回`“error”`；
+
+关键字提示：`and，billion，million，thousand，hundred`。
+
+方法原型：`public static String parse(long num)` 
+
+```
+输入描述:
+输入一个long型整数
+2356
+
+输出描述:
+输出相应的英文写法
+two thousand three hundred and fifty six
+```
+
+```java
+import java.io.*;
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String str = null;
+        
+        while ((str = reader.readLine()) != null) {
+            // 输入的带转化整数
+            Integer num = Integer.valueOf(str);
+            System.out.println(parse(num));
+        }
+        
+        //reader.close();
+    }
+    
+    private static String parse(int num) {
+        String[] numStr = {"zero","one","two","three","four","five","six","seven","eight","nine","ten", 
+                           "eleven","twelve", "thirteen","fourteen","fifteen","sixteen","seventeen", "eighteen","ninteen"};
+        if (num >= 0 && num < 20) {
+            return numStr[num];
+        } else if (num >= 20 && num < 100) {
+            int number = num % 10;
+            if (num < 30) {
+                return number != 0 ? "twenty " + parse(number) : "twenty";
+            } else if (num < 40) {
+                return number != 0 ? "thirty " + parse(number) : "thirty";
+            } else if (num < 50) {
+                return number != 0 ? "forty " + parse(number) : "forty";
+            } else if (num < 60) {
+                return number != 0 ? "fifty " + parse(number) : "fifty";
+            } else if (num < 70) {
+                return number != 0 ? "sixty " + parse(number) : "sixty";
+            } else if (num < 80) {
+                return number != 0 ? "seventy " + parse(number) : "seventy";
+            } else if (num < 90) {
+                return number != 0 ? "eighty " + parse(number) : "eighty";
+            } else if (num < 100) {
+                return number != 0 ? "ninety " + parse(number) : "ninety";
+            }
+        } else if (num >= 100 && num < 1000) {
+            int x = num / 100;
+            int y = num % 100;
+            if (y != 0) {
+                return parse(x) + " hundred" + " and " + parse(y);
+            } else {
+                return parse(x) + " hundred";
+            }
+        } else if (num >= 1000 && num < 1000000) {
+            int x = num / 1000;
+            int y = num % 1000;
+            if(y != 0){
+                return parse(x) + " thousand " + parse(y);
+            } else {
+                return parse(x) + " thousand";
+            }
+        } else if (num >= 1000000 && num < 100000000) {
+            int x = num / 1000000;
+            int y = num % 1000000;
+            if(y != 0){
+                return parse(x) + " million " + parse(y);
+            } else {
+                return parse(x) + " million";
+            }
+        }
+        
+        return "error";
+    }
+}
+```
+
+# 45.名字的漂亮度
+
+给出一个名字，该名字有26个字符串组成，定义这个**字符串的“漂亮度”是其所有字母“漂亮度”的总和**。
+
+每个字母都有一个“漂亮度”，范围在1到26之间。没有任何两个字母拥有相同的“漂亮度”。字母忽略大小写。
+
+给出多个名字，计算每个名字最大可能的“漂亮度”。
+
+```
+输入描述:
+整数N，后续N个名字
+2
+zhangsan
+lisi
+
+输出描述:
+每个名称可能的最大漂亮程度
+192
+101
+```
+
+思路：出现次数最多的字母漂亮度是`26*出现的次数`，第二多的是`25*出现的次数`...以此类推，最后累计加和。
+
+```java
+import java.io.*;
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String str = null;
+        
+        while ((str = reader.readLine()) != null) {
+            // n个名字
+            int n = Integer.parseInt(str);
+            for (int i = 0; i < n; i++) {
+                String name = reader.readLine();
+                // 统计名字中每个字母的个数
+                int[] count = new int[26];
+                for (char ch : name.toCharArray()) {
+                    count[ch - 'a']++;
+                }
+                Arrays.sort(count);
+                int k = 26;
+                int sum = 0;
+                for (int j = count.length - 1; j >= 0; j--) {
+                    if (count[j] == 0) {
+                        break;
+                    }
+                    sum += (k--) * count[j];
+                }
+                System.out.println(sum);
+            }
+        }
+        
+        reader.close();
+    }
+}
+```
+
+# 46.按字节截取字符串
+
+编写一个截取字符串的函数，输入为一个字符串和字节数，输出为按字节截取的字符串。但是要保证**汉字不被截半个**，如`"我ABC"4`，应该截为`"我AB"`，输入`"我ABC汉DEF"6`，应该输出为`"我ABC"`而不是`"我ABC+汉的半个"`。 
+
+```
+输入描述:
+输入待截取的字符串及长度
+我ABC汉DEF 6
+
+输出描述:
+截取后的字符串
+我ABC
+```
+
+注：只出现汉字与字母
+
+```java
+import java.util.*;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String str = null;
+        
+        while ((str = reader.readLine()) != null) {
+            String[] strings = str.split(" ");
+            int number = Integer.parseInt(strings[1]);
+            String result = getStringInByte(strings[0], number);
+            System.out.println(result);
+        }
+        
+        reader.close();
+    }
+    
+    private static String getStringInByte(String name, int number) {
+        StringBuilder builder = new StringBuilder();
+        int count = 0;
+        for (int i = 0; i < name.length(); i++) {
+            char judge = name.charAt(i);
+            if ((judge >= 'a' && judge <= 'z') || (judge >= 'A' && judge <= 'Z')) {
+                count++;
+                if (count > number) {
+                    return builder.toString();
+                }
+                builder.append(judge);
+            } else {
+                count += 2;
+                if (count > number) {
+                    return builder.toString();
+                }
+                builder.append(judge);
+            }
+        }
+        
+        return builder.toString();
+    }
+}
+```
+
+# 49.(未实现)多线程打印
+
+有4个线程和1个公共的字符数组：
+- 线程1的功能就是向字符数组输出A
+- 线程2的功能就是向字符数组输出B
+- 线程3的功能就是向字符数组输出C
+- 线程4的功能就是向字符数组输出D。
+  
+要求按顺序向数组赋值ABCDABCDABCD，ABCD的个数由线程函数1的参数指定。
+
+```
+输入描述:
+输入一个int整数
+10
+
+输出描述:
+输出多个ABCD
+ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD
+```
+
+```java
+import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * 多线程，线程交替打印ABCDABCD
+ */
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            int n = scanner.nextInt();
+            CountDownLatch countDownLatch = new CountDownLatch(4);
+            AlternativePrint alternativePrint = new AlternativePrint();
+            
+            //创建四个线程
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        for (int i = 0; i < n; i++) {
+                            alternativePrint.printA();
+                        }
+                    } finally {
+                        countDownLatch.countDown();
+                    }
+                }
+            }).start();
+            
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        for (int i = 0; i < n; i++) {
+                            alternativePrint.printB();
+                        }
+                    } finally {
+                        countDownLatch.countDown();
+                    }
+                }
+            }).start();
+            
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        for (int i = 0; i < n; i++) {
+                            alternativePrint.printC();
+                        }
+                    } finally {
+                        countDownLatch.countDown();
+                    }
+                }
+            }).start();
+            
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        for (int i = 0; i < n; i++) {
+                            alternativePrint.printD();
+                        }
+                    } finally {
+                        countDownLatch.countDown();
+                    }
+                }
+            }).start();
+            
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+            System.out.println();
+        }
+    }
+}
+
+class AlternativePrint {
+    private Lock lock = new ReentrantLock();
+    private Condition conditionA = lock.newCondition();
+    private Condition conditionB = lock.newCondition();
+    private Condition conditionC = lock.newCondition();
+    private Condition conditionD = lock.newCondition();
+    private int number = 1;
+
+    void printA() {
+        lock.lock();
+        try {
+            if (number != 1) {
+                conditionA.await();
+            }
+            System.out.print("A");
+            //"A"打印结束，标记置为2，并唤醒打印"B"的线程
+            number = 2;
+            conditionB.signal();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    void printB() {
+        lock.lock();
+        try {
+            if (number != 2) {
+                conditionB.await();
+            }
+            System.out.print("B");
+            //"B"打印结束，标记置为3，并唤醒打印"C"的线程
+            number = 3;
+            conditionC.signal();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    void printC() {
+        lock.lock();
+        try {
+            if (number != 3) {
+                conditionC.await();
+            }
+            System.out.print("C");
+            //"C"打印结束，标记置为4，并唤醒打印"D"的线程
+            number = 4;
+            conditionD.signal();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    void printD() {
+        lock.lock();
+        try {
+            if (number != 4) {
+                conditionD.await();
+            }
+            System.out.print("D");
+            //"D"打印结束，标记置为1，并唤醒打印"A"的线程
+            number = 1;
+            conditionA.signal();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+# 50.(未实现)四则运算
+
+请实现如下接口
+
+```
+    /* 功能：四则运算
+
+     * 输入：strExpression：字符串格式的算术表达式，如: "3+2*{1+2*[-4/(8-6)+7]}"
+
+         * 返回：算术表达式的计算结果
+
+     */
+
+    public static int calculate(String strExpression)
+
+    {
+
+        /* 请实现*/
+
+        return 0;
+
+    } 
+```
+
+约束：
+`strExpression`字符串中的有效字符包括`[‘0’-‘9’],‘+’,‘-’, ‘*’,‘/’ ,‘(’， ‘)’,‘[’, ‘]’,‘{’ ,‘}’`。
+
+`strExpression`算术表达式的有效性由调用者保证;；
+
+```
+输入描述:
+输入一个算术表达式
+3+2*{1+2*[-4/(8-6)+7]}
+
+输出描述:
+得到计算结果
+25
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String s;
+        while ((s = reader.readLine()) != null) {
+            // List 存放后缀表达式
+            List<String> list = new ArrayList<>();
+            // 定义操作符栈stack，用于存放操作符 + - * / (
+            Stack<Character> stack = new Stack();
+            for (int i = 0; i < s.length(); i++) {
+                // 定义一个字符，记录字符串当前循环的变量
+                char c = s.charAt(i);
+                if (isNum(c)) {
+                    // 取出以当前字符开头数字结尾的整数字符串进行判定是否为数字
+                    int start = i;
+                    if (i == s.length() - 1) {
+                        i++;
+                    } else {
+                        // 一直找到不是数字字符为止
+                        while (isNum(s.charAt(++i))) {
+                        }
+                    }
+                    // 将整数存入LIST中
+                    list.add(s.substring(start, i));
+                    i--;
+                } else if (c == '(' || c == '[' || c == '{') {
+                    // 字符为左括号则入栈
+                    stack.push(c);
+                } else if (c == ')' || c == ']' || c == '}') {
+                    //  一直出栈直到遇到左括号
+                    while (stack.peek() != '(' && stack.peek() != '[' && stack.peek() != '{') {
+                        // 当栈顶不为左括号时，将此操作符添加到LIST中
+                        list.add(String.valueOf(stack.pop()));
+                    }
+                    stack.pop();
+                } else if (c == '-') {
+                    if ((i != 0 && (isNum(s.charAt(i - 1)) && isNum(s.charAt(i + 1)))) || (s.charAt(i - 1) == ')' || s.charAt(i - 1) == ']' || s.charAt(i - 1) == '}') || (s.charAt(i + 1) == '(' || s.charAt(i + 1) == '[') || s.charAt(i + 1) == '{') {
+                        // 减号
+                        while (!greaterThan(c, stack)) {
+                            list.add(String.valueOf(stack.pop()));
+                        }
+                        stack.push(c);
+                    } else {
+                        // 负号
+                        int start = i;
+                        while (isNum(s.charAt(++i))) {
+                        }
+                        list.add(s.substring(start, i));
+                        i--;
+                    }
+                } else if (c == '+') {
+                    while (!greaterThan(c, stack)) {
+                        list.add(String.valueOf(stack.pop()));
+                    }
+                    stack.push(c);
+                } else if (c == '*' || c == '/') {
+                    while (!greaterThan(c, stack)) {
+                        list.add(String.valueOf(stack.pop()));
+                    }
+                    stack.push(c);
+                }
+            }
+            while (!stack.isEmpty()) {
+                list.add(String.valueOf(stack.pop()));
+            }
+
+            // 计算后缀表达式
+            int res = calculate(list);
+            System.out.println(res);
+        }
+    }
+
+    public static boolean isNum(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    // 比较运算符与栈顶运算符的优先级
+    public static boolean greaterThan(char c, Stack<Character> stack) {
+        if (stack.isEmpty()) {
+            return true;
+        } else {
+            char c1 = stack.peek();
+            if (c == '*' || c == '/') {
+                return !(c1 == '*' || c1 == '/');
+            } else {
+                return c1 == '(' || c1 == '{' || c1 == '[';
+            }
+        }
+    }
+
+    public static int calculate(List<String> list) {
+        // 定义数字栈，存放后缀表达式计算过程中的值
+        Stack<Integer> stack = new Stack<>();
+        for (int i = 0; i < list.size(); i++) {
+            String s = list.get(i);
+            int n1;
+            int n2;
+            switch (s) {
+                case "*":
+                    n1 = stack.pop();
+                    n2 = stack.pop();
+                    stack.push(n1 * n2);
+                    break;
+                case "/":
+                    n1 = stack.pop();
+                    n2 = stack.pop();
+                    stack.push(n2 / n1);
+                    break;
+                case "+":
+                    stack.push(stack.pop() + stack.pop());
+                    break;
+                case "-":
+                    n1 = stack.pop();
+                    n2 = stack.pop();
+                    stack.push(n2 - n1);
+                    break;
+                default:
+                    stack.push(Integer.parseInt(s));
+            }
+        }
+        return stack.pop();
+    }
+
+}
+```
