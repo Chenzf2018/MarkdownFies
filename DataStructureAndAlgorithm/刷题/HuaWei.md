@@ -2498,3 +2498,369 @@ public class Main {
 
 }
 ```
+
+# 52.计算字符串的距离
+
+Levenshtein距离，又称编辑距离，指的是**两个字符串之间，由一个转换成另一个所需的最少编辑操作次数**。许可的编辑操作包括将一个字符**替换**成另一个字符，**插入**一个字符，**删除**一个字符。编辑距离的算法是首先由俄国科学家Levenshtein提出的，故又叫Levenshtein Distance。
+
+Ex：
+
+字符串A:abcdefg
+
+字符串B:abcdef
+
+通过增加或是删掉字符”g”的方式达到目的。这两种方案都需要一次操作。把这个操作所需要的次数定义为两个字符串的距离。
+
+要求：
+
+给定任意两个字符串，写出一个算法计算它们的编辑距离。
+
+ 
+
+请实现如下接口
+```
+/*  功能：计算两个字符串的距离
+ *  输入： 字符串A和字符串B
+ *  输出：无
+ *  返回：如果成功计算出字符串的距离，否则返回-1
+ */
+ 
+ public static int calStringDistance(String charA, String charB)
+ {
+    return  0;
+}  
+```
+
+## 动态规划
+
+https://github.com/Wang-Jun-Chao/hawei-online-test/blob/master/078-%E8%AE%A1%E7%AE%97%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%9A%84%E8%B7%9D%E7%A6%BB/src/Main.java
+
+很经典的可使用动态规划方法解决的题目，和计算两字符串的最长公共子序列相似。
+
+设Ai为字符串A(`a1a2a3 … am`)的前i个字符（即为`a1,a2,a3 … ai`），设Bj为字符串B(`b1b2b3 … bn`)的前j个字符（即为`b1,b2,b3 … bj`）。设`L(i,j)`为使两个字符串和Ai和Bj相等的最小操作次数。
+
+- 当`ai==bj`时 显然`L(i,j) = L(i-1,j-1)`；
+- 当`ai!=bj`时
+  -  若将它们修改为相等，则对两个字符串至少还要操作`L(i-1,j-1)`次
+  -  若删除ai或在bj后添加ai，则对两个字符串至少还要操作`L(i-1,j)`次
+  -  若删除bj或在ai后添加bj，则对两个字符串至少还要操作`L(i,j-1)`次
+  -  此时`L(i,j) = min( L(i-1,j-1), L(i-1,j), L(i,j-1) ) + 1`
+
+显然，`L(i,0)=i`，`L(0,j)=j`，再利用上述的递推公式，可以直接计算出`L(i,j)`值。
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            String a = scanner.nextLine();
+            String b = scanner.nextLine();
+            System.out.println(getStringDistance(a, b));
+        }
+        scanner.close();
+    }
+    
+    private static int getStringDistance(String a, String b) {
+        return stringDistance(a.toCharArray(), b.toCharArray());
+    }
+    
+    private static int stringDistance(char[] a, char[] b) {
+        int[][] len = new int[a.length + 1][b.length + 1];
+        for (int i = 0; i < len.length; i++) {
+            len[i][0] = i;
+        }
+        for (int j = 0; j < len[0].length; j++) {
+            len[0][j] = j;
+        }
+        for (int i = 1; i < len.length; i++) {
+            for (int j = 1; j < len[0].length; j++) {
+                if (a[i - 1] == b[j - 1]) {
+                    len[i][j] = len[i - 1][j - 1];
+                } else {
+                    len[i][j] = Math.min(Math.min(len[i - 1][j], len[i - 1][j - 1]), len[i][j - 1]) + 1;
+                }
+            }
+        }
+        
+        return len[len.length - 1][len[0].length - 1];
+    }
+}
+```
+
+
+# 53.杨辉三角的变形
+```
+1
+
+1  1  1
+
+1  2  3  2  1
+
+1  3  6  7  6  3  1
+
+1  4  10 16 19 16 10  4  1
+```
+
+以上三角形的数阵，第一行只有一个数1，以下每行的每个数，是恰好是~~它上面的数，左上角数到右上角的数~~它上面的数与其前两个数，3个数之和（如果不存在某个数，认为该数就是0）。
+
+求**第n行第一个偶数出现的位置**。如果没有偶数，则输出-1。例如输入3,则输出2，输入4则输出3。
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            int input = scanner.nextInt();
+            System.out.println(findIndex(input));
+        }
+        
+        scanner.close();
+    }
+    
+    private static int findIndex(int n) {
+        if (n <= 2) {
+            return -1;
+        }
+        
+        int[][] arr = {new int[2 * n -1], new int[2 * n -1], new int[2 * n -1]};
+        arr[0][0] = 1;
+        arr[1][0] = 1;
+        arr[1][1] = 1;
+        arr[1][2] = 1;
+        
+        // “i = 2”从第三行开始
+        for (int i = 2; i < n; i++) {
+            int curr = i % 3;
+            int prev = (i - 1) % 3;
+            int last = 2 * i;
+            
+            // 每行第一个值
+            arr[curr][0] = 1;
+            // 每行第二个值
+            arr[curr][1] = i;
+            // 每行最后一个值
+            arr[curr][last] = 1;
+            // 每行倒数第二个值
+            arr[curr][last - 1] = i;
+            
+            // 从每行第三个数开始
+            for (int j = 2; j <= last - 2; j++) {
+                arr[curr][j] = arr[prev][j - 2] + arr[prev][j - 1] + arr[prev][j];
+            }
+        }
+        
+        // 第一行是从0开始的
+        int curr = (n - 1) % 3;
+        for (int i = 0; i < arr[curr].length; i++) {
+            if (arr[curr][i] % 2 == 0) {
+                // 每一行的数index都是从0开始
+                return i + 1;
+            }
+        }
+        
+        return -1;
+    }
+}
+```
+
+# 54.(未实现)表达式求值
+
+给定一个字符串描述的算术表达式，计算出结果值。
+
+输入字符串长度不超过100，合法的字符包括`"+, -, *, /, (, )"，"0-9"`，字符串内容的合法性及表达式语法的合法性由做题者检查。本题目只涉及整型计算。
+
+``` java
+import java.util.*;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+//        Scanner scanner = new Scanner(Main.class.getClassLoader().getResourceAsStream("data.txt"));
+        while (scanner.hasNext()) {
+            String input = scanner.next();
+            input = format(input);
+            System.out.println(calculate(input));
+        }
+
+        scanner.close();
+    }
+
+    /**
+     * 进行四则运行
+     *
+     * @param s 输入一个算术表达式
+     * @return 表达式结果
+     */
+    private static int calculate(String s) {
+
+        // 操作符栈
+        Deque<Character> opts = new LinkedList<>();
+        // 操作数栈
+        Deque<Integer> opds = new LinkedList<>();
+
+        int idx = 0;
+        while (idx < s.length()) {
+            char c = s.charAt(idx);
+            // 如果是数字
+            if (c >= '0' && c <= '9') {
+                // 计算数字的值
+                int opd = 0;
+                while (idx < s.length() && s.charAt(idx) >= '0' && s.charAt(idx) <= '9') {
+                    opd = opd * 10 + (s.charAt(idx) - '0');
+                    idx++;
+                }
+                opds.addLast(opd);
+            }
+            // 如果是操作符
+            else {
+
+
+                // 如果是左括号
+                if (c == '(' || c == '[' || c == '{') {
+                    opts.addLast(c);
+                }
+                // 如果是右括号
+                else if (c == ')' || c == ']' || c == '}') {
+                    while (!opts.isEmpty() && opts.getLast() != '(' && opts.getLast() != '[' && opts.getLast() != '{') {
+                        calculate(opts, opds);
+                    }
+                    opts.removeLast();
+                }
+                // 如果是乘或者除
+                else if (c == '*' || c == '/') {
+                    while (!opts.isEmpty() && (opts.getLast() == '*' || opts.getLast() == '/')) {
+                        calculate(opts, opds);
+                    }
+                    // 操作符入栈
+                    opts.addLast(c);
+                } else if (c == '+' || c == '-') {
+                    while (!opts.isEmpty() && (opts.getLast() == '*'
+                            || opts.getLast() == '/'
+                            || opts.getLast() == '+'
+                            || opts.getLast() == '-')) {
+                        calculate(opts, opds);
+                    }
+                    // 操作符入栈
+                    opts.addLast(c);
+                }
+
+                // 处理下一个字符
+                idx++;
+            }
+
+
+        }
+
+        while (!opts.isEmpty()) {
+            calculate(opts, opds);
+        }
+        return opds.removeLast();
+    }
+
+    /**
+     * 求值操作，取opt的最后一个操作符，opds中的最后两个操作数
+     *
+     * @param opts 操作符栈
+     * @param opds 操作数栈
+     */
+    private static void calculate(Deque<Character> opts, Deque<Integer> opds) {
+
+        // 取操作数栈中的最后一个操作符
+        char opt = opts.removeLast();
+        // 取操作数
+        int v2 = opds.removeLast();
+        int v1 = opds.removeLast();
+
+        // 计算
+        int v = calculate(v1, v2, opt);
+        opds.addLast(v);
+    }
+
+    /**
+     * 将算术表达式归整，-5*3整理成0-5*3
+     *
+     * @param s 算术表达式
+     * @return 归整后的表达式
+     */
+    private static String format(String s) {
+        // 去掉空格
+        String t = s.replaceAll("(\\s)+", "");
+
+        int idx = 0;
+        // 对所有的减号进行处理
+        while ((idx = t.indexOf('-', idx)) >= 0) {
+            // 第一个字符是负号，要规格形式要加上0
+            if (idx == 0) {
+                t = '0' + t;
+            }
+            // 如果不是第一个字符
+            else {
+                char c = t.charAt(idx - 1);
+                // 负号前面有括号，需要在前面加0
+                if (c == '(' || c == '[' || c == '{') {
+                    t = t.substring(0, idx) + '0' + t.substring(idx);
+                }
+            }
+
+            idx++;
+        }
+
+        return t;
+    }
+
+    /**
+     * 计算 v1 operator v2，operator是加减乘除
+     *
+     * @param v1       操作数1
+     * @param v2       操作数2
+     * @param operator 操作符
+     * @return 结果
+     */
+    private static int calculate(int v1, int v2, char operator) {
+        switch (operator) {
+            case '+':
+                return v1 + v2;
+            case '-':
+                return v1 - v2;
+            case '*':
+                return v1 * v2;
+            case '/':
+                return v1 / v2;
+            default:
+                // do nothing
+        }
+        return 0;
+    }
+}
+```
+
+# 57.高精度整数加法
+
+在计算机中，由于处理器位宽限制，只能处理有限精度的十进制整数加减法，比如在32位宽处理器计算机中，参与运算的操作数和结果必须在$-2^{31}...2^{31}-1$(2,147,483,648~2,147,483,647)之间。如果需要进行更大范围的十进制整数加法，需要使用特殊的方式实现，比如使用字符串保存操作数和结果，采取逐位运算的方式。
+
+如下：
+`9876543210 + 1234567890 = ?`
+让字符串`num1="9876543210"`，字符串`num2="1234567890"`，结果保存在字符串`result = "11111111100"`。
+
+`-9876543210 + (-1234567890) = ?`
+让字符串`num1="-9876543210"`，字符串`num2="-1234567890"`，结果保存在字符串`result = "-11111111100"`。
+
+要求编程实现上述高精度的十进制加法。
+
+要求实现方法：
+`public String add (String num1, String num2)`
+输入
+- num1：字符串形式操作数1，如果操作数为负，则num1的前缀为符号位'-'
+- num2：字符串形式操作数2，如果操作数为负，则num2的前缀为符号位'-'
+返回：保存加法计算结果字符串，如果结果为负，则字符串的前缀为'-'
+
+注：
+(1)当输入为正数时，'+'不会出现在输入字符串中；当输入为负数时，'-'会出现在输入字符串中，且一定在输入字符串最左边位置；
+(2)输入字符串所有位均代表有效数字，即不存在由'0'开始的输入字符串，比如"0012", "-0012"不会出现；
+(3)要求输出字符串所有位均为有效数字，结果为正或0时'+'不出现在输出字符串，结果为负时输出字符串最左边位置为'-'。
+
