@@ -2839,7 +2839,7 @@ public class Main {
 }
 ```
 
-# 57.高精度整数加法
+# 57.(***)高精度整数加法
 
 在计算机中，由于处理器位宽限制，只能处理有限精度的十进制整数加减法，比如在32位宽处理器计算机中，参与运算的操作数和结果必须在$-2^{31}...2^{31}-1$(2,147,483,648~2,147,483,647)之间。如果需要进行更大范围的十进制整数加法，需要使用特殊的方式实现，比如使用字符串保存操作数和结果，采取逐位运算的方式。
 
@@ -2864,3 +2864,526 @@ public class Main {
 (2)输入字符串所有位均代表有效数字，即不存在由'0'开始的输入字符串，比如"0012", "-0012"不会出现；
 (3)要求输出字符串所有位均为有效数字，结果为正或0时'+'不出现在输出字符串，结果为负时输出字符串最左边位置为'-'。
 
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            String str1 = scanner.next();
+            String str2 = scanner.next();
+            System.out.println(add(str1, str2));
+        }
+        scanner.close();
+    }
+
+    /**
+     * 两个字符串相加
+     */
+    private static String add(String str1, String str2) {
+        // 判断str1, str2是否为正数
+        boolean positiveNumber1 = str1.charAt(0) != '-';
+        boolean positiveNumber2 = str2.charAt(0) != '-';
+
+        int[] number1;
+        int[] number2;
+
+        // getNumber返回无符号的整数
+        if (positiveNumber1) {
+            number1 = getNumber(str1);
+        } else {
+            number1 = getNumber(str1.substring(1));
+        }
+
+        if (positiveNumber2) {
+            number2 = getNumber(str2);
+        } else {
+            number2 = getNumber(str2.substring(1));
+        }
+
+        // 两者同号
+        if (positiveNumber1 == positiveNumber2) {
+            int[] result = add(number1, number2);
+            String resultStr = toNumberStr(result);
+
+            // 根据需要添加符号
+            if (positiveNumber1) {
+                return resultStr;
+            } else {
+                return "-" + resultStr;
+            }
+        } else {
+            // getNumber返回无符号的整数
+            if (compare(number1, number2) >= 0) {
+                // number1大于等于number2
+                int[] result = minus(number1, number2);
+                String resultStr = toNumberStr(result);
+                // str1为正数，str2为负数
+                if (positiveNumber1) {
+                    return resultStr;
+                } else {
+                    return "-" + resultStr;
+                }
+            } else {
+                // number1小于number2
+                int[] result = minus(number2, number1);
+                String resultStr = toNumberStr(result);
+                // str1为正数，str2为负数
+                if (positiveNumber1) {
+                    return "-" + resultStr;
+                } else {
+                    return resultStr;
+                }
+            }
+        }
+    }
+
+    /**
+     * 将字符数值转换成整数数值，不包含符号位
+     */
+    private static int[] getNumber(String numStr) {
+        int[] result = new int[numStr.length()];
+        for (int i = 0; i < result.length; i++) {
+            // 下标从小到大表示数位的从低到高，方便进位运算
+            result[i] = numStr.charAt(numStr.length() - i - 1) - '0';
+        }
+        return result;
+    }
+
+    /**
+     * 重载
+     * 两个无符号整数相加
+     */
+    private static int[] add(int[] number1, int[] number2) {
+        // 找到更大的一个数，保证number2不小于number1
+        if (number2.length < number1.length) {
+            int[] temp = number1;
+            number1 = number2;
+            number2 = temp;
+        }
+
+        int[] result = new int[number2.length + 1];
+        // 进位
+        int carry = 0;
+
+        // 此时number1更小
+        for (int i = 0; i < number1.length; i++) {
+            result[i] = number1[i] + number2[i] + carry;
+            carry = result[i] / 10;
+            result[i] %= 10;
+        }
+
+        // 计算剩余部分
+        for (int i = number1.length; i < number2.length; i++) {
+            result[i] = carry + number2[i];
+            carry = result[i] / 10;
+            result[i] %= 10;
+        }
+
+        // 最后可能还有进位
+        if (carry == 1) {
+            result[result.length - 1] = 1;
+            return result;
+        } else {
+            int[] res = new int[result.length - 1];
+            System.arraycopy(result, 0, res, 0, res.length);
+            return res;
+        }
+    }
+
+    /**
+     * 将数组表示的整数转换成字符串
+     */
+    private static String toNumberStr(int[] number) {
+        if (number == null) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = number.length - 1; i >= 0; i--) {
+            sb.append(number[i]);
+        }
+
+        return sb.toString();
+    }
+
+
+    /**
+     * 比较两个整数是否相等，下标由小到大表示由低位到高位，忽略最高有效位上的前导0
+     * @return number1 > number2返回1，number1 = number2返回0，number1 < number2返回-1
+     */
+    private static int compare(int[] number1, int[] number2) {
+        if (number1 == null && number2 == null) {
+            return 0;
+        }
+        if (number1 == null) {
+            return -1;
+        }
+        if (number2 == null) {
+            return 1;
+        }
+
+        int lastNumber1Index = number1.length - 1;
+        int lastNumber2Index = number2.length - 1;
+
+        // 找number1的最高有效位的位置，至少有一位
+        while (lastNumber1Index >= 1 && number1[lastNumber1Index] == 0) {
+            lastNumber1Index--;
+        }
+
+        // 找number2的最高有效位的位置，至少有一位
+        while (lastNumber2Index >= 1 && number2[lastNumber2Index] == 0) {
+            lastNumber2Index--;
+        }
+
+        if (lastNumber1Index > lastNumber2Index) {
+            return 1;
+        } else if (lastNumber1Index < lastNumber2Index) {
+            return -1;
+        } else {
+            // 位数一样，比较每一个数位上的值，从高位到低位进行比较
+            for (int i = lastNumber1Index; i >= 0; i--) {
+                if (number1[i] > number2[i]) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * 做减法number1-number2，保证number1大于等于number2
+     */
+    private static int[] minus(int[] number1, int[] number2) {
+        number1 = format(number1);
+        number2 = format(number2);
+
+        // 做减法number1-number2，保证number1大于等于number2
+        int[] result = new int[number1.length];
+
+        // 当前位被借位
+        int carry = 0;
+        int temp;
+
+        for (int i = 0; i < number2.length; i++) {
+            temp = number1[i] - carry - number2[i];
+
+            // 当前位够减
+            if (temp >= 0) {
+                result[i] = temp;
+                // 没有进行借位
+                carry = 0;
+            } else {
+                // 当前位够减
+                result[i] = temp + 10;
+                // 进行借位
+                carry = 1;
+            }
+        }
+
+        // 还有借位或者number1比number2位数多，要将number1中的数位复制到result中
+        for (int i = number2.length; i < number1.length; i++) {
+            temp = number1[i] - carry;
+            // 当前位够减
+            if (temp >= 0) {
+                result[i] = temp;
+                carry = 0;
+            } else {
+                result[i] = temp + 10;
+                carry = 1;
+            }
+        }
+
+        return format(result);
+    }
+
+    /**
+     * 将整数进行格式化，去掉高位的前导0
+     */
+    private static int[] format(int[] number) {
+        int len = number.length - 1;
+        // 找到最高有效位
+        while (len > 0 && number[len] == 0) {
+            len--;
+        }
+
+        int[] newNumber = new int[len + 1];
+        System.arraycopy(number, 0, newNumber, 0, newNumber.length);
+        return newNumber;
+    }
+}
+```
+
+# 59.找出字符串中第一个只出现一次的字符
+
+```
+输入描述:
+输入几个非空字符串
+asdfasdfo
+aabb
+
+输出描述:
+输出第一个只出现一次的字符，如果不存在输出-1
+o
+-1
+```
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            String input = scanner.nextLine();
+            char result = findFirst(input);
+            if (result == ' ') {
+                System.out.println(-1);
+            } else {
+                System.out.println(result);
+            }
+
+        }
+    }
+
+    private static char findFirst(String str) {
+        Map<Character, Integer> linkedHashMap = new LinkedHashMap<>();
+        for (int i = 0; i < str.length(); i++) {
+            char ch = str.charAt(i);
+            // 如果出现过，则标记为无效
+            if (linkedHashMap.containsKey(ch)) {
+                linkedHashMap.put(ch, Integer.MAX_VALUE);
+            } else {
+                // 标记第一次出现的
+                linkedHashMap.put(ch, 1);
+            }
+        }
+
+        for (Map.Entry<Character, Integer> entry : linkedHashMap.entrySet()) {
+            if (entry.getValue() == 1) {
+                return entry.getKey();
+            }
+        }
+
+        return ' ';
+    }
+}
+```
+
+# 63.DNA序列
+
+一个DNA序列由A/C/G/T四个字母的排列组合组成。**G和C的比例（定义为GC-Ratio）是序列中G和C两个字母的总的出现次数除以总的字母数目（也就是序列长度）**。在基因工程中，这个比例非常重要。因为高的GC-Ratio可能是基因的起始点。
+
+给定一个很长的DNA序列，以及要求的最小子序列长度，研究人员经常会需要在其中找出GC-Ratio最高的子序列。
+ 
+```
+输入描述:
+输入一个string型基因序列，和int型子串的长度
+AACTGTGCACGACCTGA
+5
+
+输出描述:
+找出GC比例最高的子串，如果有多个输出第一个的子串
+```
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            String input = scanner.nextLine();
+            int len = scanner.nextInt();
+            System.out.println(maxRatioStr(input, len));
+        }
+    }
+    
+    /**
+    * 初始化两个数组，一个序列数值数组seqValue[N]，一个序列和数组SUM[N]
+    * 先遍历一边序列，为C或者G则K[i]为1，否则则置为0，然后计算连续M个K[I]之和存入SUM
+    */
+    private static String maxRatioStr(String str, int number) {
+        int[] seqValue = new int[str.length()];
+        int[] sum = new int[str.length()];
+        
+        for (int i = 0; i < str.length(); i++) {
+            char ch = str.charAt(i);
+            if (ch == 'C' || ch == 'G') {
+                seqValue[i] = 1;
+            } else {
+                seqValue[i] = 0;
+            }
+        }
+        
+        for (int i = 0; i < seqValue.length - number; i++) {
+            for (int j = 0; j < number; j++) {
+                sum[i] += seqValue[i + j];
+            }
+        }
+        
+        int max = 0;
+        int index = 0;
+        for (int i = 0; i < sum.length; i++) {
+            if (sum[i] > max) {
+                max = sum[i];
+                index = i;
+            }
+        }
+        
+        return str.substring(index, index + number);
+    }
+}
+```
+
+# 65.(动态规划)查找两个字符串a,b中的最长公共子串
+
+查找两个字符串a，b中的最长公共子串。若有多个，输出在较短串中最先出现的那个。
+
+```
+输入描述:
+输入两个字符串
+abcdefghijklmnop
+abcsafjklmnopqrstuvw
+
+输出描述:
+返回重复出现的字符
+jklmnop
+```
+
+```java
+import java.io.*;
+import java.util.*;
+
+public class Main{
+    public static void main(String[] args) throws IOException {
+          BufferedReader sc = new BufferedReader(new InputStreamReader(System.in));
+          String line = "";
+          while((line = sc.readLine()) != null){
+              String strA = line;
+              String strB = sc.readLine();
+              if (strA.length() > strB.length()) {
+                String temp = strA;
+                strA = strB;//str1是较短的子串
+                strB = temp;
+              }
+              System.out.println(findMaxCommonStr(strA,strB));
+          }
+    }
+    
+    private static String findMaxCommonStr(String str1, String str2) {
+        char[] str1Char = str1.toCharArray();
+        char[] str2Char = str2.toCharArray();
+        int[][] dp = new int[str1Char.length + 1][str2Char.length + 1];
+        int maxLen = 0;
+        int start = 0;
+        for (int i = 1; i <= str1Char.length; i++) {
+            for (int j = 1; j <= str2Char.length; j++) {
+                if (str1Char[i - 1] == str2Char[j - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                    if (dp[i][j] > maxLen) {
+                        maxLen = dp[i][j];
+                        start = i - maxLen;//记录最长公共子串的起始位置
+                    }
+                }
+            }
+        }
+        return str1.substring(start, start + maxLen);
+    }
+}
+```
+
+# 70.矩阵乘法计算量估算
+
+矩阵乘法的运算量与矩阵乘法的顺序强相关。
+
+
+例如：A是一个50×10的矩阵，B是10×20的矩阵，C是20×5的矩阵
+
+计算$A*B*C$有两种顺序：((AB)C)或者(A(BC))，前者需要计算15000次乘法，后者只需要3500次。
+
+
+编写程序计算不同的计算顺序需要进行的乘法次数
+
+```
+输入描述:
+输入多行，先输入要计算乘法的矩阵个数n，每个矩阵的行数，列数，总共2n的数，最后输入要计算的法则
+3
+50 10
+10 20
+20 5
+(A(BC))
+
+输出描述:
+输出需要进行的乘法次数
+3500
+```
+
+以$[m,n]$表示m行n列的矩阵，以$[m,n]*[n,p]$为例进行矩阵乘法规则说明：
+- 第一个矩阵取一行，第二个矩阵取一列，计算时是对应相乘，有n次乘法。
+- 还是第一个矩阵刚参加运算的那行，第二个矩阵的所有列（共$p$列），会有$n*p$次乘法
+- 第一个矩阵的所有行（共m行）参加运算，共会有$n*p*m$次乘法运算。
+- 得出$[m,n]*[n,p]$共会有$n*p*m$次乘法运算，运算后的矩阵为$[m,p]$
+
+过对`rule`进行逐个字符的遍历，并进行相应处理：
+- 字符是**左括号**，出栈
+- 字符是**右括号**，入栈`-1`
+- 字符是**非括号**，入栈
+
+出栈处理：
+- 如果只有一个矩阵，无法进行矩阵乘法，程序结束。
+- 如果有多个矩阵，出栈最后两个。注：**先出栈的为第二个矩阵，后出栈的为第一个矩阵**
+- 计算单次矩阵乘法运算的乘法次数，得到运算后的新矩阵
+- **将新矩阵入栈**，继续参与后面的运算。
+
+```java
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+ 
+public class Main {
+ 
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String str = null;
+        while ((str = br.readLine()) != null) {
+            int num = Integer.parseInt(str);
+            int [][] arr = new int[num][2];
+             
+            for (int i = 0;i<num;i++) {
+                String [] matrix = br.readLine().split(" ");
+                arr[i][0] = Integer.parseInt(matrix[0]);
+                arr[i][1] = Integer.parseInt(matrix[1]);
+            }
+             
+            int n = arr.length -1;
+            char [] rule = br.readLine().toCharArray();
+            Stack<Integer> stack = new Stack<>();
+            int sum = 0;
+            for (int i = rule.length - 1; i >= 0; i--) {
+                char one = rule[i];
+                if (one == ')') {
+                    stack.push(-1);
+                } else if (one == '(') {
+                    int n1 = stack.pop();
+                    int n2 = stack.pop();
+                    sum += arr[n1][0] * arr[n2][0] * arr[n2][1];
+                    arr[n1][1] = arr[n2][1];
+                    stack.pop();
+                    stack.push(n1);
+                } else {
+                    stack.push(n);
+                    n--;
+                }
+            }
+            System.out.println(sum);
+        }
+    }
+}
+```
