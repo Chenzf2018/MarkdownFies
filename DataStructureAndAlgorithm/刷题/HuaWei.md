@@ -3387,3 +3387,273 @@ public class Main {
     }
 }
 ```
+
+# 71.字符串通配符
+
+在计算机中，通配符一种特殊语法，广泛应用于文件搜索、数据库、正则表达式等领域。现要求各位实现字符串通配符的算法。
+
+实现如下2个通配符：
+`*`：匹配0个或以上的字符（字符由英文字母和数字0-9组成，不区分大小写。下同）
+`？`：匹配1个字符
+
+```
+输入描述:
+先输入一个带有通配符的字符串，再输入一个需要匹配的字符串
+te?t*.*
+txt12.xls
+
+输出描述:
+返回匹配的结果，正确输出true，错误输出false
+```
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args){
+        Scanner input = new Scanner(System.in);
+        while(input.hasNext()){
+            String str1 = input.nextLine();
+            String str2 = input.nextLine();
+            System.out.println(helper(str1, str2, 0, 0));
+        }
+    }
+
+    private static boolean helper(String str1, String str2, int point1, int point2) {
+        //base case
+        if (point1 == str1.length() && point2 == str2.length()){
+            return true;
+        }else if (point1 == str1.length() || point2 == str2.length()){
+            return false;
+        }
+        // 遇到'*'两种情况，要不就s2继续往后跳先不比较，要不就各跳过一个比较后面
+        if (str1.charAt(point1) == '*'){
+            return helper(str1, str2, point1, point2 + 1) || helper(str1, str2, point1 + 1, point2 + 1);
+        // 遇到'?'或对应的两个字符一样时，直接指针都往后移一个继续比较
+        } else if (str1.charAt(point1) == '?' || str1.charAt(point1) == str2.charAt(point2)) {
+            return helper(str1, str2, point1 + 1, point2 + 1);
+        } else {
+            return false;
+        }
+    }
+}
+```
+
+# 73.计算日期到天数转换
+
+输入某年某月某日，判断这一天是这一年的第几天？。
+
+接口设计及说明：
+```java
+/*****************************************************************************
+Description   : 数据转换
+Input Param   : year 输入年份
+                Month 输入月份
+                Day 输入天
+                    
+Output Param  :
+Return Value  : 成功返回0，失败返回-1（如：数据错误）
+*****************************************************************************/
+public static int iConverDateToDay(int year, int month, int day)
+{
+    /* 在这里实现功能，将结果填入输入数组中*/ 
+    return 0;
+}
+ 
+/*****************************************************************************
+Description   : 
+Input Param   :
+                    
+Output Param  :
+Return Value  : 成功:返回outDay输出计算后的第几天;
+                失败:返回-1
+*****************************************************************************/
+public static int getOutDay()
+{
+    return 0;
+}
+```
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            int year = scanner.nextInt();
+            int month = scanner.nextInt();
+            int day = scanner.nextInt();
+
+            System.out.println(calculate(year, month, day));
+        }
+
+        scanner.close();
+    }
+
+    private static int calculate(int year, int month, int day) {
+
+        int[] dayOfMonth = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+        // 如果是闰年
+        if (year % 4 == 0 && year % 100 != 0 || year % 400 == 0) {
+            dayOfMonth[1] = 29;
+        }
+
+        if (month < 1 || month > 12 || day < 1 || day > dayOfMonth[month - 1]) {
+            return -1;
+        }
+
+
+        for (int i = 0; i < month - 1; i++) {
+            day += dayOfMonth[i];
+        }
+
+        return day;
+    }
+}
+```
+
+# 74.参数解析
+
+在命令行输入如下命令：`xcopy /s c:\ d:\`
+
+各个参数如下： 
+```
+参数1：命令字xcopy 
+参数2：字符串/s
+参数3：字符串c:\
+参数4: 字符串d:\
+```
+请编写一个参数解析程序，实现将命令行各个参数解析出来。
+
+
+解析规则： 
+
+1. 参数分隔符为空格 
+2. 对于用`“”`包含起来的参数，如果中间有空格，不能解析为多个参数。比如在命令行输入`xcopy /s “C:\program files” “d:\”`时，参数仍然是4个，第3个参数应该是字符串`C:\program files`，而不是`C:\program`，注意**输出参数时，需要将`“”`去掉**，引号不存在嵌套情况。
+3. 参数不定长 
+4. 输入由用例保证，不会出现不符合要求的输入 
+ 
+```
+输入描述:
+输入一行字符串，可以有空格
+xcopy /s c:\\ d:\\
+
+输出描述:
+输出参数个数，分解后的参数，每个参数都独占一行
+4
+xcopy
+/s
+c:\\
+d:\\
+```
+
+```java
+import java.util.*;
+import java.io.*;
+  
+public class Main{
+    public static void main(String []args)throws IOException{
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String[] strings = reader.readLine().split(" ");
+        System.out.println(strings.length);
+        for (String temp : strings) {
+            if (temp.charAt(0) != '\"') {
+                System.out.println(temp);
+            } else {
+                System.out.println(temp.substring(1, temp.length() + 1));
+            }
+        }
+    }
+}
+```
+
+# 75.公共字串计算
+
+https://github.com/Chenzf2018/hawei-online-test/blob/master/071-%E5%85%AC%E5%85%B1%E5%AD%90%E4%B8%B2%E8%AE%A1%E7%AE%97/src/Main.java
+
+计算两个字符串的最大公共字串的长度，字符不区分大小写
+
+```
+输入描述:
+输入两个字符串
+asdfas
+werasdfaswer
+
+输出描述:
+输出一个整数
+6
+```
+
+```java
+import java.util.Arrays;
+import java.util.Scanner;
+
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            String n = scanner.next();
+            String m = scanner.next();
+            // 返回长度
+            System.out.println(maxSubstringLength(n, m));
+            // 返回序列
+            System.out.println(maxSubsequenceLength(n, m));
+        }
+
+        scanner.close();
+    }
+
+    private static int maxSubstringLength(String a, String b) {
+        int aLen = a.length() + 1;
+        int bLen = b.length() + 1;
+        int max = 0;
+
+        // 初始值默认为0
+        int[][] f = new int[aLen][bLen];
+
+
+        for (int i = 1; i < aLen; i++) {
+            for (int j = 1; j < bLen; j++) {
+                if (a.charAt(i - 1) == b.charAt(j - 1)) {
+                    f[i][j] = f[i - 1][j - 1] + 1;
+                } else {
+                    f[i][j] = 0;
+                }
+
+                if (f[i][j] > max) {
+                    max = f[i][j];
+                }
+            }
+        }
+
+        return max;
+    }
+    
+    private static int maxSubsequenceLength(String a, String b) {
+
+        int aLen = a.length() + 1;
+        int bLen = b.length() + 1;
+
+        // 初始值默认为0
+        int[][] f = new int[aLen][bLen];
+
+
+        for (int i = 1; i < aLen; i++) {
+            for (int j = 1; j < bLen; j++) {
+                if (a.charAt(i - 1) == b.charAt(j - 1)) {
+                    f[i][j] = f[i - 1][j - 1] + 1;
+                } else {
+                    f[i][j] = Math.max(f[i - 1][j], f[i][j - 1]);
+                }
+            }
+        }
+
+        return f[aLen - 1][bLen - 1];
+    }
+}
+```
+
+# 78.超长正整数相加
+
