@@ -190,6 +190,9 @@ class AssignCookies {
 ```
 
 
+
+
+
 ## 860. 柠檬水找零(简单)
 
 在柠檬水摊上，每一杯柠檬水的售价为 5 美元。
@@ -886,3 +889,1047 @@ class Solution {
     }
 }
 ```
+
+# 栈
+
+
+## 225. 用队列实现栈(简单)
+
+**题目：**
+使用队列实现栈的下列操作：
+- `push(x)` -- 元素`x`入栈
+- `pop()` -- 移除栈顶元素
+- `top()` -- 获取栈顶元素
+- `empty()` -- 返回栈是否为空
+
+注意:
+
+- 你只能使用队列的基本操作-- 也就是`push to back`, `peek/pop from front`, `size`, 和 `is empty`这些操作是合法的。
+- 你所使用的语言也许不支持队列。 你可以使用`list`或者`deque`（双端队列）来模拟一个队列 , 只要是标准的队列操作即可。
+- 你可以假设所有操作都是有效的（例如, 对一个空的栈不会调用`pop`或者`top`操作）。
+
+
+**思路与算法：**
+- 栈是一种**后进先出**（last in - first out， LIFO）的数据结构，栈内元素从顶端压入（push），从顶端弹出（pop）。一般我们用**数组**或者**链表**来实现栈。
+- 队列是一种与栈相反的**先进先出**（first in - first out， FIFO）的数据结构，队列中元素只能从**后端**（`rear`）入队（push），然后从**前端**（`front`）端出队（pop）。
+
+为了满足栈的特性，我们需要维护**两个队列**`q1`和`q2`。同时，我们用一个额外的变量来保存栈顶元素。
+
+**方法一（两个队列，压入$O(1)$， 弹出$O(n)$）**
+
+**压入**（push）：
+新元素永远从`q1`的**后端入队**，同时`q1`的后端也是栈的 栈顶（top）元素：
+<div align=center><img src=LeetCode\225_1.png></div>
+
+```java
+private Queue<Integer> q1 = new LinkedList<>();
+private int top;
+
+// Push element x onto stack.
+public void push(int x) {
+    q1.add(x);
+    top = x;
+}
+```
+
+- 时间复杂度：$O(1)$
+**队列是通过链表来实现**的，入队（add）操作的时间复杂度为$O(1)$。
+
+- 空间复杂度：$O(1)$
+
+**弹出**（pop）：
+我们需要把栈顶元素弹出，就是`q1`中最后入队的元素。
+
+考虑到队列是一种`FIFO`的数据结构，最后入队的元素应该在最后被出队。因此我们需要维护另外一个队列`q2`，这个队列用作**临时存储`q1`中出队的元素**。`q2`中最后入队的元素将作为新的栈顶元素。接着将`q1`中最后剩下的元素出队。我们通过**把`q1`和`q2`互相交换**（STEP4）的方式来避免把`q2`中的元素往`q1`中拷贝。
+
+<div align=center><img src=LeetCode\225_2.png></div>
+
+```java
+private Queue<Integer> q1 = new LinkedList<>();
+private Queue<Integer> q2 = new LinkedList<>();
+// Removes the element on top of the stack.
+public void pop() {
+    while (q1.size() > 1) {
+        top = q1.remove();
+        q2.add(top);
+    }
+    q1.remove();
+    Queue<Integer> temp = q1;
+    q1 = q2;
+    q2 = temp;
+}
+```
+
+时间复杂度：$O(n)$
+算法让`q1`中的$n$个元素出队，让$n - 1$个元素从`q2`入队，在这里$n$是栈的大小。这个过程总共产生了$2n - 1$次操作，时间复杂度为$O(n)$。
+
+
+**方法二（两个队列， 压入$O(n)$， 弹出$O(1)$）**
+
+**压入**（push)：
+
+接下来介绍的算法让每一个新元素从`q2`入队，同时把这个元素作为栈顶元素保存。当`q1`非空（也就是栈非空），我们让`q1`中所有的元素全部出队，再将出队的元素从`q2`入队。通过这样的方式，新元素（栈中的栈顶元素）将会在`q2`的前端。我们通过将`q1，q2`互相交换的方式来避免把`q2`中的元素往`q1`中拷贝。
+
+<div align=center><img src=LeetCode\225_3.png></div>
+
+```java
+public void push(int x) {
+    q2.add(x);
+    top = x;
+    while (!q1.isEmpty()) {                
+        q2.add(q1.remove());
+    }
+    Queue<Integer> temp = q1;
+    q1 = q2;
+    q2 = temp;
+}
+```
+
+时间复杂度：$O(n)$
+算法会让`q1`出队$n$个元素，同时入队$n + 1$个元素到`q2`。这个过程会产生$2n + 1$步操作，同时`链表`中`插入`操作和`移除`操作的时间复杂度为$O(1)$，因此时间复杂度为$O(n)$。
+
+空间复杂度：$O(1)$
+
+**弹出**（pop）:
+
+直接让`q1`中元素出队，同时将出队后的`q1`中的队首元素作为栈顶元素保存。
+
+<div align=center><img src=LeetCode\225_4.png></div>
+
+```java
+// Removes the element on top of the stack.
+public int pop() {
+    q1.remove();
+    int res = top;
+    if (!q1.isEmpty()) {
+        top = q1.peek();
+    }
+    return res;
+}
+```
+
+时间复杂度：$O(1)$；空间复杂度：$O(1)$
+
+
+**方法三（一个队列， 压入$O(n)$， 弹出$O(1)$）**
+
+上面介绍的两个方法都有一个缺点，它们都用到了两个队列。下面介绍的方法只需要**使用一个队列**。
+
+**压入**（push）：
+
+当我们将一个元素从队列入队的时候，根据队列的性质这个元素会存在队列的后端。但当我们实现一个栈的时候，最后入队的元素应该在前端，而不是在后端。为了实现这个目的，**每当入队一个新元素的时候，我们可以把队列的顺序反转过来**。
+
+<div align=center><img src=LeetCode\225_5.png></div>
+
+```java
+private LinkedList<Integer> q1 = new LinkedList<>();
+
+// Push element x onto stack.
+public void push(int x) {
+    q1.add(x);
+    int sz = q1.size();
+    while (sz > 1) {
+        q1.add(q1.remove());
+        sz--;
+    }
+}
+```
+
+时间复杂度：$O(n)$
+这个算法需要从`q1`中出队$n$个元素，同时还需要入队$n$个元素到`q1`，其中$n$是栈的大小。这个过程总共产生了$2n + 1$步操作。链表中`插入`操作和`移除`操作的时间复杂度为$O(1)$，因此时间复杂度为$O(n)$。
+
+空间复杂度：$O(1)$
+
+**代码：**
+
+```java
+class ImplementStackUsingQueues   {
+    Queue<Integer> queue;
+
+    /** Initialize your data structure here. */
+    public MyStack() {
+        queue = new ArrayDeque<>();
+    }
+    
+    /** Push element x onto stack. */
+    // 入栈时，将新元素x进入队列后，将新元素x之前的所有元素重新入队，此时元素x处于队头
+    public void push(int x) {
+        queue.offer(x);
+        int size = queue.size();
+        for(int i = 0; i < size - 1; i++)
+            queue.offer(queue.poll());
+    }
+    
+    /** Removes the element on top of the stack and returns that element. */
+    // 出栈pop操作和检查栈顶元素的top操作在调用队列相应方法前，需要检查队列是否为空，否则可能产生空指针异常
+    public int pop() {
+        if(queue.isEmpty())
+            throw new RuntimeException("Empty Stack!");
+        return queue.poll();
+    }
+    
+    /** Get the top element. */
+    public int top() {
+        if(queue.isEmpty())
+            throw new RuntimeException("Empty Stack!");
+        return queue.peek();
+    }
+    
+    /** Returns whether the stack is empty. */
+    public boolean empty() {
+        return queue.isEmpty();
+    }
+}
+
+/**
+ * Your MyStack object will be instantiated and called as such:
+ * MyStack obj = new MyStack();
+ * obj.push(x);
+ * int param_2 = obj.pop();
+ * int param_3 = obj.top();
+ * boolean param_4 = obj.empty();
+ */
+```
+
+
+## 496. 下一个更大元素I(简单)
+
+https://leetcode-cn.com/problems/next-greater-element-i/solution/xia-yi-ge-geng-da-yuan-su-i-by-leetcode/
+
+**题目：**
+
+给定两个没有重复元素的数组`nums1`和`nums2`，其中`nums1`是`nums2`的子集。找到`nums1`中每个元素在`nums2`中的下一个比其大的值。
+
+`nums1`中数字`x`的下一个更大元素是指`x`在`nums2`中对应位置的右边的第一个比`x`大的元素。如果不存在，对应位置输出`-1`。
+
+**示例：**
+
+```
+输入: nums1 = [4,1,2], nums2 = [1,3,4,2].
+输出: [-1,3,-1]
+解释:
+    对于num1中的数字4，你无法在第二个数组中找到下一个更大的数字，因此输出 -1。
+    对于num1中的数字1，第二个数组中数字1右边的下一个较大数字是 3。
+    对于num1中的数字2，第二个数组中没有下一个更大的数字，因此输出 -1。
+
+输入: nums1 = [2,4], nums2 = [1,2,3,4].
+输出: [3,-1]
+解释:
+    对于 num1 中的数字 2 ，第二个数组中的下一个较大数字是 3 。
+    对于 num1 中的数字 4 ，第二个数组中没有下一个更大的数字，因此输出 -1 。
+
+提示：
+
+nums1和nums2中所有元素是唯一的。
+nums1和nums2的数组大小都不超过1000。
+```
+
+### 单调栈
+
+我们可以忽略数组`nums1`，**<font color=red>先将`nums2`中的每一个元素，求出其下一个更大的元素。随后将这些答案放入哈希映射（HashMap）中，再遍历数组`nums1`，并直接找出答案</font>**。对于`nums2`，我们可以使用**单调栈**来解决这个问题。
+
+- 我们首先把第一个元素`nums2[1]`放入栈，随后对于第二个元素`nums2[2]`
+  - 如果`nums2[2] > nums2[1]`，那么我们就**找到了`nums2[1]`的下一个更大元素`nums2[2]`**，此时就可以**把`nums2[1]`出栈并把`nums2[2]`入栈**，**将`nums2[1]`:`nums2[2]`放入HashMap中**；
+  - **如果`nums2[2] <= nums2[1]`，我们就仅把`nums2[2]`入栈**。
+- 对于第三个元素`nums2[3]`，此时栈中有若干个元素，那么所有比`nums2[3]`小的元素都找到了下一个更大元素（即`nums2[3]`），因此都可以出栈，在这之后，我们将`nums2[3]`入栈，以此类推。
+
+可以发现，我们维护了一个单调栈，栈中的元素从栈顶到栈底是单调不降的。当我们遇到一个新的元素`nums2[i]`时，我们判断栈顶元素是否小于`nums2[i]`，如果是，那么栈顶元素的下一个更大元素即为`nums2[i]`，我们将栈顶元素出栈。重复这一操作，直到栈为空或者栈顶元素大于`nums2[i]`。此时我们将`nums2[i]`入栈，保持栈的单调性，并对接下来的`nums2[i + 1], nums2[i + 2] ...`执行同样的操作。
+
+<div align=center><img src=LeetCode\496_3.gif></div>
+
+<div align=center><img src=LeetCode\496_1.jpg></div>
+
+<div align=center><img src=LeetCode\496_2.jpg></div>
+
+
+**代码：**
+```java
+class NextGreaterElementI {
+    public int[] nextGreaterElement(int[] nums1, int[] nums2) {
+        Stack<Integer> stack = new Stack<>();
+        HashMap<Integer, Integer> map = new HashMap<>();
+        int[] result = new int[nums1.length];
+
+        for(int i = 0; i < nums2.length; i++){
+            while(!stack.empty() && nums2[i] > stack.peek())  // 此时栈顶是nums2[i]之前的数
+                map.put(stack.pop(), nums2[i]);
+            stack.push(nums2[i]);
+        }
+
+        while(!stack.empty())
+            map.put(stack.pop(), -1);
+
+        for(int i = 0; i < nums1.length; i++)
+            result[i] = map.get(nums1[i]);
+        
+        return result;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$O(M+N)$，其中$M$和$N$分别是数组`nums1`和`nums2`的长度。
+
+- 空间复杂度：$O(N)$。我们在遍历`nums2`时，需要使用栈，以及哈希映射用来临时存储答案。
+
+
+
+
+## 682. 棒球比赛(简单)
+
+**题目：**
+
+你现在是棒球比赛记录员。
+给定一个字符串列表，每个字符串可以是以下四种类型之一：
+- 整数（一轮的得分）：直接表示您在本轮中获得的积分数。
+- "+"（一轮的得分）：表示**本轮**获得的得分是**前两轮**有效回合得分的**总和**。
+- "D"（一轮的得分）：表示**本轮**获得的得分是**前一轮**有效回合得分的**两倍**。
+- "C"（一个操作，这不是一个回合的分数）：表示您获得的**最后一个**有效回合的分数是**无效**的，应该**被移除**。
+
+每一轮的操作都是永久性的，可能会对前一轮和后一轮产生影响。你需要返回你在所有回合中得分的总和。
+
+
+**示例：**
+```
+输入: ["5","2","C","D","+"]
+输出: 30
+解释: 
+第1轮：你可以得到5分。总和是：5。
+第2轮：你可以得到2分。总和是：7。
+操作1：第2轮的数据无效。总和是：5。
+第3轮：你可以得到10分（第2轮的数据已被删除）。总数是：15。
+第4轮：你可以得到5 + 10 = 15分。总数是：30。
+
+输入: ["5","-2","4","C","D","9","+","+"]
+输出: 27
+解释: 
+第1轮：你可以得到5分。总和是：5。
+第2轮：你可以得到-2分。总数是：3。
+第3轮：你可以得到4分。总和是：7。
+操作1：第3轮的数据无效。总数是：3。
+第4轮：你可以得到-4（-2*2）分（第三轮的数据已被删除）。总和是：-1。
+第5轮：你可以得到9分。总数是：8。
+第6轮：你可以得到-4 + 9 = 5分。总数是13。
+第7轮：你可以得到9 + 5 = 14分。总数是27。
+```
+
+**代码：**
+```java
+class BaseballGame {
+    public int calPoints(String[] ops) {
+        Stack<Integer> stack = new Stack<>();
+
+        for(String op : ops){
+            if(op.equals("+")){
+                // 本轮获得的得分是前两轮有效回合得分的总和
+                int top = stack.pop();
+                int newTop = top + stack.peek();
+                stack.push(top);
+                stack.push(newTop);
+            }
+            else if(op.equals("C"))
+                stack.pop();
+            else if(op.equals("D"))
+                stack.push(2 * stack.peek());
+            else
+                stack.push(Integer.valueOf(op));
+        }
+
+        int ans = 0;
+        for(int score : stack)
+            ans += score;
+        return ans;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$O(N)$，其中$N$是`ops`的长度。我们解析给定数组中的每个元素，然后每个元素执行$O(1)$的工作。
+
+- 空间复杂度：$O(N)$，用于存储`stack`的空间。
+
+
+
+## 1021. 删除最外层的括号(简单)
+
+**题目：**
+
+
+有效括号字符串为空`("")`、`"(" + A + ")"`或`A + B`，其中`A`和`B`都是有效的括号字符串，`+`代表字符串的连接。例如，`""`，`"()"`，`"(())()"`和`"(()(()))"`都是有效的括号字符串。
+
+如果有效字符串`S`非空，且不存在将其拆分为`S = A+B`的方法，我们称其为原语（primitive），其中`A`和`B`都是非空有效括号字符串。
+
+给出一个非空有效字符串`S`，考虑将其进行原语化分解，使得：`S = P_1 + P_2 + ... + P_k`，其中`P_i`是有效括号字符串原语。
+
+对`S`进行原语化分解，删除分解中每个原语字符串的最外层括号，返回`S`。
+
+**示例：**
+
+```
+输入："(()())(())"
+输出："()()()"
+解释：
+输入字符串为 "(()())(())"，原语化分解得到 "(()())" + "(())"，
+删除每个部分中的最外层括号后得到 "()()" + "()" = "()()()"。
+
+输入："(()())(())(()(()))"
+输出："()()()()(())"
+解释：
+输入字符串为 "(()())(())(()(()))"，原语化分解得到 "(()())" + "(())" + "(()(()))"，
+删除每个部分中的最外层括号后得到 "()()" + "()" + "()(())" = "()()()()(())"。
+
+输入："()()"
+输出：""
+解释：
+输入字符串为 "()()"，原语化分解得到 "()" + "()"，
+删除每个部分中的最外层括号后得到 "" + "" = ""。
+```
+
+**思路与算法：**
+遍历字符串，**遇到左括号就入栈，遇到右括号就出栈**，每次**栈空**的时候，都说明找到了一个原语，记录下每个原语的起始位置和结束位置，取原字符串在原语的**起始位置+1**到原语的结束位置的子串便得到原语删除了最外层括号的字符串，拼接，即可解出答案。
+
+https://leetcode-cn.com/problems/remove-outermost-parentheses/solution/chao-xiang-xi-ti-jie-si-lu-jie-zhu-zhan-yuan-yu-hu/
+
+**代码：**
+```java
+class RemoveOutermostParentheses {
+    public String removeOuterParentheses(String string) {
+        StringBuilder ans = new StringBuilder();
+        Stack<Character> stack = new Stack<>();
+
+        int start = 0;  // 初始化原语的起始位置
+        int end = 0;  // 初始化原语的结束位置
+        boolean flag = false;  // 标志每个原语
+
+        for(int i = 0; i <string.length(); i++){
+            char ch = string.charAt(i);
+            // 遇到左括号，入栈
+            if(ch == '('){
+                stack.push(ch);
+                // 遇到的第一个左括号，是原语的开始位置，记录下原语开始位置
+                if(!flag){
+                    start = i;
+                    flag = true;
+                }
+            }
+
+            // 遇到右括号，出栈
+            if(ch == ')'){
+                stack.pop();
+                // 当栈空的时候，找到了一个完整的原语
+                if(stack.empty()){
+                    // 记录下结束位置
+                    end = i;
+                    // 去掉原语的最外层括号，并添加到答案中
+                    ans.append(string.substring(start + 1, end));
+
+                    // 置标志为false，往后接着找下一个原语
+                    flag = false;
+                    start = end;
+                }
+            }
+        }
+
+        return ans.toString();
+    }
+}
+```
+
+
+## 1047. 删除字符串中的所有相邻重复项(简单)
+
+**题目：**
+给出由小写字母组成的字符串`S`，重复项删除操作会选择**两个相邻且相同的字母**，并删除它们。
+
+在`S`上反复执行重复项删除操作，直到无法继续删除。
+
+在完成所有重复项删除操作后返回最终的字符串。答案保证唯一。
+
+**示例：**
+
+```
+输入："abbaca"
+输出："ca"
+解释：
+例如，在 "abbaca" 中，我们可以删除 "bb" 由于两字母相邻且相同，这是此时唯一可以执行删除操作的重复项。之后我们得到字符串 "aaca"，其中又只有 "aa" 可以执行重复项删除操作，所以最后的字符串为 "ca"。
+```
+
+**思路与算法：**
+可以用栈来维护没有重复项的字母序列：
+- 若当前的字母和**栈顶**的字母相同，则弹出栈顶的字母；
+- 若当前的字母和**栈顶**的字母不同，则放入当前的字母。
+
+<div align=left><img src=LeetCode\1047.jpg></div>
+
+**代码：**
+
+https://leetcode-cn.com/problems/remove-all-adjacent-duplicates-in-string/solution/hen-jian-dan-de-ti-mu-shi-yong-zhan-jiu-neng-shi-x/
+
+```java
+class RemoveAllAdjacentDuplicatesInString {
+    public String removeDuplicates(String S) {
+        char[] s = S.toCharArray();
+        int len = s.length;
+        Stack<Character> stack = new Stack<>();
+        for (int i = 0; i < len; i++) {
+            /*
+            if(s[i] == stack.peek())
+                stack.pop();
+            else
+                stack.push(s[i]);*/
+            if(stack.empty() || s[i] != stack.peek())
+                stack.push(s[i]);
+            else
+                stack.pop();
+        }
+        /* 数据的展示可以继续优化 */
+        StringBuilder str = new StringBuilder();
+        for (Character c : stack) {
+            str.append(c);
+        }
+        return str.toString();
+    }
+}
+```
+
+```java
+class Solution {
+    public String removeDuplicates(String S) {
+        StringBuilder sb = new StringBuilder();
+        int sbLength = 0;
+        for (char character : S.toCharArray()) {
+            // 若当前的字母和栈顶的字母相同，则弹出栈顶的字母
+            if (sbLength != 0 && character == sb.charAt(sbLength - 1))
+                sb.deleteCharAt(sbLength-- - 1);
+            else {
+                sb.append(character);
+                sbLength++;
+            }
+        }
+        return sb.toString();
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是字符串的长度。
+
+- 空间复杂度：$O(N)$。
+
+
+
+
+
+# 双指针
+
+
+## 剑指Offer 22. 链表中倒数第k个节点(简单)
+
+输入一个链表，输出该链表中倒数第k个节点。
+
+为了符合大多数人的习惯，本题从1开始计数，即链表的尾节点是倒数第1个节点。例如，一个链表有6个节点，从头节点开始，它们的值依次是1、2、3、4、5、6。这个链表的倒数第3个节点是值为4的节点。
+
+ 
+```
+示例：
+
+给定一个链表: 1->2->3->4->5, 和 k = 2.
+
+返回链表 4->5.
+```
+
+**解题思路：**
+
+解法一：
+- 先遍历统计链表长度，记为$n$；
+- 设置一个指针走$(n−k)$步，即可找到链表倒数第$k$个节点。
+
+解法二：使用双指针则可以不用统计链表长度。
+
+- 初始化：前指针`former`、后指针`latter`，双指针都指向头节点`head`​。
+- 构建双指针距离：前指针`former`先向前走$k$步（结束后，双指针`former`和`latter`间相距 $k$步）。
+- 双指针共同移动：循环中，双指针`former`和`latter`每轮都向前走一步，直至`former`走过链表**尾节点**时跳出（跳出后，`latter`与尾节点距离为$k−1$，即`latter`指向倒数第$k$个节点）。
+返回值： 返回`latter`即可。
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+
+class Solution {
+    public ListNode getKthFromEnd(ListNode head, int k) {
+        ListNode former = head, latter = head;
+        for(int i = 0; i < k; i++)
+            former = former.next;
+        while(former != null) {
+            former = former.next;
+            latter = latter.next;
+        }
+        return latter;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度$O(N)$：$N$为链表长度；总体看，`former`走了$N$步，`latter`走了$(N-k)$步。
+- 空间复杂度$O(1)$： 双指针`former`、`latter`使用常数大小的额外空间。
+
+
+
+
+作者：jyd
+链接：https://leetcode-cn.com/problems/lian-biao-zhong-dao-shu-di-kge-jie-dian-lcof/solution/mian-shi-ti-22-lian-biao-zhong-dao-shu-di-kge-j-11/
+
+
+## 27. *移除元素(简单)
+
+给你一个数组`nums`和一个值`val`，你需要**原地移除所有数值等于val的元素**，并返回移除后数组的新长度。
+
+不要使用额外的数组空间，你必须仅使用$O(1)$额外空间并原地修改输入数组。
+
+元素的顺序可以改变。你不需要考虑数组中超出新长度后面的元素。
+
+ 
+```
+示例 1:
+
+给定 nums = [3,2,2,3], val = 3,
+
+函数应该返回新的长度 2, 并且 nums 中的前两个元素均为 2。
+
+你不需要考虑数组中超出新长度后面的元素。
+
+示例 2:
+
+给定 nums = [0,1,2,2,3,0,4,2], val = 2,
+
+函数应该返回新的长度 5, 并且 nums 中的前五个元素为 0, 1, 3, 0, 4。
+
+注意这五个元素可为任意顺序。
+
+你不需要考虑数组中超出新长度后面的元素。
+```
+
+**思路与算法：**
+
+当`nums[j]`与给定的值相等时，递增`j`以跳过该元素。只要$nums[j] \neq val$，我们就复制`nums[j]` 到`nums[i]`并同时递增两个索引。重复这一过程，直到`j`到达数组的末尾，该数组的新长度为`i`。
+
+```java
+class Solution {
+    public int removeElement(int[] nums, int val) {
+        int i = 0;
+        for (int j = 0; j < nums.length; j++) {
+            // 把!= val的值往前移
+            if (nums[j] != val) {
+                nums[i] = nums[j];
+                i++;
+            }
+        }
+        return i;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，
+  假设数组总共有$n$个元素，$i$和$j$至少遍历$2n$步。
+
+- 空间复杂度：$O(1)$。
+
+
+## 167. 两数之和 II - 输入有序数组(简单)
+
+给定一个已**按照升序排列**的有序数组，找到两个数使得它们相加之和等于目标数。
+
+函数应该返回这两个下标值`index1`和`index2`，其中`index1`必须小于`index2`。
+
+说明:
+
+- 返回的下标值（`index1`和`index2`）不是从零开始的。
+- 你可以假设每个输入只对应唯一的答案，而且你不可以重复使用相同的元素。
+
+```
+示例:
+
+输入: numbers = [2, 7, 11, 15], target = 9
+输出: [1,2]
+解释: 2 与 7 之和等于目标数 9 。因此 index1 = 1, index2 = 2 。
+```
+
+**思路与算法：**
+
+- 初始时两个指针分别指向**第一个元素位置**和**最后一个元素的位置**。
+- 每次计算两个指针指向的两个元素之和，并和目标值比较。
+  - 如果两个元素之和**等于**目标值，则发现了唯一解。
+  - 如果两个元素之和**小于**目标值，则**将左侧指针右移一位**。
+  - 如果两个元素之和**大于**目标值，则**将右侧指针左移一位**。
+- 移动指针之后，重复上述操作，直到找到答案。
+
+
+```java
+class Solution {
+    public int[] twoSum(int[] numbers, int target) {
+        int low = 0, high = numbers.length - 1;
+        while (low < high) {
+            int sum = numbers[low] + numbers[high];
+            if (sum == target) {
+                return new int[]{low + 1, high + 1};
+            } else if (sum < target) {
+                low++;
+            } else {
+                high--;
+            }
+        }
+        return new int[]{-1, -1};
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是数组的长度。两个指针移动的总次数最多为$n$次。
+
+- 空间复杂度：$O(1)$。
+
+
+
+
+## 283. *移动零(简单)
+
+给定一个数组nums，编写一个函数将所有0移动到数组的末尾，同时保持非零元素的相对顺序。
+
+```
+示例:
+
+输入: [0,1,0,3,12]
+输出: [1,3,12,0,0]
+```
+
+说明:
+
+- 必须在原数组上操作，不能拷贝额外的数组。
+- 尽量减少操作次数。
+
+```java
+class Solution {
+	public void moveZeroes(int[] nums) {
+		if(nums == null) {
+			return;
+		}
+		//第一次遍历的时候，j指针记录非0的个数，只要是非0的统统都赋给nums[j]
+		int j = 0;
+		for(int i = 0; i < nums.length; i++) {
+			if(nums[i] != 0) {
+				nums[j++] = nums[i];
+			}
+		}
+		//非0元素统计完了，剩下的都是0了。所以第二次遍历把末尾的元素都赋为0即可
+		for(int i = j; i < nums.length; i++) {
+			nums[i] = 0;
+		}
+	}
+}
+```
+
+
+
+## 344. 反转字符串(简单)
+
+**题目描述：**
+
+编写一个函数，其作用是将输入的字符串反转过来。输入字符串以字符数组char[]的形式给出。
+
+不要给另外的数组分配额外的空间，你必须**原地修改输入数组**、使用$O(1)$的额外空间解决这一问题。
+
+你可以假设数组中的所有字符都是`ASCII`码表中的可打印字符。
+
+```
+示例1：
+输入：["h","e","l","l","o"]
+输出：["o","l","l","e","h"]
+
+示例2：
+输入：["H","a","n","n","a","h"]
+输出：["h","a","n","n","a","H"]
+```
+
+**思路与算法：**
+
+双指针法是使用两个指针，一个左指针left，右指针right，**开始工作时left指向首元素，right指向尾元素。交换两个指针指向的元素，并向中间移动，直到两个指针相遇**。
+
+
+<div align=center><img src=LeetCode\344.jpg width=70%></div>
+
+```java
+package solution;
+
+/**
+ * leetcode_344_反转字符串
+ * @author Chenzf 
+ * @date 2020/7/26
+ * @version 1.0
+ */
+
+public class ReverseString {
+    public void reverseString(char[] chars) {
+        if (chars == null || chars.length == 0) {
+            return;
+        }
+        
+        int left = 0, right = chars.length - 1;
+        while (left < right) {
+            char temp = chars[left];
+            chars[left] = chars[right];
+            chars[right] = temp;
+            left++;
+            right--;
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N)$。执行了$N/2$次的交换。
+- 空间复杂度：$\mathcal{O}(1)$，只使用了常数级空间。
+
+
+
+
+## 350. 两个数组的交集 II(简单)
+
+
+给定两个数组，编写一个函数来计算它们的交集。
+
+```
+示例 1：
+
+输入：nums1 = [1,2,2,1], nums2 = [2,2]
+输出：[2,2]
+
+示例 2:
+
+输入：nums1 = [4,9,5], nums2 = [9,4,9,8,4]
+输出：[4,9]
+```
+
+说明：
+
+- 输出结果中每个元素出现的次数，应与元素在两个数组中出现次数的最小值一致。
+- 可以不考虑输出结果的顺序。
+
+进阶：
+
+- 如果给定的数组已经排好序呢？你将如何优化你的算法？
+- 如果nums1的大小比nums2小很多，哪种方法更优？
+- 如果nums2的元素存储在磁盘上，磁盘内存是有限的，并且你不能一次加载所有的元素到内存中，你该怎么办？
+
+
+**思路与算法：**
+
+- 首先对两个数组进行排序，然后使用两个指针遍历两个数组。
+
+- 初始时，两个指针分别指向两个数组的头部。每次比较两个指针指向的两个数组中的数字
+  - 如果两个数字**不相等**，则**将指向较小数字的指针右移一位**
+  - 如果两个数字**相等**，将该数字添加到答案，并**将两个指针都右移一位**。
+- 当至少有一个指针超出数组范围时，遍历结束。
+
+```java
+class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
+        
+        int length1 = nums1.length, length2 = nums2.length;
+        int[] intersection = new int[Math.min(length1, length2)];
+        int index1 = 0, index2 = 0, index = 0;
+        while (index1 < length1 && index2 < length2) {
+            if (nums1[index1] < nums2[index2]) {
+                index1++;
+            } else if (nums1[index1] > nums2[index2]) {
+                index2++;
+            } else {
+                intersection[index] = nums1[index1];
+                index1++;
+                index2++;
+                index++;
+            }
+        }
+        return Arrays.copyOfRange(intersection, 0, index);
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(m \log m+n \log n)$，其中$m$和$n$分别是两个数组的长度。对两个数组进行排序的时间复杂度是$O(m \log m+n \log n)$，遍历两个数组的时间复杂度是$O(m+n)$，因此总时间复杂度是$O(m \log m+n \log n)$。
+
+- 空间复杂度：$O(\min(m,n))$，其中$m$和$n$分别是两个数组的长度。为返回值创建一个数组 `intersection`，其长度为较短的数组的长度。
+
+
+
+
+
+## 977. 有序数组的平方(简单)
+
+给定一个按**非递减**顺序排序的整数数组A，返回每个数字的平方组成的新数组，要求也**按非递减**顺序排序。
+
+```
+示例 1：
+
+输入：[-4,-1,0,3,10]
+输出：[0,1,9,16,100]
+
+示例 2：
+
+输入：[-7,-3,2,3,11]
+输出：[4,9,9,49,121]
+```
+
+提示：
+
+- $1 <= A.length <= 10000$
+- $-10000 <= A[i] <= 10000$
+- A已按非递减顺序排序。
+
+
+**思路与算法：**
+
+因为**数组A已经排好序了**，所以可以说**数组中的负数已经按照平方值降序排好了，数组中的非负数已经按照平方值升序排好了**。
+
+举一个例子，若给定数组为`[-3, -2, -1, 4, 5, 6]`，数组中负数部分`[-3, -2, -1]`的平方为`[9, 4, 1]`，数组中非负部分`[4, 5, 6]`的平方为`[16, 25, 36]`。我们的策略就是**从前向后遍历数组中的非负数部分**，并且**反向遍历数组中的负数部分**。
+
+
+```java
+class Solution {
+    public int[] sortedSquares(int[] A) {
+        int N = A.length;
+        // 指针j正向读取非负数部分
+        int j = 0;
+        while (j < N && A[j] < 0) {
+            j++;
+        }
+
+        // 指针i反向读取负数部分
+        int i = j - 1;
+        int[] ans = new int[N];
+        int temp = 0;
+
+        while (i >= 0 && j < N) {
+            if (A[i] * A[i] < A[j] * A[j]) {
+                ans[temp++] = A[i] * A[i];
+                i--;
+            } else {
+                ans[temp++] = A[j] * A[j];
+                j++;
+            }
+        }
+
+        while (i >= 0) {
+            ans[temp++] = A[i] * A[i];
+            i--;
+        }
+        while (j < N) {
+            ans[temp++] = A[j] * A[j];
+            j++;
+        }
+
+        return ans;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是数组A的长度。
+- 空间复杂度：$O(N)$。
+
+
+
+# 哈希表
+
+## 349. 两个数组的交集(简单)
+
+给定两个数组，编写一个函数来计算它们的交集。
+
+```
+示例 1：
+
+输入：nums1 = [1,2,2,1], nums2 = [2,2]
+输出：[2]
+
+示例 2：
+
+输入：nums1 = [4,9,5], nums2 = [9,4,9,8,4]
+输出：[9,4]
+```
+
+说明：
+- 输出结果中的**每个元素一定是唯一的**。
+- 我们**可以不考虑输出结果的顺序**。
+
+
+最直观的方法是迭代并检查第一个数组`nums1`中的每个值是否也存在于`nums2`中。如果存在，则将值添加到输出。这种方法的时间复杂度为$O(n \times m)$，其中$n$和$m$分别为数组`nums1`和`nums2`的长度。
+
+为了在线性时间内解决这个问题，我们使用集合set这一数据结构，该结构可以提供平均时间复杂度为$O(1)$的`in/contains`操作（用于测试某一元素是否为该集合的成员）。
+
+本解法先将两个数组都转换为集合，然后**迭代较小的集合，检查其中的每个元素是否同样存在于较大的集合中**。平均情况下，这种方法的时间复杂度为$O(n+m)$。
+
+
+
+
+```java
+class Solution {
+    public int[] intersection(int[] nums1, int[] nums2) {
+        // 将两个数组都转换为集合
+        HashSet<Integer> set1 = new HashSet<Integer>();
+        for (Integer n : nums1) {
+            set1.add(n);
+        }
+        HashSet<Integer> set2 = new HashSet<Integer>();
+        for (Integer n : nums2) {
+            set2.add(n);
+        }
+        
+        // 迭代较小的集合，检查其中的每个元素是否同样存在于较大的集合中
+        if (set1.size() < set2.size()) {
+            return set_intersection(set1, set2);
+        }
+        else {
+            return set_intersection(set2, set1);
+        }
+    }
+    
+    public int[] set_intersection(HashSet<Integer> set1, HashSet<Integer> set2) {
+        int [] output = new int[set1.size()];
+        int index = 0;
+        for (Integer s : set1) {
+            if (set2.contains(s)) {
+                output[index++] = s;
+            }
+        }
+        return Arrays.copyOf(output, index);
+        // return output;
+        /*
+        输入：[4,9,5] [9,4,9,8,4]
+        输出：[4,9,0]
+        预期：[9,4]
+        */
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(m+n)$，其中$n$和$m$是数组的长度。将`nums1`转换为集合需要$O(n)$的时间，类似地，将`nums2`转换为集合需要$O(m)$的时间。而在平均情况下，集合的`in/contains`操作只需要$O(1)$的时间。
+- 空间复杂度：$O(m+n)$，最坏的情况是数组中的所有元素都不同。

@@ -32,7 +32,7 @@ Java为每个原始类型提供了包装类型：
 - 原始类型：boolean，char，byte，short，int，long，float，double
 - 包装类型：Boolean，Character，Byte，Short，Integer，Long，Float，Double
 
-<font color=red>`new`将对象存储在`堆`里，故用`new`创建一个对象——特别是小的、简单的变量，往往不是很有效</font>。对于这些类型，Java不用`new`来创建这些变量，而是<font color=red>创建一个并非是引用的“自动”变量。这个变量直接存储“值”，并置于栈(stack)中，因此更加高效</font>。基本类型具有的包装器类，使得可以在堆中创建一个非基本对象，用来表示对应的基本类型。
+<font color=red>`new`将对象存储在`堆`里，故用`new`创建一个对象——特别是小的、简单的变量，往往不是很有效</font>。对于这些类型，Java不用`new`来创建这些变量，而是<font color=red>创建一个并非是引用的“自动”变量。这个变量直接存储“值”，并置于栈(stack)中，因此更加高效</font>。**基本类型具有的包装器类，使得可以在堆中创建一个非基本对象，用来表示对应的基本类型**。
 
 ```java
 public class AutoUnboxingTest
@@ -129,6 +129,8 @@ public boolean equals(Object obj)
 }
 ```
 
+
+
 ### 注意
 
 对于`Integer var=?`在-128至127之间的赋值，Integer对象是在`IntegerCache.cache`产生，会复用已有对象，**这个区间内的Integer值可以直接使用==进行判断**；但是**这个区间之外的所有数据**，都会**在堆上产生**，并不会复用已有对象，推荐**使用equals方法**进行判断。
@@ -174,6 +176,9 @@ public static Integer valueOf(int i) {
 **参考：**
 https://www.jianshu.com/p/3819388ff2f4
 https://zhuanlan.zhihu.com/p/43001449
+
+
+<font color=red>如果只重写equals方法而不重写hashcode方法，很可能会造成两个不同的对象，它们的hashcode也相等，造成冲突。</font>
 
 equals()用于**判断两个对象是否相等**；hashCode()<font color=red>对不同的object会返回唯一的哈希值</font>，被设计是用来**使得哈希容器能高效的工作**。
 
@@ -327,7 +332,7 @@ public class Test {
     }
 }
 ```
-当代码执行到`String s1 = "100"`时，会先看常量池里有没有字符串刚好是“100”这个对象，如果没有，在常量池里创建初始化该对象，并**把引用指向它**，如下图，绿色部分为常量池，存在于**堆内存**中：
+当代码执行到`String s1 = "100"`时，会先看**常量池**里有没有字符串刚好是“100”这个对象，如果没有，在常量池里创建初始化该对象，并**把引用指向它**，如下图，绿色部分为常量池，存在于**堆内存**中：
 
 <div align=center><img src=Pictures\equals.png width=80%></div>
 
@@ -335,7 +340,7 @@ public class Test {
 
 <div align=center><img src=Pictures\equals1.png width=80%></div>
 
-这时候我们打印`System.out.println(s1 == s2)`时，由于**==是判断两个对象是否指向同一个引用**，所以这儿打印出来的就应该是true。
+这时候我们打印`System.out.println(s1 == s2)`时，由于`==`**是判断两个对象是否指向同一个引用**，所以这儿打印出来的就应该是true。
 
 继续执行到`Strings3 = new String("100")`这时候我们加了一个new关键字，这个关键字呢就是告诉JVM，你直接**在堆内存里开辟一块新的内存**：
 
@@ -348,6 +353,64 @@ public class Test {
 这时候再打印`System.out.println(s3 == s4)`那一定便是false了，因为s3和s4不是指向对一个引用（对象）。
 
 我们在写代码过程中，为了**避免重复的创建对象**，尽量使用`String s1 ="123"`而不是String s1 = new String("123")，因为**JVM对前者给做了优化**。
+
+
+### String.equals
+
+
+`java.lang.String.java`
+```java
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (anObject instanceof String) {
+            String anotherString = (String)anObject;
+            int n = value.length;
+            if (n == anotherString.value.length) {
+                char v1[] = value;
+                char v2[] = anotherString.value;
+                int i = 0;
+                while (n-- != 0) {
+                    if (v1[i] != v2[i])
+                        return false;
+                    i++;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+```
+
+- 首先会判断要比较的两个字符串它们的**引用是否相等**。如果引用相等的话，直接返回true，不相等的话继续下面的判断；
+- 然后再判断被比较的对象**是否是String的实例**，如果不是的话直接返回false
+- 如果是的话，**再比较两个字符串的长度是否相等**，如果长度不想等的话也就没有比较的必要了；
+- 长度如果相同，会比较字符串中的**每个字符是否相等**，一旦有一个字符不相等，就会直接返回 false。
+
+- String类型**比较不同对象内容**是否相同，应该用equals()
+
+```java
+// 对象不同，内容相同
+String s1 = new String("java");
+String s2 = new String("java");
+ 
+System.out.println(s1==s2);           //false
+System.out.println(s1.equals(s2));    //true
+
+// 同一对象
+String s1 = new String("java");
+String s2 = s1;
+ 
+System.out.println(s1==s2);           //true
+System.out.println(s1.equals(s2));    //true
+
+String s1 = "java";
+String s2 = "java";
+ 
+System.out.println(s1==s2);           //true
+System.out.println(s1.equals(s2));    //true
+```
 
 
 ## `String`和`StringBuffer`, `StringBuilder`的区别
@@ -602,6 +665,10 @@ arraycopy方法没有给目标数组分配内存空间。复制前必须创建�
 
 
 ## 值传递和引用传递区别
+
+- **值传递**是指在调用函数时将**实际参数**复制一份到函数中，这样的话如果函数对其传递过来的形式参数进行修改，将**不会影响到实际参数**。
+
+- **引用传递**是指在调用函数时将**对象的地址**直接传递到函数中，如果在对形式参数进行修改，**将影响到实际参数的值**。
 
 值传递和引用传递之前的区别的重点：
 | | 值传递 | 引用传递 |
@@ -1638,7 +1705,51 @@ JVM在内存够用的时候，不会对软引用的对象进行回收，但是�
 
 
 
+## HashMap与HashTable的关系
 
+<div align=center><img src=Pictures\Map.webp width=70%></div>
+
+**共同点：**
+
+- 底层都是使用哈希表 + 链表的实现方式。
+
+**区别：**
+
+- 从层级结构上看，HashMap、HashTable有一个共用的Map接口。另外，HashTable还单独继承了一个抽象类Dictionary(已废弃)；
+- **HashTable线程安全，HashMap线程不安全**；
+- 初始值和扩容方式不同。HashTable的初始值为11，扩容为原大小的2*d+1。容量大小都采用奇数且为素数，且采用取模法，这种方式散列更均匀。但有个缺点就是对素数取模的性能较低（涉及到除法运算）；而HashTable的长度都是2的次幂，这种方式的取模都是直接做位运算，性能较好。
+- **HashMap的key、value都可为null**，且value可多次为null，key多次为null时会覆盖。但**HashTable的key、value都不可为null**，否则直接NPE(NullPointException)。
+
+```java
+/**
+ * HashTable的put方法
+ */
+public synchronized V put(K key, V value) {
+    // Make sure the value is not null
+    if (value == null) {
+        throw new NullPointerException();
+    }
+
+
+    // Makes sure the key is not already in the hashtable.
+    Entry<?,?> tab[] = table;
+    int hash = key.hashCode();
+    int index = (hash & 0x7FFFFFFF) % tab.length;
+    @SuppressWarnings("unchecked")
+    Entry<K,V> entry = (Entry<K,V>)tab[index];
+    for(; entry != null ; entry = entry.next) {
+        if ((entry.hash == hash) && entry.key.equals(key)) {
+            V old = entry.value;
+            entry.value = value;
+            return old;
+        }
+    }
+
+
+    addEntry(hash, key, value, index);
+    return null;
+}
+```
 
 
 

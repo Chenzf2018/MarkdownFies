@@ -1444,6 +1444,63 @@ public class ReverseKGroup {
 
 
 
+# 27. 移除元素(简单)
+
+给你一个数组`nums`和一个值`val`，你需要**原地移除所有数值等于val的元素**，并返回移除后数组的新长度。
+
+不要使用额外的数组空间，你必须仅使用$O(1)$额外空间并原地修改输入数组。
+
+元素的顺序可以改变。你不需要考虑数组中超出新长度后面的元素。
+
+ 
+```
+示例 1:
+
+给定 nums = [3,2,2,3], val = 3,
+
+函数应该返回新的长度 2, 并且 nums 中的前两个元素均为 2。
+
+你不需要考虑数组中超出新长度后面的元素。
+
+示例 2:
+
+给定 nums = [0,1,2,2,3,0,4,2], val = 2,
+
+函数应该返回新的长度 5, 并且 nums 中的前五个元素为 0, 1, 3, 0, 4。
+
+注意这五个元素可为任意顺序。
+
+你不需要考虑数组中超出新长度后面的元素。
+```
+
+**思路与算法：**
+
+当`nums[j]`与给定的值相等时，递增`j`以跳过该元素。只要$nums[j] \neq val$，我们就复制`nums[j]` 到`nums[i]`并同时递增两个索引。重复这一过程，直到`j`到达数组的末尾，该数组的新长度为`i`。
+
+```java
+class Solution {
+    public int removeElement(int[] nums, int val) {
+        int i = 0;
+        for (int j = 0; j < nums.length; j++) {
+            // 把!= val的值往前移
+            if (nums[j] != val) {
+                nums[i] = nums[j];
+                i++;
+            }
+        }
+        return i;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，
+  假设数组总共有$n$个元素，$i$和$j$至少遍历$2n$步。
+
+- 空间复杂度：$O(1)$。
+
+
 # 31. 下一个排列(中等)
 
 **题目描述：**
@@ -4210,6 +4267,61 @@ public class CompareVersionNumbers_v2 {
 
 
 
+# 167. 两数之和 II - 输入有序数组(简单)
+
+给定一个已**按照升序排列**的有序数组，找到两个数使得它们相加之和等于目标数。
+
+函数应该返回这两个下标值`index1`和`index2`，其中`index1`必须小于`index2`。
+
+说明:
+
+- 返回的下标值（`index1`和`index2`）不是从零开始的。
+- 你可以假设每个输入只对应唯一的答案，而且你不可以重复使用相同的元素。
+
+```
+示例:
+
+输入: numbers = [2, 7, 11, 15], target = 9
+输出: [1,2]
+解释: 2 与 7 之和等于目标数 9 。因此 index1 = 1, index2 = 2 。
+```
+
+**思路与算法：**
+
+- 初始时两个指针分别指向**第一个元素位置**和**最后一个元素的位置**。
+- 每次计算两个指针指向的两个元素之和，并和目标值比较。
+  - 如果两个元素之和**等于**目标值，则发现了唯一解。
+  - 如果两个元素之和**小于**目标值，则**将左侧指针右移一位**。
+  - 如果两个元素之和**大于**目标值，则**将右侧指针左移一位**。
+- 移动指针之后，重复上述操作，直到找到答案。
+
+
+```java
+class Solution {
+    public int[] twoSum(int[] numbers, int target) {
+        int low = 0, high = numbers.length - 1;
+        while (low < high) {
+            int sum = numbers[low] + numbers[high];
+            if (sum == target) {
+                return new int[]{low + 1, high + 1};
+            } else if (sum < target) {
+                low++;
+            } else {
+                high--;
+            }
+        }
+        return new int[]{-1, -1};
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是数组的长度。两个指针移动的总次数最多为$n$次。
+
+- 空间复杂度：$O(1)$。
+
+
 # 189. 旋转数组(简单)
 
 给定一个数组，将数组中的元素向右移动k个位置，其中k是非负数。
@@ -5520,6 +5632,45 @@ public class LowestCommonAncestor {
   - 因此最后总的空间复杂度为$O(N)$。
 
 
+# 283. 移动零(简单)
+
+给定一个数组nums，编写一个函数将所有0移动到数组的末尾，同时保持非零元素的相对顺序。
+
+```
+示例:
+
+输入: [0,1,0,3,12]
+输出: [1,3,12,0,0]
+```
+
+说明:
+
+- 必须在原数组上操作，不能拷贝额外的数组。
+- 尽量减少操作次数。
+
+```java
+class Solution {
+	public void moveZeroes(int[] nums) {
+		if(nums == null) {
+			return;
+		}
+		//第一次遍历的时候，j指针记录非0的个数，只要是非0的统统都赋给nums[j]
+		int j = 0;
+		for(int i = 0; i < nums.length; i++) {
+			if(nums[i] != 0) {
+				nums[j++] = nums[i];
+			}
+		}
+		//非0元素统计完了，剩下的都是0了。所以第二次遍历把末尾的元素都赋为0即可
+		for(int i = j; i < nums.length; i++) {
+			nums[i] = 0;
+		}
+	}
+}
+```
+
+
+
 # 344. 反转字符串(简单)
 
 **题目描述：**
@@ -5579,6 +5730,156 @@ public class ReverseString {
 
 - 时间复杂度：$\mathcal{O}(N)$。执行了$N/2$次的交换。
 - 空间复杂度：$\mathcal{O}(1)$，只使用了常数级空间。
+
+
+# 349. 两个数组的交集(简单)
+
+给定两个数组，编写一个函数来计算它们的交集。
+
+```
+示例 1：
+
+输入：nums1 = [1,2,2,1], nums2 = [2,2]
+输出：[2]
+
+示例 2：
+
+输入：nums1 = [4,9,5], nums2 = [9,4,9,8,4]
+输出：[9,4]
+```
+
+说明：
+- 输出结果中的**每个元素一定是唯一的**。
+- 我们**可以不考虑输出结果的顺序**。
+
+
+最直观的方法是迭代并检查第一个数组`nums1`中的每个值是否也存在于`nums2`中。如果存在，则将值添加到输出。这种方法的时间复杂度为$O(n \times m)$，其中$n$和$m$分别为数组`nums1`和`nums2`的长度。
+
+为了在线性时间内解决这个问题，我们使用集合set这一数据结构，该结构可以提供平均时间复杂度为$O(1)$的`in/contains`操作（用于测试某一元素是否为该集合的成员）。
+
+本解法先将两个数组都转换为集合，然后**迭代较小的集合，检查其中的每个元素是否同样存在于较大的集合中**。平均情况下，这种方法的时间复杂度为$O(n+m)$。
+
+
+
+
+```java
+class Solution {
+    public int[] intersection(int[] nums1, int[] nums2) {
+        // 将两个数组都转换为集合
+        HashSet<Integer> set1 = new HashSet<Integer>();
+        for (Integer n : nums1) {
+            set1.add(n);
+        }
+        HashSet<Integer> set2 = new HashSet<Integer>();
+        for (Integer n : nums2) {
+            set2.add(n);
+        }
+        
+        // 迭代较小的集合，检查其中的每个元素是否同样存在于较大的集合中
+        if (set1.size() < set2.size()) {
+            return set_intersection(set1, set2);
+        }
+        else {
+            return set_intersection(set2, set1);
+        }
+    }
+    
+    public int[] set_intersection(HashSet<Integer> set1, HashSet<Integer> set2) {
+        int [] output = new int[set1.size()];
+        int index = 0;
+        for (Integer s : set1) {
+            if (set2.contains(s)) {
+                output[index++] = s;
+            }
+        }
+        return Arrays.copyOf(output, index);
+        // return output;
+        /*
+        输入：[4,9,5] [9,4,9,8,4]
+        输出：[4,9,0]
+        预期：[9,4]
+        */
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(m+n)$，其中$n$和$m$是数组的长度。将`nums1`转换为集合需要$O(n)$的时间，类似地，将`nums2`转换为集合需要$O(m)$的时间。而在平均情况下，集合的`in/contains`操作只需要$O(1)$的时间。
+- 空间复杂度：$O(m+n)$，最坏的情况是数组中的所有元素都不同。
+
+
+
+# 350. 两个数组的交集 II(简单)
+
+
+给定两个数组，编写一个函数来计算它们的交集。
+
+```
+示例 1：
+
+输入：nums1 = [1,2,2,1], nums2 = [2,2]
+输出：[2,2]
+
+示例 2:
+
+输入：nums1 = [4,9,5], nums2 = [9,4,9,8,4]
+输出：[4,9]
+```
+
+说明：
+
+- 输出结果中每个元素出现的次数，应与元素在两个数组中出现次数的最小值一致。
+- 可以不考虑输出结果的顺序。
+
+进阶：
+
+- 如果给定的数组已经排好序呢？你将如何优化你的算法？
+- 如果nums1的大小比nums2小很多，哪种方法更优？
+- 如果nums2的元素存储在磁盘上，磁盘内存是有限的，并且你不能一次加载所有的元素到内存中，你该怎么办？
+
+
+**思路与算法：**
+
+- 首先对两个数组进行排序，然后使用两个指针遍历两个数组。
+
+- 初始时，两个指针分别指向两个数组的头部。每次比较两个指针指向的两个数组中的数字
+  - 如果两个数字**不相等**，则**将指向较小数字的指针右移一位**
+  - 如果两个数字**相等**，将该数字添加到答案，并**将两个指针都右移一位**。
+- 当至少有一个指针超出数组范围时，遍历结束。
+
+```java
+class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
+        
+        int length1 = nums1.length, length2 = nums2.length;
+        int[] intersection = new int[Math.min(length1, length2)];
+        int index1 = 0, index2 = 0, index = 0;
+        while (index1 < length1 && index2 < length2) {
+            if (nums1[index1] < nums2[index2]) {
+                index1++;
+            } else if (nums1[index1] > nums2[index2]) {
+                index2++;
+            } else {
+                intersection[index] = nums1[index1];
+                index1++;
+                index2++;
+                index++;
+            }
+        }
+        return Arrays.copyOfRange(intersection, 0, index);
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(m \log m+n \log n)$，其中$m$和$n$分别是两个数组的长度。对两个数组进行排序的时间复杂度是$O(m \log m+n \log n)$，遍历两个数组的时间复杂度是$O(m+n)$，因此总时间复杂度是$O(m \log m+n \log n)$。
+
+- 空间复杂度：$O(\min(m,n))$，其中$m$和$n$分别是两个数组的长度。为返回值创建一个数组 `intersection`，其长度为较短的数组的长度。
+
 
 
 
@@ -6907,6 +7208,80 @@ public class BinaryTreeCameras_v1 {
 }
 ```
 
+# 977. 有序数组的平方(简单)
+
+给定一个按**非递减**顺序排序的整数数组A，返回每个数字的平方组成的新数组，要求也**按非递减**顺序排序。
+
+```
+示例 1：
+
+输入：[-4,-1,0,3,10]
+输出：[0,1,9,16,100]
+
+示例 2：
+
+输入：[-7,-3,2,3,11]
+输出：[4,9,9,49,121]
+```
+
+提示：
+
+- $1 <= A.length <= 10000$
+- $-10000 <= A[i] <= 10000$
+- A已按非递减顺序排序。
+
+
+**思路与算法：**
+
+因为**数组A已经排好序了**，所以可以说**数组中的负数已经按照平方值降序排好了，数组中的非负数已经按照平方值升序排好了**。
+
+举一个例子，若给定数组为`[-3, -2, -1, 4, 5, 6]`，数组中负数部分`[-3, -2, -1]`的平方为`[9, 4, 1]`，数组中非负部分`[4, 5, 6]`的平方为`[16, 25, 36]`。我们的策略就是**从前向后遍历数组中的非负数部分**，并且**反向遍历数组中的负数部分**。
+
+
+```java
+class Solution {
+    public int[] sortedSquares(int[] A) {
+        int N = A.length;
+        // 指针j正向读取非负数部分
+        int j = 0;
+        while (j < N && A[j] < 0) {
+            j++;
+        }
+
+        // 指针i反向读取负数部分
+        int i = j - 1;
+        int[] ans = new int[N];
+        int temp = 0;
+
+        while (i >= 0 && j < N) {
+            if (A[i] * A[i] < A[j] * A[j]) {
+                ans[temp++] = A[i] * A[i];
+                i--;
+            } else {
+                ans[temp++] = A[j] * A[j];
+                j++;
+            }
+        }
+
+        while (i >= 0) {
+            ans[temp++] = A[i] * A[i];
+            i--;
+        }
+        while (j < N) {
+            ans[temp++] = A[j] * A[j];
+            j++;
+        }
+
+        return ans;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是数组A的长度。
+- 空间复杂度：$O(N)$。
+
 
 # 1005. *K次取反后最大化的数组和(简单)
 
@@ -7595,3 +7970,61 @@ class Solution {
     }
 }
 ```
+
+
+# 剑指Offer 22. 链表中倒数第k个节点(简单)
+
+输入一个链表，输出该链表中倒数第k个节点。
+
+为了符合大多数人的习惯，本题从1开始计数，即链表的尾节点是倒数第1个节点。例如，一个链表有6个节点，从头节点开始，它们的值依次是1、2、3、4、5、6。这个链表的倒数第3个节点是值为4的节点。
+
+ 
+```
+示例：
+
+给定一个链表: 1->2->3->4->5, 和 k = 2.
+
+返回链表 4->5.
+```
+
+**解题思路：**
+
+解法一：
+- 先遍历统计链表长度，记为$n$；
+- 设置一个指针走$(n−k)$步，即可找到链表倒数第$k$个节点。
+
+解法二：使用双指针则可以不用统计链表长度。
+
+- 初始化：前指针`former`、后指针`latter`，双指针都指向头节点`head`​。
+- 构建双指针距离：前指针`former`先向前走$k$步（结束后，双指针`former`和`latter`间相距 $k$步）。
+- 双指针共同移动：循环中，双指针`former`和`latter`每轮都向前走一步，直至`former`走过链表**尾节点**时跳出（跳出后，`latter`与尾节点距离为$k−1$，即`latter`指向倒数第$k$个节点）。
+返回值： 返回`latter`即可。
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+
+class Solution {
+    public ListNode getKthFromEnd(ListNode head, int k) {
+        ListNode former = head, latter = head;
+        for(int i = 0; i < k; i++)
+            former = former.next;
+        while(former != null) {
+            former = former.next;
+            latter = latter.next;
+        }
+        return latter;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度$O(N)$：$N$为链表长度；总体看，`former`走了$N$步，`latter`走了$(N-k)$步。
+- 空间复杂度$O(1)$： 双指针`former`、`latter`使用常数大小的额外空间。
