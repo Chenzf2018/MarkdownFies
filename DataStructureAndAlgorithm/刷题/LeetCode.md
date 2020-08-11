@@ -1444,6 +1444,83 @@ public class ReverseKGroup {
 
 
 
+# 26. *删除排序数组中的重复项(简单)
+
+给定**一个<font color=red>排序数组</font>**，你需要在原地删除重复出现的元素，使得每个元素只出现一次，返回移除后数组的新长度。
+
+**不要使用额外的数组空间**，你必须在原地修改输入数组并在使用$O(1)$额外空间的条件下完成。
+
+
+```
+示例 1:
+
+给定数组 nums = [1,1,2], 
+
+函数应该返回新的长度 2, 并且原数组 nums 的前两个元素被修改为 1, 2。 
+
+你不需要考虑数组中超出新长度后面的元素。
+
+示例 2:
+
+给定 nums = [0,0,1,1,1,2,2,3,3,4],
+
+函数应该返回新的长度 5, 并且原数组 nums 的前五个元素被修改为 0, 1, 2, 3, 4。
+
+你不需要考虑数组中超出新长度后面的元素。
+```
+
+说明：
+
+为什么返回数值是整数，但输出的答案是数组呢?
+
+请注意，输入数组是以「引用」方式传递的，这意味着在函数里修改输入数组对于调用者是可见的。
+
+你可以想象内部操作如下:
+```
+// nums 是以“引用”方式传递的。也就是说，不对实参做任何拷贝
+int len = removeDuplicates(nums);
+
+// 在函数里修改输入数组对于调用者是可见的。
+// 根据你的函数返回的长度, 它会打印出数组中该长度范围内的所有元素。
+for (int i = 0; i < len; i++) {
+    print(nums[i]);
+}
+```
+
+**思路与算法：**
+
+放置两个指针$i$和$j$，其中$i$是慢指针，而$j$是快指针
+- 只要$nums[i] = nums[j]$，我们就增加$j$以**跳过重复项**。
+
+- 当我们遇到$nums[j] \neq nums[i]$时，跳过重复项的运行已经结束，因此我们必须把它（$nums[j]$）的值复制到$nums[i + 1]$。然后递增$i$，接着我们将再次重复相同的过程，直到$j$到达数组的末尾为止。
+
+
+```java
+class Solution {
+    public int removeDuplicates(int[] nums) {
+        if (nums.length == 0) {
+            return 0;
+        }
+        int i = 0;
+        for (int j = 1; j < nums.length; j++) {
+            if (nums[j] != nums[i]) {
+                i++;
+                // 此时i=j
+                nums[i] = nums[j];
+            }
+        }
+        return i + 1;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，假设数组的长度是$n$，那么$i$和$j$分别最多遍历$n$步。
+
+- 空间复杂度：$O(1)$。
+
+
 # 27. 移除元素(简单)
 
 给你一个数组`nums`和一个值`val`，你需要**原地移除所有数值等于val的元素**，并返回移除后数组的新长度。
@@ -1891,6 +1968,55 @@ public class TestAddBinary {
     }
 }
 ```
+
+
+# 83. 删除排序链表中的重复元素(简单)
+
+给定一个排序链表，删除所有重复的元素，使得每个元素只出现一次。
+
+```
+示例 1:
+
+输入: 1->1->2
+输出: 1->2
+示例 2:
+
+输入: 1->1->2->3->3
+输出: 1->2->3
+```
+
+由于输入的列表**已排序**，因此我们可以通过将**结点的值**与**它之后的结点**进行比较来确定它是否为重复结点。如果它是重复的，我们更改当前结点的next指针，以便它跳过下一个结点并直接指向下一个结点之后的结点。
+
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode deleteDuplicates(ListNode head) {
+        ListNode current = head;
+        while (current != null && current.next != null) {
+            if (current.next.val == current.val) {
+                current.next = current.next.next;
+            } else {
+                current = current.next;
+            }
+        }
+        return head;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，因为列表中的每个结点都检查一次以确定它是否重复，所以总运行时间为$O(n)$，其中$n$是列表中的结点数。
+
+- 空间复杂度：$O(1)$，没有使用额外的空间。
 
 
 # 84. 柱状图中最大的矩形(困难)
@@ -3362,6 +3488,86 @@ public class LongestConsecutiveSequence {
 
 
 
+# 141. *环形链表(简单)
+
+给定一个链表，判断链表中是否有环。
+
+为了表示给定链表中的环，我们使用整数pos来表示**链表尾连接到链表中的位置**（索引从0开始）。 如果pos是-1，则在该链表中没有环。
+
+ 
+```
+示例 1：
+
+输入：head = [3,2,0,-4], pos = 1
+输出：true
+解释：链表中有一个环，其尾部连接到第二个节点。
+```
+
+<div align=center><img src=LeetCode\141_1.png width=50%></div>
+
+
+**思路与算法：**
+
+通过使用具有不同速度的**快、慢两个指针**遍历链表，空间复杂度可以被降低至$O(1)$。**慢指针每次移动一步，而快指针每次移动两步**。
+
+- 如果列表中不存在环，最终快指针将会最先到达尾部，此时我们可以返回false。
+
+- 现在考虑一个环形链表，把慢指针和快指针想象成两个在环形赛道上跑步的运动员（分别称之为慢跑者与快跑者）。而**快跑者最终一定会追上慢跑者**。这是为什么呢？考虑下面这种情况（记作情况 A）- 假如快跑者只落后慢跑者一步，在下一次迭代中，它们就会分别跑了一步或两步并相遇。
+
+<div align=center><img src=LeetCode\141.gif></div>
+
+```java
+/**
+ * Definition for singly-linked list.
+ * class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) {
+ *         val = x;
+ *         next = null;
+ *     }
+ * }
+ */
+public class Solution {
+    public boolean hasCycle(ListNode head) {
+        if (head == null || head.next == null) {
+            return false;
+        }
+        
+        ListNode slow = head;
+        ListNode fast = head.next;
+        
+        while (slow != fast) {
+            if (fast == null || fast.next == null) {
+                return false;
+            }
+            // 慢指针每次移动一步，而快指针每次移动两步
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        return true;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，让我们将$n$设为链表中结点的总数。为了分析时间复杂度，我们分别考虑下面两种情况。
+
+    - 链表中不存在环：快指针将会首先到达尾部，其时间取决于列表的长度，也就是$O(n)$。
+
+    - 链表中存在环：我们将慢指针的移动过程划分为两个阶段：非环部分与环形部分：
+
+        - 慢指针在走完非环部分阶段后将进入环形部分：此时，快指针已经进入环中：$\text{迭代次数} = \text{非环部分长度} = N$
+
+        - 两个指针都在环形区域中：考虑两个在环形赛道上的运动员 - 快跑者每次移动两步而慢跑者每次只移动一步。其**速度的差值为1**，因此需要经过$\dfrac{\text{二者之间距离}}{\text{速度差值}}$次循环后，快跑者可以追上慢跑者。这个距离几乎就是$\text{环形部分长度 K}$，且速度差值为1，我们得出这样的结论$\text{迭代次数}=近似于\text{环形部分长度 K}$。
+
+    - 因此，在最糟糕的情形下，时间复杂度为$O(N+K)$，也就是$O(n)$。
+
+- 空间复杂度：$O(1)$，我们只使用了慢指针和快指针两个结点，所以空间复杂度为$O(1)$。
+
+
+
 # 144. 二叉树的前序遍历(中等)
 
 给定一个二叉树，返回它的前序遍历
@@ -4534,7 +4740,83 @@ public class RightSideView {
 - 空间复杂度：$O(N)$，因为这不是一棵平衡二叉树，二叉树的深度最少是$logN$，最坏的情况下会退化成一条链表，深度就是$N$，因此**递归时使用的栈空间是$O(N)$的**。
 
 
+# 203. 移除链表元素(简单)
 
+
+删除链表中等于给定值val的所有节点。
+
+```
+示例:
+
+输入: 1->2->6->3->4->5->6, val = 6
+输出: 1->2->3->4->5
+```
+
+
+## 双指针
+
+如果删除的节点是中间的节点，则问题似乎非常简单：
+
+- 选择要删除节点的前一个结点`prev`。
+- 将`prev`的`next`设置为要删除结点的`next`。
+
+<div align=center><img src=LeetCode\203_1.jpg></div>
+
+当要删除的一个或多个节点位于链表的头部时，事情会变得复杂：
+
+<div align=center><img src=LeetCode\203_2.jpg></div>
+
+可以通过**哨兵节点**去解决它，哨兵节点广泛应用于树和链表中，如伪头、伪尾、标记等，它们是纯功能的，通常不保存任何数据，其主要目的是使链表标准化，如使链表永不为空、永不无头、简化插入和删除。
+
+<div align=center><img src=LeetCode\203_3.jpg></div>
+
+在这里哨兵节点将被用于**伪头**。
+
+算法：
+
+- 初始化哨兵节点为`ListNode(0)`且设置`sentinel.next = head`。
+- 初始化两个指针`curr`和`prev`指向当前节点和前继节点。
+- 当`curr != null`：
+  - 比较当前节点和要删除的节点：
+    - 若当前节点就是要删除的节点：则`prev.next = curr.next`。
+    - 否则设`prve = curr`。
+  - 遍历下一个元素：`curr = curr.next`。
+- 返回`sentinel.next`。
+
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+  public ListNode removeElements(ListNode head, int val) {
+    ListNode sentinel = new ListNode(0);
+    sentinel.next = head;
+
+    ListNode prev = sentinel, curr = head;
+    while (curr != null) {
+      if (curr.val == val) {
+          prev.next = curr.next;
+      } else {
+          prev = curr;
+      }
+      curr = curr.next;
+    }
+    return sentinel.next;
+  }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N)$，只遍历了一次。
+- 空间复杂度：$\mathcal{O}(1)$。
 
 
 # 206. 反转链表(简单)
@@ -5632,6 +5914,60 @@ public class LowestCommonAncestor {
   - 因此最后总的空间复杂度为$O(N)$。
 
 
+
+# 237. 删除链表中的节点(简单)
+
+编写一个函数，使其可以删除某个链表中给定的（非末尾）节点。传入函数的唯一参数为要被删除的节点。
+
+现有一个链表：head = [4,5,1,9]，它可以表示为:
+
+<div align=center><img src=LeetCode\237.png width=50%></div>
+
+```
+示例 1：
+
+输入：head = [4,5,1,9], node = 5
+输出：[4,1,9]
+解释：给定你链表中值为 5 的第二个节点，那么在调用了你的函数之后，该链表应变为 4 -> 1 -> 9。
+
+示例 2：
+
+输入：head = [4,5,1,9], node = 1
+输出：[4,5,9]
+解释：给定你链表中值为 1 的第三个节点，那么在调用了你的函数之后，该链表应变为 4 -> 5 -> 9.
+```
+
+提示：
+
+- 链表至少包含两个节点。
+- 链表中所有节点的值都是唯一的。
+- 给定的节点为非末尾节点并且一定是链表中的一个有效节点。
+- 不要从你的函数中返回任何结果。
+
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public void deleteNode(ListNode node) {
+        node.val = node.next.val;
+        node.next = node.next.next;
+    }
+}
+```
+
+时间和空间复杂度都是：$O(1)$。
+
+
+
+
+
 # 283. 移动零(简单)
 
 给定一个数组nums，编写一个函数将所有0移动到数组的末尾，同时保持非零元素的相对顺序。
@@ -5730,6 +6066,73 @@ public class ReverseString {
 
 - 时间复杂度：$\mathcal{O}(N)$。执行了$N/2$次的交换。
 - 空间复杂度：$\mathcal{O}(1)$，只使用了常数级空间。
+
+
+
+# 345. 反转字符串中的元音字母(简单)
+
+编写一个函数，以字符串作为输入，反转该字符串中的元音字母。
+
+```
+示例 1:
+
+输入: "hello"
+输出: "holle"
+
+示例 2:
+
+输入: "leetcode"
+输出: "leotcede"
+说明:
+元音字母不包含字母"y"。
+```
+
+```java
+class Solution {
+    public String reverseVowels(String s) {
+        // 先将字符串转成字符数组（方便操作）
+        // 以上是只针对 Java 语言来说的 因为 chatAt(i) 每次都要检查是否越界 有性能消耗
+        char[] arr = s.toCharArray();
+        int n = arr.length;
+        int left = 0;
+        int right = n - 1;
+        while (left < right) {
+            // 从左判断如果当前元素不是元音
+            while (left < n && !isVowel(arr[left]) ) {
+                left++;
+            }
+            // 从右判断如果当前元素不是元音
+            while (right >= 0 && !isVowel(arr[right]) ) {
+                right--;
+            }
+            // 如果没有元音
+            if (left >= right) {
+                break;
+            }
+            // 交换前后的元音
+            swap(arr, left, right);
+            left++;
+            right--;
+        }
+        // 最后返回的时候要转换成字符串输出
+        return new String(arr);
+    }
+
+    private void swap(char[] arr, int a, int b) {
+        char temp = arr[a];
+        arr[a] = arr[b];
+        arr[b] = temp;
+    }
+
+    // 判断是不是元音
+    private boolean isVowel(char ch) {
+        // 这里要直接用 return 语句返回，不要返回 true 或者 false
+         return ch == 'a' || ch == 'e' || ch == 'i' || ch == 'o' || ch == 'u'
+                ||ch=='A'|| ch == 'E' || ch == 'I' || ch == 'O' || ch == 'U';
+    }
+}
+```
+
 
 
 # 349. 两个数组的交集(简单)
@@ -6676,6 +7079,54 @@ public class SearchInBinarySearchTree {
 
 
 
+# 771. 宝石与石头(简单)
+
+给定字符串`J`代表石头中**宝石的类型**，和字符串`S`代表你拥有的**石头**。 `S`中每个字符代表了一种你拥有的石头的类型，你想知道你拥有的石头中有多少是宝石。
+
+**`J`中的字母不重复**，`J`和`S`中的所有字符都是字母。**字母区分大小写**，因此"a"和"A"是不同类型的石头。
+
+```
+示例 1:
+
+输入: J = "aA", S = "aAAbbbb"
+输出: 3
+
+示例 2:
+
+输入: J = "z", S = "ZZ"
+输出: 0
+```
+注意:
+
+- `S`和`J`最多含有50个字母。
+- `J`中的字符不重复。
+
+
+```java
+class Solution {
+    public int numJewelsInStones(String J, String S) {
+        // J宝石类型
+        Set<Character> Jset = new HashSet();
+        for (char j: J.toCharArray())
+            Jset.add(j);
+
+        int ans = 0;
+        // S各种石头
+        for (char s: S.toCharArray())
+            if (Jset.contains(s))
+                ans++;
+        return ans;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(J.length + S.length))$。$O(J.length)$这部分来自于创建$J$，$O(S.length)$这部分来自于$S$。
+
+- 空间复杂度：$O(J.length)$。
+
+
 
 # 818. 赛车(困难)
 
@@ -6977,6 +7428,63 @@ class Solution {
 时间复杂度：$O(N)$，其中$N$是`bills`的长度。
 
 空间复杂度：$O(1)$。
+
+
+
+# 876. 链表的中间结点(简单)
+
+给定一个带有头结点head的非空单链表，返回链表的中间结点。如果有两个中间结点，则返回第二个中间结点。
+
+ 
+```
+示例 1：
+
+输入：[1,2,3,4,5]
+输出：此列表中的结点3(序列化形式：[3,4,5])
+解释：返回的结点值为3。(测评系统对该结点序列化表述是[3,4,5])。
+注意，我们返回了一个ListNode类型的对象ans，这样：`ans.val = 3, ans.next.val = 4, ans.next.next.val = 5`以及`ans.next.next.next = NULL`。
+
+示例 2：
+
+输入：[1,2,3,4,5,6]
+输出：此列表中的结点 4 (序列化形式：[4,5,6])
+由于该列表有两个中间结点，值分别为 3 和 4，我们返回第二个结点。
+```
+
+提示：给定链表的结点数介于1和100之间。
+
+
+**思路与算法：快慢指针法**
+
+用两个指针`slow`与`fast`一起遍历链表。`slow`**一次走一步**，`fast`**一次走两步**。那么当`fast`到达链表的末尾时，`slow`必然位于中间。
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode middleNode(ListNode head) {
+        ListNode slow = head, fast = head;
+        while (fast != null && fast.next != null) {
+            // 保证了如果有两个中间结点，则返回第二个中间结点
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        return slow;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是给定链表的结点数目。
+
+- 空间复杂度：$O(1)$，只需要常数空间存放`slow`和`fast`两个指针。
 
 
 
@@ -7792,6 +8300,111 @@ class Solution {
 ```
 
 
+# 1290. 二进制链表转整数(简单)
+
+给你一个单链表的引用结点head。链表中每个结点的值不是0就是1。已知此链表是一个整数数字的二进制表示形式。请你返回该链表所表示数字的十进制值 。
+
+```
+示例 1：
+输入：head = [1,0,1]
+输出：5
+解释：二进制数 (101) 转化为十进制数 (5)
+```
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int getDecimalValue(ListNode head) {
+        ListNode current = head;
+        int sum = 0;
+
+        while(current != null){
+            sum = sum * 2 + current.val;
+            current = current.next;
+        }
+        return sum;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是链表中的节点个数。
+
+- 空间复杂度：$O(1)$。
+
+
+# 1365. 有多少小于当前数字的数字(简单)
+
+给你一个数组`nums`，对于其中每个元素`nums[i]`，请你统计数组中比它小的所有数字的数目。
+
+换而言之，对于每个`nums[i]`你必须计算出有效的`j`的数量，其中`j`满足`j != i`且`nums[j] < nums[i]`。
+
+以数组形式返回答案。
+
+```
+示例 1：
+
+输入：nums = [8,1,2,2,3]
+输出：[4,0,1,1,3]
+解释： 
+对于 nums[0]=8 存在四个比它小的数字：（1，2，2 和 3）。 
+对于 nums[1]=1 不存在比它小的数字。
+对于 nums[2]=2 存在一个比它小的数字：（1）。 
+对于 nums[3]=2 存在一个比它小的数字：（1）。 
+对于 nums[4]=3 存在三个比它小的数字：（1，2 和 2）。
+
+示例 2：
+
+输入：nums = [6,5,4,8]
+输出：[2,1,0,3]
+
+示例 3：
+
+输入：nums = [7,7,7,7]
+输出：[0,0,0,0]
+```
+
+提示：
+
+- $2 <= nums.length <= 500$
+- $0 <= nums[i] <= 100$
+
+
+```java
+class Solution {
+    public int[] smallerNumbersThanCurrent(int[] nums) {
+        //new一个新数组
+        int[] newArr = new int[nums.length];
+        int index = 0;
+        //每次取出一个进行遍历
+        for (int num : nums) {
+            //count重置
+            int temp = num, count = 0;
+            for (int i = 0; i < nums.length; i++) {
+                //数组中元素小于当前数，count++
+                if (nums[i] < temp) {
+                    count++;
+                }
+            }
+            //有效j（小于的个数）放入数组中
+            newArr[index] = count;
+            index++;
+        }
+        return newArr;
+    }
+}
+```
+
+
+
 # 1403. 非递增顺序的最小子序列(简单)
 
 给你一个数组`nums`，请你从中抽取一个子序列，满足<u>该子序列的元素之和</u>**严格大于**<u>未包含在该子序列中的各元素之和</u>。
@@ -7926,6 +8539,153 @@ class Solution {
     }
 }
 ```
+
+
+# 1474. 删除链表M个节点后的N个节点(简单)
+
+Given the head of a linked list and two integers m and n. Traverse the linked list and remove some nodes in the following way:
+
+- Start with the head as the current node.
+- Keep the first $m$ nodes starting with the current node.
+- Remove the next $n$ nodes
+- Keep repeating steps 2 and 3 until you reach the end of the list.
+- Return the head of the modified list after removing the mentioned nodes.
+
+<div align=center><img src=LeetCode\1474_1.png></div>
+```
+Example 1:
+Input: head = [1,2,3,4,5,6,7,8,9,10,11,12,13], m = 2, n = 3
+Output: [1,2,6,7,11,12]
+Explanation: Keep the first (m = 2) nodes starting from the head of the linked List  (1 ->2) show in black nodes.
+Delete the next (n = 3) nodes (3 -> 4 -> 5) show in read nodes.
+Continue with the same procedure until reaching the tail of the Linked List.
+Head of linked list after removing nodes is returned.
+```
+
+<div align=center><img src=LeetCode\1474_2.png></div>
+```
+Example 2:
+Input: head = [1,2,3,4,5,6,7,8,9,10,11], m = 1, n = 3
+Output: [1,5,9]
+Explanation: Head of linked list after removing nodes is returned.
+```
+
+```java
+class Solution {
+    int mm, nn;
+    public ListNode deleteNodes(ListNode head, int m, int n) {
+        mm = m; // 将m和n保存为全局变量
+        nn = n;
+        return helper(head, m, n); // 递归求解
+    }
+    
+    ListNode helper(ListNode head, int m, int n) {
+        if (head == null) return null; // 当前节点为空，返回空
+        if (n == 0) { // 如果已删除完n个节点，复原m和n值继续
+            m = mm;
+            n = nn;
+        }
+        if (m > 0) { // 如果m大于0，当前元素需要保留
+            // 当前节点的下一节点为递归返回值
+            head.next = helper(head.next, m - 1, n);
+            // 返回当前节点
+            return head;
+        } else { // 如果m等于0，当前元素需要删除
+            // 递归到下一节点，递归返回之为当前返回值。
+            return helper(head.next, m, n - 1);
+        }
+    }
+}
+```
+
+
+# 1512. 好数对的数目(简单)
+
+给你一个整数数组`nums`，如果一组数字$(i,j)$满足$nums[i] == nums[j]$且$i < j$，就可以认为这是一组**好数对**。返回好数对的数目。
+
+ 
+```
+示例 1：
+
+输入：nums = [1,2,3,1,1,3]
+输出：4
+解释：有 4 组好数对，分别是 (0,3), (0,4), (3,4), (2,5) ，下标从 0 开始
+
+示例 2：
+
+输入：nums = [1,1,1,1]
+输出：6
+解释：数组中的每组数字都是好数对
+
+示例 3：
+
+输入：nums = [1,2,3]
+输出：0
+```
+
+提示：
+
+- $1 <= nums.length <= 100$
+- $1 <= nums[i] <= 100$
+
+
+```java
+default V getOrDefault(Object key, V defaultValue) {
+        V v;
+        return (((v = get(key)) != null) || containsKey(key))
+            ? v
+            : defaultValue;
+    }
+```
+
+如果`map`中含有指定的`key`，就**返回该`key`对应的`value`**，否则使用该方法的第二个参数作为默认值返回。
+
+```java
+@Test
+    public void testSix() {
+        Map<String, Integer> map = new HashMap<>(3);
+        map.put("john", null);
+        map.put("jack", 180);
+        map.put("jane", 168);
+
+        // 不会使用提供的默认值
+        Integer wanna1 = map.getOrDefault("jane", 166);
+        // 会使用提供的默认值
+        Integer wanna2 = map.getOrDefault("tom", 166);
+        // 不会使用提供的默认值
+        Integer wanna3 = map.getOrDefault("john", 185);
+        logger.info("Map.getOrDefault : {}, {}, {}", wanna1, wanna2, wanna3);
+    }
+
+dev 17:17:57.414 [main] INFO  com.info.maka.waimai.CommonTest - Map.getOrDefault : 168, 166, null
+```
+
+```java
+class Solution {
+    public int numIdenticalPairs(int[] nums) {
+        Map<Integer, Integer> hashMap = new HashMap<Integer, Integer>();
+        for (int num : nums) {
+            // 如果hashMap中含有指定的key，就返回该key对应的value，否则使用该方法的第二个参数作为默认值返回
+            // V getOrDefault(Object key, V defaultValue)
+            hashMap.put(num, hashMap.getOrDefault(num, 0) + 1);
+        }
+
+        int ans = 0;
+        for (Map.Entry<Integer, Integer> entry : hashMap.entrySet()) {
+            // 知道相同值的数量v，一共有(v-1)+(v-2)+...+1中组合
+            int v = entry.getValue();
+            ans += v * (v - 1) / 2;
+        }
+
+        return ans;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$。
+- 空间复杂度：$O(n)$，即哈希表使用到的辅助空间的空间代价。
 
 
 
