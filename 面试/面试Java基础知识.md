@@ -49,6 +49,12 @@ public class AutoUnboxingTest
 }
 ```
 
+- Stack
+    - 位于通用RAM(随机访问存储器)中，栈指针若向下移动，则分配新的内存，若向上移动，则释放那些内存。这是一种快速有效的分配存储方法，仅次于寄存器。**创建程序时，Java系统必须知道存储在栈内所有项的确切生命周期，以便上下移动栈指针**。这一约束限制了程序的灵活性，所以虽然某些Java数据存储于栈中——特别是**对象引用**，但是Java对象并不存储于其中。
+- Heap
+    - 一种通用的内存池(也位于RAM区)，用于存放所有的Java对象。**堆不同于栈的好处是：编译器不需要知道存储的数据在堆里存活多长时间**。因此，**在堆里分配存储有很大的灵活性**。当需要一个对象时，只需用new写一行简单的代码，当执行这行代码时，**会自动在堆里进行存储分配**。当然，为这种灵活性必须要付出相应的代价：**用堆进行存储分配和清理可能比用栈进行存储分配需要更多的时间**。
+
+
 ## ==与equals()
 
 ```java
@@ -78,8 +84,8 @@ integer3.equals(integer4): true
 */
 ```
 
-* `==`和`!=`比较的是**对象的引用**。
-* 如果想比较两个对象的**实际内容**是否相同，必须使用所有对象都适用的特殊方法`equals()`。但这个方法<font color=red>不适用于基本类型</font>，基本类型直接使用`==`和`!=`即可。
+- `==`和`!=`比较的是**对象的引用(对象的地址)**。
+- 如果想比较两个对象的**实际内容--对象**是否相同，必须使用所有对象都适用的特殊方法`equals()`。但这个方法<font color=red>不适用于基本类型</font>，基本类型直接使用`==`和`!=`即可。
 
 <font color=red>`equals()`的默认行为是比较引用</font>：
 
@@ -180,7 +186,7 @@ https://zhuanlan.zhihu.com/p/43001449
 
 <font color=red>如果只重写equals方法而不重写hashcode方法，很可能会造成两个不同的对象，它们的hashcode也相等，造成冲突。</font>
 
-equals()用于**判断两个对象是否相等**；hashCode()<font color=red>对不同的object会返回唯一的哈希值</font>，被设计是用来**使得哈希容器能高效的工作**。
+在不重写`equals`方法的情况下，`equals`方法是比较**两个对象是否具有相同的引用，即是否指向了同一个内存地址**；hashCode()<font color=red>对不同的object会返回唯一的哈希值</font>，被设计是用来**使得哈希容器能高效的工作**。
 
 在Java中，有一些哈希容器，比如Hashtable、HashMap等等，当我们调用这些容器的诸如`get(Object obj)`方法时，**容器的内部肯定需要判断一下当前obj对象在容器中是否存在**，然后再进行后续的操作。一般来说，判断是够存在，肯定是要将obj对象和容器中的每个元素一一进行比较，要使用equals()才是正确的。
 
@@ -205,7 +211,7 @@ hashCode的通用规定：
 
 - 在应用程序的执行期间，只要对象的equals方法的比较操作所用到的信息没有被修改，那么<font color=red>对同一个对象的多次调用，hashCode方法都必须始终返回同一个值</font>。在一个应用程序与另一个应用程序的执行过程中，执行hashCode方法所返回的值可以不一致。
 
-- 如果两个对象根据equals(Object)方法比较是相等的，那么调用这两个对象中的hashCode方法都必须产生同样的整数结果。即：**如果两个对象的equals()相等，那么他们的hashCode()必定相等**。**如果两个对象的hashCode()不相等，那么他们的equals()必定不等**。
+- 如果两个对象根据equals(Object)方法比较是相等的，那么调用这两个对象中的hashCode方法都必须产生同样的整数结果。即：**<font color=red>如果两个对象的equals()相等，那么他们的hashCode()必定相等</font>**。**如果两个对象的hashCode()不相等，那么他们的equals()必定不等**。
 
 - 如果两个对象根据equals(Object)方法比较是不相等的，那么调用这两个对象中的hashCode方法，则不一定要求hashCode方法必须产生不同的结果。但是程序员应该知道，给不相等的对象产生截然不同的整数结果，有可能提高散列表的性能。
 
@@ -253,14 +259,19 @@ public class Test {
         System.out.println(person1.equals(person2));
         // false
         System.out.println(hashMap.containsKey(person2));
+
+        // false
+        System.out.println(person1 == person2);
     }
 }
 ```
 对于第一个输出true我们很容易知道，因为我们重写了equals方法，只要两个对象的name属性相同就会返回ture。
 
+**<font color=red>如果两个对象的equals()相等，那么他们的hashCode()必定应该相等</font>**。
+
 但是为什么第二个为什么输出的是false呢？
 
-就是因为我们没有重写hashCode方法。所以我们得到一个结论：**<font color=red>如果一个类重写了equals方法但是没有重写hashCode方法，那么该类无法结合所有基于散列的集合（HashMap，HashSet）一起正常运作</font>**。
+就是因为我们**没有重写hashCode方法**。所以我们得到一个结论：**<font color=red>如果一个类重写了equals方法但是没有重写hashCode方法，那么该类无法结合所有基于散列的集合（HashMap，HashSet）一起正常运作</font>**。
 
 ```java {.line-numbers highlight=28-31}
 import java.util.HashMap;
@@ -308,6 +319,9 @@ public class Test {
         System.out.println(person1.equals(person2));
         // true
         System.out.println(hashMap.containsKey(person2));
+
+        // false
+        System.out.println(person1 == person2);
     }
 }
 ```
@@ -315,6 +329,8 @@ public class Test {
 
 
 ## Java字符串两种声明方式在堆内存中不同的体现
+
+String不可变是因为在JDK中**String类被声明为一个final类，且类内部的value字节数组也是final的，只有当字符串是不可变时字符串池才有可能实现，字符串池的实现可以在运行时节约很多heap空间，因为不同的字符串变量都指向池中的同一个字符串**。
 
 ```java
 public class Test {
@@ -352,7 +368,7 @@ public class Test {
 
 这时候再打印`System.out.println(s3 == s4)`那一定便是false了，因为s3和s4不是指向对一个引用（对象）。
 
-我们在写代码过程中，为了**避免重复的创建对象**，尽量使用`String s1 ="123"`而不是String s1 = new String("123")，因为**JVM对前者给做了优化**。
+我们在写代码过程中，为了**避免重复的创建对象**，尽量使用`String s1 ="123"`而不是`String s1 = new String("123")`，因为**JVM对前者给做了优化**。
 
 
 ### String.equals
@@ -418,6 +434,8 @@ System.out.println(s1.equals(s2));    //true
 ### String
 
 char类型只能表示一个字符。为了表示一串字符，使用称为String (字符串)的数据类型。String类型不是基本类型，而是**引用类型(reference type)**。
+
+String不可变是因为在JDK中**String类被声明为一个final类，且类内部的value字节数组也是final的，只有当字符串是不可变时字符串池才有可能实现，字符串池的实现可以在运行时节约很多 heap 空间，因为不同的字符串变量都指向池中的同一个字符串**。
 
 `String`方法：
 
@@ -634,7 +652,7 @@ public class stringBuffer
 
 该语句并不能将list1引用的数组内容复制给list2, 而只是将list1的**引用值**复制给了list2。在这条语句之后，list1和list2都指向同一个数组。list2原先所引用的数组不能再引用，它就变成了垃圾，会被Java虚拟机自动收回(这个过程称为垃圾回收)。
 
-在Java中，可以使用赋值语句复制基本数据类型的变量，但不能复制数组。将一个数组变量赋值给另一个数组变量，实际上是将一个数组的引用复制给另一个变量，使两个变量都指向相同的内存地址。
+在Java中，**可以使用赋值语句复制基本数据类型的变量，但不能复制数组**。将一个数组变量赋值给另一个数组变量，实际上是**将一个数组的引用复制给另一个变量，使两个变量都指向相同的内存地址**。
 
 复制数组有三种方法：
 
@@ -698,7 +716,7 @@ str = "MDove is cool.";
 
 <div align=center><img src=Pictures/基本与引用类型1.jpg width=40%></div>
 
-对于基本类型num，赋值运算符会直接改变变量的值，**原来的值被覆盖掉**。对于引用类型str，赋值运算符会**改变引用中所保存的地址**，原来的地址被覆盖掉。但是原来的对象不会被改变（重要）。"MDove" 字符串对象没有被改变（没有被任何引用所指向的对象是垃圾，会被垃圾回收器回收）。
+对于基本类型num，赋值运算符会直接改变变量的值，**原来的值被覆盖掉**。对于引用类型str，赋值运算符会**改变引用中所保存的地址**，原来的地址被覆盖掉。但是**原来的对象不会被改变**（重要）。"MDove" 字符串对象没有被改变（**没有被任何引用所指向的对象是垃圾，会被垃圾回收器回收**）。
 
 **参数传递基本上就是赋值操作。**
 
@@ -1011,7 +1029,23 @@ n is 2
 
 ## 重载Overload与重写Override
 
-重栽方法使得你可以使用**同样的名字**来定义**不同方法**，只要它们的**签名（参数）是不同的**。
+重载方法使得你可以使用**同样的名字**来定义**不同方法**，只要它们的**签名（参数）是不同的**。
+
+- 重载
+
+    - 方法重载是让类**以统一的方式处理不同类型数据**的一种手段。多个同名函数同时存在，具有不同的参数个数/类型。
+
+    - Java的方法重载，就是在类中可以创建多个方法，它们**具有相同的名字，但具有不同的参数**。调用方法时通过传递给它们的**不同参数个数和参数类型**来决定具体使用哪个方法。
+
+    - 重载的时候，**方法名要一样，但是参数类型和个数不一样，返回值类型可以相同也可以不相同。无法以返回型别作为重载函数的区分标准**。
+
+- 重写
+
+    - 父类与子类之间的多态性，对**父类的函数进行重新定义**。如果在子类中定义某方法与其父类**有相同的名称和参数**，我们说该方法被重写。在Java中，子类可继承父类中的方法，而不需要重新编写相同的方法。但有时子类并不想原封不动地继承父类的方法，而是想作一定的修改，这就需要采用**方法的重写**。
+
+    - 若子类中的方法与父类中的某一方法具有相同的方法名、返回类型和参数表，则新方法将覆盖原有的方法。如需父类中原有的方法，可使用**super关键字**，该关键字引用了当前类的父类。
+
+    - 子类函数的访问修饰权限不能少于父类的。
 
 ```java
 public class TestMethodOverloading
@@ -1752,6 +1786,462 @@ public synchronized V put(K key, V value) {
 ```
 
 
+
+
+## final关键字
+
+
+可能使用到final的三种情况：数据、方法和类。
+
+- final数据
+    - 在Java中，这类**恒定不变的常量**必须是**基本数据类型**，并且以关键字final表示。在对这个常量进行定义的时候，必须对其进行赋值。**一个既是static又是final的域只占据一段不能改变的存储空间**。
+    - 对于**基本类型**，final使数值恒定不变；而用于**对象引用**，final使引用恒定不变。一旦引用被初始化指向一个对象，就无法再把它改为指向另一个对象。然而，对象其自身却是可以被修改的，Java并未提供使任何对象恒定不变的途径。
+    - 既是static又是final的域(即编译期常量)将用大写表示，并使用下划线分隔各个单词。
+
+- final方法
+    - 使用final方法的原因有两个。第一个原因是**把方法锁定**，**以防任何继承类修改它的含义**。这是出于设计的考虑：想要确保在继承中使方法行为保持不变，并且不会被覆盖。过去建议使用final方法的第二个原因是**效率**。在最近的Java版本中，虚拟机(特别是hotspot技术)可以探测到这些情况，并优化去掉这些效率反而降低的额外的内嵌调用，因此不再需要使用final方法来进行优化了。
+    - final和private关键字：**类中所有的private方法都隐式地指定为是final的**。由于无法取用private方法，所以也就无法覆盖它。可以对private方法添加final修饰词，但这并不能给该方法增加任何额外的意义。
+
+- final类
+    - 当将某个类的整体定义为final时(通过将关键字final置于它的定义之前)就表明了你不打算继承该类，而且也不允许别人这样做。由于**final类禁止继承**，所以final类中所有的方法都隐式指定为是final的，因为无法覆盖它们。
+
+
+
+## 访问权限
+
+<div align=center><img src=Pictures\访问权限.png></div>
+
+
+## Java程序初始化顺序
+
+**父类静态变量；父类静态代码块；子类静态变量；子类静态代码块
+父类非静态变量；父类非静态代码块；父类构造器
+子类非静态变量；子类非静态代码块；子类构造器**。
+
+Java程序初始化一般遵循3个原则：
+
+1. 静态对象(变量)先于非静态对象(变量)初始化。其中**静态对象(变量)只初始化一次**，因为static在jvm中只有一块区域存储，方法区(Method Area)，之所以被称为静态是因为**从程序创建到死亡他的地址值都不会改变**，其只在class类对象初次加载时初始化，因此static只需要初始化一次，而非静态对象(变量)可能会初始化很多次。
+2. 如果类之间存在继承关系，那么父类优先于子类进行初始化。
+3. 按照成员变量的定义顺序进行初始化。即使变量定义散布于方法之中，它们依然在任何方法(包括构造函数)被调用前先初始化。
+
+
+
+## 构造方法
+
+**当新对象被创建的时候，构造函数会被调用**。每一个类都有构造函数。在程序员没有给类提供构造函数的情况下，Java编译器会为这个类创建一个默认的构造函数。
+
+Java中构造函数重载和方法重载很相似。可以为一个类创建多个构造函数。每一个构造函数必须有它自己**唯一的参数列表**。
+
+
+
+## 异常处理
+
+Java通过面向对象的方法进行异常处理，**把各种不同的异常进行分类**，并提供了良好的接口。
+
+在Java中，**每个异常都是一个对象，它是Throwable类或其它子类的实例**。当一个方法出现异常后便抛出一个异常对象，该对象中包含有异常信息，调用这个对象的方法可以捕获到这个异常并进行处理。
+
+Java的异常处理是通过5个关键词来实现的：`try、catch、throw、throws`和`finally`。
+
+- 一般情况下是用try来执行一段程序，如果出现异常，系统会抛出一个异常，这时候你可以**通过它的类型来捕捉（catch）它**，或**最后（finally）由缺省处理器来处理**。用try来指定一块预防所有“异常”的程序。紧跟在try程序后面，应包含一个catch子句来指定你想要捕捉的“异常”的类型。
+
+- `throw`语句用来**明确地抛出一个“异常”**。
+
+- `throws`用来标明**一个成员函数可能抛出的各种“异常”**。
+
+- `finally`为确保一段代码**不管发生什么“异常”都被执行一段代码**。可以在一个成员函数调用的外面写一个try语句，在这个成员函数内部写另一个try语句保护其他代码。每当遇到一个try语句，“异常”的框架就放到堆栈上面，直到所有的try语句都完成。如果下一级的try语句没有对某种“异常”进行处理，堆栈就会展开，直到遇到有处理这种“异常”的try语句。
+
+
+
+## 接口与抽象类
+
+- 接口
+    - 不同的子类可以用不同的方式表示此接口
+
+    - 由于Java**不支持多继承**，而有可能**某个类或对象要使用分别在几个类或对象里面的方法或属性**，现有的单继承机制就不能满足要求。
+
+    - 与继承相比，接口有更高的灵活性，因为**接口中没有任何实现代码**。当一个类实现了接口以后，该类要实现接口里面所有的方法和属性，并且**接口里面的属性在默认状态下面都是`public static`，所有方法默认情况下是`public`**。
+
+    - 一个类可以实现多个接口。
+
+- 抽象类
+
+    - **声明方法的存在**而**不去实现它**的类被叫做抽象类（abstract class），它用于要创建一个体现某些基本行为的类，并为该类声明方法，但不能在该类中实现该类的情况。**不能创建abstract类的实例**。
+    - Abstract类的子类为它们父类中的所有抽象方法提供实现，否则它们也是抽象类为。
+
+- 区别
+    - **接口中所有的方法隐含的都是抽象的**。而抽象类则可以同时包含**抽象和非抽象的方法**。
+    - 类可以实现很多个接口，但是只能继承一个抽象类。
+    - 类可以不实现抽象类和接口声明的所有方法，当然，在这种情况下，类也必须得声明成是抽象的。
+    - 抽象类可以在不提供接口方法实现的情况下实现接口。
+    - Java接口中声明的**变量**默认都是final的。抽象类可以包含非final的变量。
+    - Java接口中的**成员函数**默认是`public`的。抽象类的成员函数可以是`private，protected`或者是`public`。
+
+
+
+## 面向对象的特征
+
+- 抽象：
+    抽象是从众多的事物中抽**取出共同的、本质性的特征**，而舍弃其非本质的特征。
+- 继承：
+    继承是一种联结类的层次模型，并且允许和鼓励类的重用，它提供了一种明确表述共性的方法。对象的一个新类可以从现有的类中派生，这个过程称为类继承。新类继承了原始类的特性，新类称为原始类的派生类（子类），而原始类称为新类的基类（父类）。**派生类可以从它的基类那里继承方法和实例变量，并且类可以修改或增加新的方法使之更适合特殊的需要**。
+- 封装：
+    - 封装是把过程和数据包围起来，**对数据的访问只能通过已定义的界面**。**隐藏对象的属性和实现细节，仅对外提供公共访问方式**。
+    - “封装”通过合并特征和行为来创建新的数据类型。“实现隐藏”则通过将细节“私有化”**把接口和实现分离开来**。
+- 多态性：
+    - 多态性是指允许不同类的对象对同一消息作出响应。多态性包括参数化多态性和包含多态性。多态性语言具有灵活、抽象、行为共享、代码共享的优势，很好的解决了应用程序函数同名问题。
+
+
+## 多态
+- **对象既可以作为它自己本身的类型使用，也可以作为它的基类型使用**。而这种把对某个对象的引用视为对其基类型的引用的做法被称作向上转型——因为在继承树的画法中，基类是放置在上方的。
+- Java中除了`static`方法和`final`方法(`private`方法属于`final`方法)之外，其他所有的方法都是**后期绑定**。**Java的实例方法调用是基于运行时的实际类型的动态调用，而非变量的声明类型**。
+- 可以**编写只与基类打交道的程序代码**，并且这些代码对所有的派生类都可以正确运行。或者换一种说法，发送消息给某个对象，让该对象去断定应该做什么事。
+- **继承+覆写+向上转型+调用子类覆写方法**=多态！
+- 多态也有弊端，就是无法调用子类特有的功能。
+
+```java
+class Income
+{
+    protected double income;
+
+    public Income(double income)
+    {
+        this.income = income;
+    }
+    public double getTax()
+    {
+        return income * 0.1;
+    }
+}
+
+class Salary extends Income
+{
+    public Salary(double income)
+    {
+        super(income);
+    }
+
+    @Override
+    public double getTax()
+    {
+        if (income <= 5000)
+            return 0;
+        return (income - 5000) * 0.2;
+    }
+}
+
+class StateCouncilSpecialAllowance extends Income
+{
+    public StateCouncilSpecialAllowance(double income)
+    {
+        super(income);
+    }
+
+    @Override
+    public double getTax()
+    {
+        return 0;
+    }
+}
+
+public class Test
+{
+    public static void main(String[] args)
+    {
+        // 给一个有普通收入、工资收入和享受国务院特殊津贴的小伙伴算税:
+        Income[] incomes = new Income[] {new Income(3000),
+        new Salary(7500), new StateCouncilSpecialAllowance(15000)};
+        System.out.println(totalTax(incomes));
+    }
+
+    public static double totalTax(Income... incomes)
+    {
+        double total = 0;
+        for (Income income: incomes)
+            total += income.getTax();
+        return total;
+    }
+}
+```
+
+利用多态，`totalTax()`方法只需要和`Income`打交道，它**完全不需要知道`Salary`和`StateCouncilSpecialAllowance`的存在，就可以正确计算出总的税**。如果我们要新增一种稿费收入，只需要**从`Income`派生**，然后**正确覆写`getTax()`方法**就可以。把新的类型传入`totalTax()`，不需要修改任何代码。
+
+
+
+## Comparable和Comparator接口
+
+`Comparable-->compareTo`；`Comparator-->compare`
+
+**<font color=red>`Comparable`用于比较实现`Comparable`的类的对象；`Comparator`用于比较没有实现`Comparable`的类的对象**。
+
+使用`Comparable`接口来比较元素称为使用**自然顺序**(natural order)进行比较，使用`Comparator`接口来比较元素被称为使用**比较器**来进行比较</font>。
+
+Java API的一些类，比如`String`、`Date`、`Calendar`、`BigInteger`、`BigDecimal`以及所有**基本类型的数字包装类**都实现了`Comparable`接口。<font color=red>`Comparable`接口定义了`compareTo`方法，用于比较实现了`Comparable`接口的<u>同一个类</u>的两个元素</font>。
+
+- Java提供了**只包含一个`compareTo()`方法的`Comparable`接口**。这个方法可以个**给两个对象排序**。具体来说，它返回**负数，0，正数**来表明输入**对象小于，等于，大于已经存在的对象**。
+
+
+**如果元素的类没有实现Comparable接口又将如何呢**？这些元素可以比较么？
+
+可以定义一个**比较器**(comparator)来比较<font color=red>不同类</font>的元素。要做到这一点，需要创建一个实现`java.util.Comparator<T>`接口的类并重写它的`compare`方法。
+`public int compare(T elementl, T element2)`
+>如果`element1`**小于**`element2`, 就返回一个**负值**； 如果`element1`**大于**`element2`, 就返回一个**正值**； 若两者**相等**， 则返回**0**。
+
+- Java提供了**包含`compare()`和`equals()`两个方法的`Comparator`接口**。`compare()`方法用来给两个输入参数排序，返回**负数，0，正数**表明第一个参数是小于，等于，大于第二个参数。`equals()`方法需要一个对象作为参数，它用来决定输入参数是否和`comparator`相等。只有当输入参数也是一个`comparator`并且输入参数和当前`comparator`的排序结果是相同的时候，这个方法才返回`true`。
+
+
+
+
+
+
+```java
+// GeometricObjectComparator.java
+import java.util.Comparator;
+
+public class GeometricObjectComparator
+    implements Comparator<GeometricObject>, java.io.Serializable
+{
+    @Override
+    public int compare(GeometricObject o1, GeometricObject o2)
+    {
+        double area1 = o1.getArea();
+        double area2 = o2.getArea();
+
+        if (area1 < area2)
+            return -1;
+        else if (area1 == area2)
+            return 0;
+        else
+            return 1;
+  }
+}
+```
+
+`public int compare(GeometricObject o1, GeometricObject o2)`通过覆盖`compare`方法来比较两个几何对象。比较器类也实现了`Serializable`接口。通常对于比较器来说，实现`Serializable`是一个好主意，因为它们可以被用作可序列化数据结构的排序方法。为了使数据结构能够成功序列化，比较器（如果提供）必须实现`Serializable`接口。
+
+```java
+import java.util.Comparator;
+
+public class TestComparator
+{
+    public static void main(String[] args)
+    {
+        GeometricObject g1 = new Rectangle(5, 5);
+        GeometricObject g2 = new Circle(5);
+
+        GeometricObject g = max(g1, g2, new GeometricObjectComparator());
+
+        System.out.println("The area of the larger object is " + g.getArea());
+    }
+
+    public static GeometricObject max(GeometricObject g1, GeometricObject g2, Comparator<GeometricObject> c)
+    {
+        if (c.compare(g1, g2) > 0)
+            return g1;
+        else
+            return g2;
+    }
+}
+```
+
+**<font color=red>`Comparable`用于比较实现`Comparable`的类的对象；`Comparator`用于比较没有实现`Comparable`的类的对象**。
+
+使用`Comparable`接口来比较元素称为使用**自然顺序**(natural order)进行比较，使用`Comparator`接口来比较元素被称为使用**比较器**来进行比较</font>。
+
+```java
+// SortStringByLength.java
+
+public class SortStringByLength
+{
+    public static void main(String[] args)
+    {
+        String[] cities = {"Atlanta", "Savannah", "New York", "Dallas"};
+        java.util.Arrays.sort(cities, new MyComparator());
+
+        for (String s : cities)
+            System.out.print(s + " ");
+    }
+
+    public static class MyComparator implements java.util.Comparator<String>
+    {
+        @Override
+        public int compare(String s1, String s2)
+        {
+            return s1.length() - s2.length();
+        }
+    }
+}
+
+// SortStringByLength1.java
+
+public class SortStringByLength1
+{
+    public static void main(String[] args)
+    {
+        String[] cities = {"Atlanta", "Savannah", "New York", "Dallas"};
+        java.util.Arrays.sort(cities, (s1, s2) -> s1.length() - s2.length());
+
+        for (String s : cities)
+            System.out.print(s + " ");
+    }
+}
+```
+
+```java
+public class SortStringIgnoreCase
+{
+    public static void main(String[] args)
+    {
+        java.util.List<String> cities = java.util.Arrays.asList("Atlanta", "Savannah", "New York", "Dallas");
+
+        cities.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
+
+        for (String s : cities)
+            System.out.print(s + " ");
+    }
+}
+```
+
+
+## static关键字
+
+<font color=red>在static方法的内部不能调用非静态方法(反之可以)。</font>
+
+static变量在Java中是属于类的，它在所有的实例中的值是一样的。当类被Java虚拟机载入的时候，会对static变量进行初始化。**如果你的代码尝试不用实例来访问非static的变量**，编译器会报错，因为**这些变量还没有被创建出来，还没有跟任何实例关联上**。
+
+当创建类时，就是在描述那个类的对象的外观与行为。**除非用new创建那个类的对象，否则，实际上并未获得任何对象**。执行new来创建对象时，数据存储空间才被分配，其方法才供外界调用。
+
+有两种情形用上述方法是无法解决的？
+
+- 一种情形是，**只想为某特定域分配单一存储空间，而不去考虑究竞要创建多少对象，甚至根本就不创建任何对象**。
+
+- 另一种情形是，希望某个方法不与包含它的类的任何对象关联在一起。也就是说，**即使没有创建对象，也能够调用这个方法**。有些面向对象语言采用类数据和类方法两个术语，代表那些数据和方法只是作为整个类，而不是类的某个特定对象而存在的。
+
+当我们说某个事物是静态时，就意味着**该字段或方法不依赖于任何特定的对象实例**。**即使我们从未创建过该类的对象，也可以调用其静态方法或访问其静态字段**。
+
+相反，**对于普通的非静态字段和方法，我们必须要先创建一个对象并使用该对象来访问字段或方法，因为非静态字段和方法必须与特定对象关联**。
+
+```java
+public class StaticTest
+{
+    static int i = 47;
+
+    public static void main(String[] args)
+    {
+        StaticTest st1 = new StaticTest();
+        StaticTest st2 = new StaticTest();
+
+        System.out.println("st1: " + st1 + " st2: " + st2);
+        // st1: Object.StaticTest@3b07d329 st2: Object.StaticTest@41629346
+        
+        System.out.println("st1:" + st1.i + " st2:" + st2.i);  // st1:47 st2:47
+	System.out.println(StaticTest.i);  // 47
+    }
+}
+```
+
+即使创建了两个`StaticTest`对象，`StaticTest.i`也只有一份存储空间，这两个对象共享同一个`i`。因此，`st1.i`和`st2.i`指向同一存储空间。
+	
+引用static变最有两种方法：可以**通过一个对象**去定位它，如`st1.i`。也可以通过其**类名直接引用**(`StaticTest.i`)，这对于非静态成员则不行。**使用类名是引用`static`变量的首选方式**，这不仅是因为它强调了变最的static结构，而且在某些情况下它还为编译器进行优化提供了更好的机会。
+
+
+## 深拷贝和浅拷贝
+
+在Java中数据类型可以分为两大类：**基本类型和引用类型**。
+
+基本类型也称为值类型，分别是字符类型char，布尔类型boolean以及数值类型byte、short、int、long、float、double。
+
+引用类型则包括类、接口、数组、枚举等。
+
+Java将内存空间分为**堆和栈**。**基本类型直接在栈中存储数值，而引用类型是将引用放在栈中，实际存储的值是放在堆中，通过栈中的引用指向堆中存放的数据**。
+
+**浅拷贝：引用类型仅复制引用；深拷贝：所有属性都复制独立一份。**
+
+<div align=center><img src=Pictures\深拷贝和浅拷贝.png></div>
+
+
+
+## 泛型
+
+泛型(generic)可以**参数化类型**。这个能力使我们可以定义带泛型类型的类或方法，**随后编译器会用具体的类型来替换它**。例如，Java定义了一个泛型类`Arraylist`用于存储泛型类型的元素。基于这个泛型类，可以创建用于保存**字符串的Arraylist对象**，以及保存**数字的Arraylist对象**。这里，**字符串和数字是取代泛型类型的具体类型**。
+
+这里的`<T>`表示形式泛型类型(formal generic type)，**随后可以用一个实际具体类型(actual concrete type)来替换它**。替换泛型类型称为泛型实例化(generic instantiation)。按照惯例，像`E`或`T`这样的单个大写字母用于表示形式泛型类型。
+
+### 通配泛型
+
+可以使用**非受限通配、受限通配**或者**下限通配**来对一个泛型类型指定范围。
+
+通配泛型类型有三种形式——`?`、`? extends T`或者`? super T`，其中T是泛型类型。
+
+- 第一种形式：`?`称为**非受限通配**(unbounded wildcard)，它和`? extends Object`是一样的。
+
+```java
+public class AnyWildCardDemo
+{
+    public static void main(String[] args)
+    {
+        GenericStack<Integer> intStack = new GenericStack<>();
+        intStack.push(1);
+        intStack.push(2);
+        intStack.push(-2);
+        print(intStack);
+    }
+
+    private static void print(GenericStack<?> stack)
+    {
+        while (!stack.isEmpty())
+            System.out.print(stack.pop() + " ");
+    }
+}
+```
+
+`<?>`是一个通配符，表示**任何一种对象类型**。它等价于`<? Extends Object>`。
+
+- 第二种形式：`? extends T`称为**受限通配**(bounded wildcard)，表示`T`或`T的一个子类型`。
+
+`private static double max(GenericStack<? extends Number> stack){…}`
+
+- 第三种形式：`? super T`称为**下限通配**(lower-bound wildcard )，表示`T`或`T的一个父类型`。
+
+```java
+public class SuperWildCardDemo
+{
+    public static void main(String[] args)
+    {
+        GenericStack<String> stack1 = new GenericStack<>();
+        GenericStack<Object> stack2 = new GenericStack<>();
+
+        stack2.push("Java");
+        stack2.push(2);
+        stack1.push("Sun");
+        add(stack1, stack2);
+        AnyWildCardDemo.print(stack2);
+    }
+
+    private static <T> void add(GenericStack<T> stack1, GenericStack<? super T> stack2)
+    {
+        while (!stack1.isEmpty())
+            stack2.push(stack1.pop());
+    }
+}
+/*
+Output:
+Sun 2 Java
+ */
+```
+
+
+### 使用泛型的限制
+
+由于泛型类型在运行时被消除，因此，对于如何使用泛型类型是有一些限制的：
+
+- 限制1：不能使用`new E()`
+    **不能使用泛型类型参数创建实例**：`E object = new E();`原因是运行时执行的是new E()，但是运行时泛型类型E是不可用的。
+
+- 限制2：不能使用new E[]
+    不能使用泛型类型参数创建数组：E[] elements = new E[capacity];
+
+
+- 限制3：异常类不能是泛型的
 
 # 多线程
 
