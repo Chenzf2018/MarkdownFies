@@ -3737,8 +3737,27 @@ $1 <= candies[i] <= 100$
 $1 <= extraCandies <= 50$
 
 
+**思路与算法：**
 
+对于每一个小朋友，只要这个小朋友「拥有的糖果数目」加上「额外的糖果数目」大于等于**所有小朋友拥有的糖果数目最大值**，那么这个小朋友就可以拥有最多的糖果。
 
+```java {.line-numbers highlight=11}
+class Solution {
+    public List<Boolean> kidsWithCandies(int[] candies, int extraCandies) {
+        int n = candies.length;
+        int maxCandies = 0;
+        for (int i = 0; i < n; ++i) {
+            maxCandies = Math.max(maxCandies, candies[i]);
+        }
+
+        List<Boolean> result = new ArrayList<Boolean>();
+        for (int i = 0; i < n; ++i) {
+            result.add(candies[i] + extraCandies >= maxCandies);
+        }
+        return result;
+    }
+}
+```
 
 
 
