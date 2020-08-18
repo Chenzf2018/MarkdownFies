@@ -13,8 +13,8 @@ Java是一门面向对象的语言，就免不了**处理对象**；为了方便
 数组和合集的区别:
 
 - 长度的区别
-  - 数组的长度固定；
-  - 合集的长度可变。
+  - **数组的长度固定**；
+  - **合集的长度可变**。
 
 - 元素的数据类型
   - 数组可以存储**基本数据类型**，也可以存储**引用类型**；
@@ -27,14 +27,15 @@ Java容器主要是由两大接口(Interface)派生出来的：`Collection`和`M
 
 Java集合框架支持以下两种类型的容器：
 
+
 - 为了存储**键/值对**，称为**映射表(map)**。
-  - 如果要**保持插入顺序**的，我们可以选择`LinkedHashMap`；
-  - 如果不需要则选择`HashMap`；
-  - 如果要**排序**则选择`TreeMap`。
+  - 映射表(map) 是一种依照**键/值对**存储元素的容器。它提供了**通过键快速获取、删除和更新键/值对**的功能。
+  - 在`Map`中，键可以是**任意类型的对象**。映射表中**不能有重复的键**，每个键都对应一个值。
+  - 如果要**保持插入顺序**的，我们可以选择`LinkedHashMap`；如果**不需要**则选择`HashMap`；如果要**排序**则选择`TreeMap`。
 - 为了存储**一个元素**合集，简称为**合集(collection)**；
-  - `Set`用于存储一组**不重复**的元素。
-  - `List`用于存储一个**有序**元素合集，List大小可以**动态扩展**。
-    - `Stack`用千存储采用**后进先出**方式处理的对象。
+  - `Set`用于存储一组**无序、不重复**的元素。
+  - `List`用于存储一个**有序、可重复**元素合集，List大小可以**动态扩展**。
+    - `Stack`用于存储采用**后进先出**方式处理的对象。
   - `Queue`用于存储采用**先进先出**方式处理的对象。
     - `Priority Queue`用于存储按照**优先级顺序**处理的对象。
 
@@ -133,12 +134,43 @@ The statement in line 23 uses a `lambda expression` in (a), which is equivalent 
 `List`集合常用的子类有三个：
 - ArrayList
     底层数据结构是**数组**。线程**不安全**。
+    - `ArrayList`是基于**动态数组**实现的，在增删时候，需要数组的**拷贝复制**(`navite`方法由C/C++实现)。
+    - `ArrayList`的**默认初始化容量是10，每次扩容时候增加原先容量的一半**，也就是变为原来的**1.5倍**。
+    - 删除元素时不会减少容量，若希望减少容量则调用`trimToSize()`。
+    - 它**不是线程安全的**。它能存放`null`值。
+
 
 - LinkedList
     底层数据结构是**链表**。线程**不安全**。
 
 - Vector
     底层数据结构是**数组**。线程**安全**。
+
+
+**`ArrayList`与`LinkedList`对比**
+
+- 两者在**实现层面**的区别是：
+
+  - ArrayList是用一个**可扩容的数组**来实现的(re-sizing array)；
+    - ArrayList的最大特点就是能**随机访问**，因为元素在物理上是连续存储的，所以访问的时候，可以通过简单的算法直接定位到指定位置，所以不管队列的元素数量有多少，总能在$O(1)$的时间里定位到指定位置，但是**连续存储也是它的缺点，导致要在中间插入一个元素的时候，所有之后的元素都要往后挪动**。
+  - LinkedList是用doubly-linked list来实现的。
+    - LinkedList的插入**只需要调整前后元素的引用**即可。
+
+
+- **查询**多用`ArrayList`，**增删**多用`LinkedList`。
+
+    - `ArrayList`增删慢不是绝对的(在数量大的情况下，已测试)：
+      - 如果增加元素一直是使用`add()`(**增加到末尾**)的话，那是`ArrayList`要快；
+      - 一直**删除末尾**的元素也是`ArrayList`要快(不用复制移动位置)；
+      - 至于如果删除的是**中间的位置**的话，还是`ArrayList`要快！
+    - 如果删除的是中间的位置的话，需要两个步骤：1.遍历**找到这个元素**；2.进行删除增加操作。**大样本时，`ArrayList`的第一步操作会快很多**。
+  - 如果**不考虑找到这个元素的时间**，**<font color=red>数组因为物理上的连续性</font>**，当要增删元素时，在尾部还好，但是其他地方就会导致**后续元素都要移动**，所以效率较低；而**链表**则可以轻松的断开和下一个元素的连接，直接插入新元素或者移除旧元素。
+
+
+<div align=center><img src=DataStructure\List总结.jpg></div>
+
+
+
 
 `Arraylist`和`Linkedlist`定义在`List`接口下。`List`接口继承`Collection`接口，定义了一个**允许重复**的**有序**合集。
 
@@ -548,17 +580,27 @@ Stack是**后进先出**(LIFO)的线性数据结构。leetcode中“**有效的�
 <div align=center><img src=DataStructure\List总结.jpg></div>
 
 
-# Comparator接口
+# Comparator与Comparable接口
+
 
 `Comparable-->compareTo`；`Comparator-->compare`
 
-Java API的一些类，比如`String`、`Date`、`Calendar`、`BigInteger`、`BigDecimal`以及所有**基本类型的数字包装类**都实现了`Comparable`接口。<font color=red>`Comparable`接口定义了`compareTo`方法，用于比较实现了`Comparable`接口的**同一个类**的两个元素</font>。
+- **<font color=red>`Comparable`用于比较实现`Comparable`的类的对象；`Comparator`用于比较没有实现`Comparable`的类的对象**。
+
+- 使用`Comparable`接口来比较元素称为使用**自然顺序**(natural order)进行比较，使用`Comparator`接口来比较元素被称为使用**比较器**来进行比较</font>。
+
+Java API的一些类，比如`String`、`Date`、`Calendar`、`BigInteger`、`BigDecimal`以及所有**基本类型的数字包装类**都实现了`Comparable`接口。<font color=red>`Comparable`接口定义了`compareTo`方法，用于比较实现了`Comparable`接口的<u>同一个类</u>的两个元素</font>。
+
+- Java提供了**只包含一个`compareTo()`方法的`Comparable`接口**。这个方法可以个**给两个对象排序**。具体来说，它返回**负数，0，正数**来表明输入**对象小于，等于，大于已经存在的对象**。
+
 
 **如果元素的类没有实现Comparable接口又将如何呢**？这些元素可以比较么？
 
-可以定义一个**比较器**(comparator)来比较**不同类**的元素。要做到这一点，需要创建一个实现`java.util.Comparator<T>`接口的类并重写它的`compare`方法。
+可以定义一个**比较器**(comparator)来比较<font color=red>不同类</font>的元素。要做到这一点，需要创建一个实现`java.util.Comparator<T>`接口的类并重写它的`compare`方法。
 `public int compare(T elementl, T element2)`
 >如果`element1`**小于**`element2`, 就返回一个**负值**； 如果`element1`**大于**`element2`, 就返回一个**正值**； 若两者**相等**， 则返回**0**。
+
+- Java提供了**包含`compare()`和`equals()`两个方法的`Comparator`接口**。`compare()`方法用来给两个输入参数排序，返回**负数，0，正数**表明第一个参数是小于，等于，大于第二个参数。`equals()`方法需要一个对象作为参数，它用来决定输入参数是否和`comparator`相等。只有当输入参数也是一个`comparator`并且输入参数和当前`comparator`的排序结果是相同的时候，这个方法才返回`true`。
 
 ```java
 // GeometricObjectComparator.java
@@ -805,7 +847,7 @@ public class PriorityQueueDemo
 
 Set集合常用子类：
 - HashSet集合
-    采用Hashmap的key来储存元素，主要特点是**无序**的，基本操作都是$O(1)$的时间复杂度，很快。
+    采用Hashmap的key来储存元素，主要特点是**无序、不重复**的，基本操作都是$O(1)$的时间复杂度，很快。
 
 - TreeSet集合
     - 底层数据结构是**红黑树**(是一个自平衡的二叉树)
@@ -813,7 +855,7 @@ Set集合常用子类：
     - 可以用**自然排序**或者**自定义比较器**来排序
 
 - LinkedHashSet集合
-    是一个`HashSet + LinkedList的`结构，特点就是既拥有了$O(1)$的时间复杂度，又能够**保留插入的顺序**。
+    是一个`HashSet + LinkedList的`结构，特点就是**既拥有了$O(1)$的时间复杂度**，又能够**保留插入的顺序**。
 
 `Set`接口扩展了`Collection`合集接口：
 <div align=center><img src=DataStructure\集合类.jpg width=80%></div>
@@ -1258,17 +1300,13 @@ The number of keywords in D:\Learning_Java\Java_Code\Inheritance\src\inheritance
 
 映射表(map)类似于目录，提供了使用**键key**快速查询和荻取**值value**的功能。
 
-映射表(map) 是一种依照**键/值对**存储元素的容器。它提供了**通过键快速获取、删除和更新键/值对**的功能。映射表将值和键一起保存。键很像下标。在`List`中，下标是整数；而在`Map`中，键可以是**任意类型的对象**。映射表中**不能有重复的键**，每个键都对应一个值。一个键和它的对应值构成一个条目并保存在映射表中。
+映射表(map) 是一种依照**键/值对**存储元素的容器。它提供了**通过键快速获取、删除和更新键/值对**的功能。映射表将值和键一起保存。键很像下标。在`List`中，下标是整数；而在`Map`中，键可以是**任意类型的对象**。映射表中<font color=red>不能有重复的键</font>，每个键都对应一个值。一个键和它的对应值构成一个条目并保存在映射表中。
 
 <div align=center><img src=DataStructure\映射表.jpg></div>
 
 
 **链表**和**数组**都可以按照人们的意愿来排列元素的次序，他们可以说是有序的(存储的顺序和取出的顺序是一致的)。但同时，这会带来缺点：想要获取某个元素，就要访问所有的元素，直到找到为止。而**散列表**不在意元素的顺序，能够快速的查找元素的数据。
 
-Map有三种遍历方式：
-1. 通过遍历**KeySet**来遍历所有键值对
-2. 通过遍历**EntrySe**t来实现
-3. 通过**EntrySet的Iterator**来遍历。
 
 
 ## 散列表Hash Table工作原理
@@ -1289,6 +1327,9 @@ Map有三种遍历方式：
 `HashMap`、`LinkedHashMap`和`TreeMap`类是`Map`接口的三个具体实现：
 
 <div align=center><img src=DataStructure\三种映射表关系.jpg width=80%></div>
+
+
+<div align=center><img src=DataStructure\Map总结.jpg></div>
 
 对于**定位**一个值、**插入**一个条目以及**删除**一个条目而言，`HashMap`类是高效的。
 
@@ -1322,10 +1363,46 @@ public class Test {
 }
 ```
 
-Map有三种遍历方式：
-1. 通过遍历**KeySet**来遍历所有键值对
-2. 通过遍历**EntrySe**t来实现
-3. 通过**EntrySet的Iterator**来遍历。
+### HashMap遍历方式：
+
+1. 通过遍历**entrySet**来实现
+    ```java
+    Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+    for(Map.Entry<Integer, Integer> entry : map.entrySet()){
+        System.out.println("key = " + entry.getKey() + ", value = " + entry.getValue())
+    }
+    ```
+2. 通过遍历**keySet、value**来遍历所有键值对
+    ```java
+    Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+ 
+    //iterating over keys only
+    for (Integer key : map.keySet()) {
+	    System.out.println("Key = " + key);
+    }
+ 
+    //iterating over values only
+    for (Integer value : map.values()) {
+	    System.out.println("Value = " + value);
+    }
+    ```
+3. 通过**entrySet的Iterator**来遍历。
+    ```java
+    Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+    Iterator<Map.Entry<Integer, Integer>> entries = map.entrySet().iterator();
+    while (entries.hasNext()) {
+	    Map.Entry<Integer, Integer> entry = entries.next();
+	    System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+    }
+    ```
+4. 迭代keys并搜索values（低效的）
+    ```java
+    Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+    for (Integer key : map.keySet()) {
+	    Integer value = map.get(key);
+	    System.out.println("Key = " + key + ", Value = " + value);
+    }
+    ```
 
 对于HashMap中的每个key，首先通过`hash function`计算出**一个hash值**，这个hash值就代表了在buckets里的编号，而buckets实际上是用**数组**来实现的，由于**桶有可能比数组大**，所以**把这个数值模上数组的长度**得到它**在数组的index**，就这样把它放在了数组里。
 
@@ -1345,9 +1422,13 @@ https://www.jianshu.com/p/8324a34577a0
 
 ### 概述
 
-HashMap存储的是key-value的键值对，允许key为null，也允许value为null。
+对于HashMap中的每个key，首先通过`hash function`计算出**一个hash值**，这个hash值就代表了在buckets里的编号，而buckets实际上是用**数组**来实现的，由于**桶有可能比数组大**，所以**把这个数值模上数组的长度**得到它**在数组的index**，就这样把它放在了数组里。
 
-HashMap内部为**数组+链表**的结构，会**根据key的hashCode值来确定数组的索引**(确认放在哪个桶里)。**遇到索引相同的key，那么他们就会被分到一个桶中(hash冲突)**。**如果发生hash冲突，HashMap会将同一个桶中的数据以链表的形式存储**，但是如果发生hash冲突的概率比较高，就会导致**同一个桶中的链表长度过长**，遍历效率降低，所以在JDK1.8中**如果链表长度到达阀值(默认是8)，就会将链表转换成红黑二叉树**。
+<div align=center><img src=DataStructure\HashMap18.webp></div>
+
+HashMap存储的是key-value的键值对，**允许key为null，也允许value为null**。
+
+JDK 1.7中HashMap内部为**数组+链表**的结构，会**根据key的hashCode值来确定数组的索引**(确认放在哪个桶里)。**遇到索引相同的key，那么他们就会被分到一个桶中(hash冲突)**。**如果发生hash冲突，HashMap会将同一个桶中的数据以链表的形式存储**，但是如果发生hash冲突的概率比较高，就会导致**同一个桶中的链表长度过长**，遍历效率降低，所以在JDK1.8中**如果链表长度到达阀值(默认是8)，就会将链表转换成红黑二叉树**。
 
 
 - 无序，允许为`null`，**非同步**；
@@ -1510,7 +1591,7 @@ HashMap的**默认初始长度是16**，并且每次自动扩展或是手动初�
 
 我们通过**利用Key的HashCode值来做某种运算**。
 
-为了实现高效的Hash算法，采用了**位运算**：`index = HashCode(Key) & (Length - 1)`，其中Length是**HashMap的长度**。
+**为了实现高效的Hash算法，采用了<font color=red>位运算：`index = HashCode(Key) & (Length - 1)`其中Length是HashMap的长度</font>**。
 
 以值为“book”的Key来演示整个过程：
 
@@ -1518,7 +1599,7 @@ HashMap的**默认初始长度是16**，并且每次自动扩展或是手动初�
 2. 假定HashMap长度是默认的16，计算Length-1的结果为十进制的15，**二进制的1111**。
 3. 把以上两个结果做**与运算**，101110001110101110 1001 & 1111 = 1001，十进制是9，所以 index=9。
 
-可以说，**Hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位**。
+可以说，**<font color=red>Hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位</font>**。
 
 如果取HashMap长度为10，有些index结果的出现几率会更大，而有些index结果永远不会出现（比如0111）！这样，显然不符合**Hash算法均匀分布**的原则。
 
@@ -1575,10 +1656,10 @@ static final int MIN_TREEIFY_CAPACITY = 64;
 
 **为什么在JDK1.8中进行对HashMap优化的时候，把链表转化为红黑树的阈值是8,而不是7或者不是20呢？**
 
-- 如果选择6和8（如果链表小于等于6树还原转为链表，大于等于8转为树），中间有个差值7可以**有效防止链表和树频繁转换**。
+- 如果选择6和8（如果链表小于等于6树还原转为链表，大于等于8转为树），**中间有个差值7<font color=red>可以有效防止链表和树频繁转换</font>**。
   假设设计成链表个数超过8则链表转换成树结构，链表个数小于8则树结构转换成链表，如果一个HashMap不停的插入、删除元素，链表个数在8左右徘徊，就会频繁的发生树转链表、链表转树，效率会很低。
   
-- 由于TreeNodes的大小大约是常规节点的两倍，因此我们仅在容器包含足够的节点以保证使用时才使用它们，当它们变得太小（由于移除或调整大小）时，它们会被转换回普通的node节点，**容器中节点分布在hash桶中的频率遵循泊松分布，桶的长度超过8的概率非常非常小**。所以作者应该是根据概率统计而选择了8作为阀值。
+- 由于TreeNodes的大小大约是常规节点的两倍，因此我们仅在容器包含足够的节点以保证使用时才使用它们，当它们变得太小（由于移除或调整大小）时，它们会被转换回普通的node节点，**<font color=red>容器中节点分布在hash桶中的频率遵循泊松分布，桶的长度超过8的概率非常非常小</font>**。所以作者应该是根据概率统计而选择了8作为阀值。
   - 理想情况下，HashCode随机分布，当负载因子设置成0.75时，那么在桶中元素个数的概率大致符合0.5的泊松分布，**桶中元素个数达到8的概率小于千万分之一**，因为转化为红黑树还是比较耗时耗力的操作，自然不希望经常进行，但如果设置得过大，将失去设置该值的意义。 
 
 ```
@@ -1728,10 +1809,6 @@ Hash，一般翻译做**散列**，也有直接音译为**哈希**的，就是**
 
 因为**HashMap扩容每次都是扩容为原来的2倍**，所以length总是2的次方，这是非常规的设置，常规设置是把桶的大小设置为素数，因为素数发生hash冲突的概率要小于合数，比如HashTable的默认值设置为11，就是桶的大小为素数的应用(HashTable扩容后不能保证是素数)。HashMap采用这种设置是为了在取模和扩容的时候做出优化。
 
-hashMap是通过**key的hashCode的高16位和低16位异或(不同则为1)**后和桶的数量**取模**得到**索引位置**，即`key.hashcode()^(hashcode>>>16)%length`，当length是2^n时，`h & (length-1)`运算等价于`h % length`，而&操作比%效率更高。而**采用高16位和低16位进行异或，也可以让所有的位数都参与运算，使得在length比较小的时候也可以做到尽量的散列**。
-
-在**扩容**的时候，**如果length每次是2^n**，那么重新计算出来的索引只有两种情况，一种是**old索引+16**，另一种是**索引不变**，所以就**不需要每次都重新计算索引**(JDK1.7中HashMap需要)。
-
 #### 扰动函数
 
 
@@ -1760,9 +1837,19 @@ static int indexFor(int h, int length) {
 }
 ```
 
+JDK 1.8中HashMap是通过<font color=red>key的hashCode的高16位和低16位异或(不同则为1)后和桶的数量取模得到索引位置</font>，即`key.hashcode()^(hashcode>>>16)%length`，当length是$2^n$时，`h & (length-1)`运算等价于`h % length`，而`&`操作比`%`效率更高。而<font color=red>采用高16位和低16位进行异或，也可以让所有的位数都参与运算，使得在length比较小的时候也可以做到尽量的散列</font>。
+
+在**扩容**的时候，**如果length每次是2^n**，那么重新计算出来的索引只有两种情况
+- 一种是**old索引+16**
+- 另一种是**索引不变**
+
+所以就**不需要每次都重新计算索引**(JDK1.7中HashMap需要)。
+
+
+
 `key.hashCode()`函数调用的是key键值类型自带的哈希函数，**返回int型散列值**。理论上散列值是一个int型，如果直接拿散列值作为下标访问HashMap主数组的话，考虑到2进制32位带符号的int表值范围从-2147483648到2147483648，前后加起来大概40亿的映射空间。只要**哈希函数映射得比较均匀松散**，一般应用是很难出现碰撞的。
 
-但问题是一个40亿长度的数组，内存是放不下的。HashMap扩容之前的数组初始大小才16。所以**这个散列值是不能直接拿来用的**。**用之前还要先做对数组的长度取模运算，得到的余数才能用来访问数组下标**。源码中模运算是在这个`indexFor( )`函数中完成：`bucketIndex = indexFor(hash, table.length);`。
+但**问题是<font color=red>一个40亿长度的数组，内存是放不下的</font>。HashMap扩容之前的数组初始大小才16。所以<font color=red>这个散列值是不能直接拿来用的。用之前还要先做对数组的长度取模运算，得到的余数才能用来访问数组下标</font>**。源码中模运算是在这个`indexFor( )`函数中完成：`bucketIndex = indexFor(hash, table.length);`。
 
 `indexFor`的代码也很简单，就是把**散列值和数组长度**做一个“与”运算：
 ```java
@@ -1937,7 +2024,7 @@ final Node<K,V> getNode(int hash, Object key) {
 
 **计算存放在数组table中的位置（即数组下标、索引）的过程**：
 
-<div align=center><img src=DataStructure\HashMap2.webp width=70%></div>
+<div align=center><img src=DataStructure\HashMap2.webp></div>
 
 **计算示意图：**
 
@@ -2370,6 +2457,8 @@ Entry3.next = Entry2
 https://blog.csdn.net/qq_36520235/article/details/82417949
 
 
+
+
 1. JDK1.7用的是**头插法**，而JDK1.8及之后使用的都是**尾插法**。
    
    那么他们为什么要这样做呢？
@@ -2380,8 +2469,24 @@ https://blog.csdn.net/qq_36520235/article/details/82417949
    - 而在JDK1.8的时候直接用了JDK1.7的时候计算的规律，却简化成**扩容前的原始位置+扩容的大小值=JDK1.8的计算方式**。这种方式相当于**只需要判断Hash值的新增参与运算的位是0还是1**就直接迅速计算出了扩容后的储存方式。
 3. JDK1.7的时候使用的是**数组+单链表**的**数据结构**。但是在JDK1.8及之后时，使用的是**数组+链表+红黑树**的数据结构（当链表的深度达到8的时候，也就是默认阈值，就会**自动扩容把链表转成红黑树的数据结构**来把时间复杂度从$O(n)$变成$O(logN)$提高了效率）
 
+
+#### 三个维度区别
+
 **数据结构的区别：**
 <div align=center><img src=DataStructure\HashMap5.webp></div>
+
+```java {.line-numbers highlight=26-29}
+// 1. 桶的树化阈值：即 链表转成红黑树的阈值，在存储数据时，当链表长度 > 该值时，则将链表转换成红黑树
+static final int TREEIFY_THRESHOLD = 8;
+
+// 2. 桶的链表还原阈值：即 红黑树转为链表的阈值，当在扩容resize()时（此时HashMap的数据存储位置会重新计算），在重新计算存储位置后，当原有的红黑树内数量 < 6时，则将 红黑树转换成链表
+static final int UNTREEIFY_THRESHOLD = 6;
+
+// 3. 最小树形化容量阈值：即 当哈希表中的容量 > 该值时，才允许树形化链表（即 将链表 转换成红黑树）
+// 否则，若桶内元素太多时，则直接扩容，而不是树形化
+// 为了避免进行扩容、树形化选择的冲突，这个值不能小于 4 * TREEIFY_THRESHOLD
+static final int MIN_TREEIFY_CAPACITY = 64;
+```
 
 **插入数据的区别：**
 <div align=center><img src=DataStructure\HashMap.webp></div>
