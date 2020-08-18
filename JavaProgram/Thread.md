@@ -1984,6 +1984,70 @@ God blesses you !  // 随后守护线程也结束了
 
 # 线程的同步(重点)
 
+<div align=center><img src=Thread\并发编程三大核心.png></div>
+
+## `synchronized`和`Lock`区别：
+
+* `synchronized`内置的Java**关键字**，`Lock`是一个Java**接口**；
+
+* `Lock`是显示锁（手动开启和关闭锁）必须手动释放锁！如果不释放，则会出现死锁；`sychronized`是隐式锁，出了作用域自动释放；
+
+
+* `synchronized`线程1（获得锁，阻塞）、线程2（等待，傻傻的等）；**`Lock`锁就不一定会等待下去（`lock.tryLock();`）**；
+
+* `synchronized`可重入锁，不可以中断的，**非公平**；`Lock`可重入锁，可以判断锁，是否公平可以自己设置；
+* `synchronized`适合锁少量的代码同步问题，`Lock`适合锁大量的同步代码！
+* 优先使用顺序：`Lock` > 同步代码块 > 同步方法
+
+## `synchronized`与`volatile`区别
+
+1. volatile本质是在告诉jvm**当前变量在寄存器（工作内存）中的值是不确定的，需要从主存中读取**；synchronized则是**锁定当前变量，只有当前线程可以访问该变量，其他线程被阻塞住**。
+
+2. volatile仅能使用在**变量级别**；synchronized则可以使用在**变量、方法、和类级别**的
+
+3. volatile仅能实现变量的**修改可见性，不能保证原子性**；而synchronized则可以**保证变量的修改可见性和原子性**
+
+4. volatile**不会造成线程的阻塞**；synchronized可能**会造成线程的阻塞**。
+
+5. volatile标记的变量不会被编译器优化；synchronized标记的变量可以被编译器优化
+
+
+**`count++`程序代码是一行，但是翻译成CPU指令却是三行**(可以用`javap -c`命令查看)。
+
+- `synchronized`是**独占锁/排他锁**（**有你没我**），同时只能有一个线程调用 `add10KCount`方法，其他调用线程会被阻塞。所以三行CPU指令都是同一个线程执行完之后别的线程才能继续执行，这就是通常说说的**原子性**（**线程执行多条指令不被中断**）——**<font color=red>保证原子性</font>**
+
+- 但`volatile`是**非阻塞算法**（**不排他**），**当遇到三行CPU指令自然就不能保证别的线程不插足了**，这就是通常所说的：**`volatile`<font color=red>能保证内存可见性，但是不能保证原子性</font>**。
+
+那什么时候才能用volatile关键字呢？
+
+**如果写入变量值不依赖变量当前值，那么就可以用volatile**！
+
+比如上面`count++`，是`获取-计算-写入`三步操作，也就是依赖当前值的，所以不能靠volatile解决问题。
+
+
+就好像：如果让你同一段时间内【写几行代码】就要去【数钱】，数几下钱就要去【唱歌】，唱完歌又要去【写代码】，反复频繁这样操作，还要接上上一次的操作（代码接着写，钱累加着数，歌接着唱）还需要保证不出错，你累不累？
+
+- synchronized是排他的，**线程排队就要有切换**，这个切换就好比上面的例子，**要完成切换，还得记准线程上一次的操作**，很累CPU大脑，这就是通常说的**上下文切换会带来很大开销**。
+
+- volatile就不一样了，它是非阻塞的方式，所以在**解决共享变量可见性问题**的时候，volatile就是synchronized的弱同步体现了。
+
+
+`Volatile`是Java虚拟机提供的**轻量级的同步机制**
+- 保证可见性
+- 不保证原子性
+- 禁止指令重排
+
+
+**`synchronized`关键字是怎么解决共享变量内存不可见性问题的呢？**
+
+- 【进入】synchronized块的内存语义是**把在synchronized块内使用的变量从线程的工作内存中清除，从主内存中读取**
+- 【退出】synchronized块的内存语义事把在synchronized块内对共享变量的修改**刷新到主内存中**
+
+在多线程下，处理共享变量时Java的内存模型：Java内存模型规定，将所有的变量都存放在**主内存**中，当线程使用变量时，会把主内存里面的变量复制到自己的工作空间或者叫作工作内存，**线程读写变量时操作的是自己工作内存中的变量**，处理完后将变量值更新到主内存。
+
+
+## 初识并发问题
+
 <font color=red>多个线程操作同一个资源——并发</font>。
 
 处理多线程问题时，多个线程**访问**同一个对象，并且某些线程还想**修改**这个对象，这时需要线程同步。<font color=red>线程同步其实就是一个**等待机制**，多个需要同时访问此对象的线程进入这个对象的**等待池**形成队列(排队)，等待前面线程使用完毕，下一个线程再使用</font>。
@@ -1997,8 +2061,6 @@ God blesses you !  // 随后守护线程也结束了
 * 在多线程竞争下，加锁、释放锁会导致比较多的上下文切换和调度延时，引起性能问题；
 * 如果一个优先级高的线程等待一个优先级低的线程释放锁，会导致<font color=red>优先级倒置</font>，引起性能问题。
 
-
-## 初识并发问题
 
 **并发**是指同**一个时间段内**多个任务同时都在执行，并且都没有执行结束，而**并行**是说在**单位时间内**多个任务同时在执行。并发任务强调在一个时间段内同时执行，而**一个时间段由多个单位时间累积而成**，所以说**并发的多个任务在单位时间内不一定同时在执行**。
 
@@ -2807,10 +2869,106 @@ thread线程：main线程
 ```
 
 
+## 原子类
+
+<div align=center><img src=Thread\并发编程三大核心.png></div>
+
+当程序更新一个变量时，如果是多线程同时更新这个变量，可能得到的结果与期望值不同。比如：有一个变量`i`，A线程执行`i+1`，B线程也执行`i+1`，经过两个线程的操作后，变量i的值可能不是期望的3，而是2。这是因为，可能在A线程和B线程执行的时候拿到的i的值都是1，这就是线程不安全的更新操作，通常我们会使用`synchronized`来解决这个问题，`synchronized`能保证多线程不会同时更新变量`i`。
+
+从java1.5开始，jdk提供了`java.util.concurrent.atomic`包，这个包中的原子操作类，提供了一种用法简单，性能高效，线程安全的更新一个变量的方式。
+
+`atomic`包里面一共提供了13个类，分为4种类型，分别是：原子更新基本类型，原子更新数组，原子更新引用，原子更新属性，这13个类都是使用Unsafe实现的包装类。
+
+
+- 原子变量提供了与`volatile`类型变量相同的内存语义，此外还支持原子性操作。从JDK1.5开始，提供了`java.util.concurrent.atomic`包，这个包中的原子操作提供了一种用法简单，性能高效，线程安全的更新一个变量的方式。原子类采用非阻塞算法CAS实现
+
+- 非阻塞算法可以使多个线程在竞争相同的数据时不会发生阻塞。独占锁可以看做是一种悲观锁，它假设只要有线程进入就会导致错误，因此只在确保无其它线程进入的时候才进行操作；非阻塞算法，则只关心结果，如果结果错误了，那么重新再来，对于错误选择原谅，而不是想进办法防止其它线程进入，使用非阻塞算法无需关心其它线程。
+
+Java中对非阻塞算法的支持是`java.util.concurrent.atomic`包中的原子类。
+
+
+
+
+
+原子类划分
+- 基本类型：`AtomicBoolean, AtomicInteger, AtomicLong`
+- 数组：`AtomicIntegerArray, AtomicLongArray, AtomicRefernceArray`
+- 引用类型：`AtomicReference, AtomicReferenceFieldUpdater, AtomicMarkableReference`
+- 字段类：`AtomicIntegerFieldUpdater, AtomicLongFieldUpdater, AtomicStampedReference`
+
+
+无锁总是假设对共享资源的访问没有冲突，线程可以不停执行，无需加锁，无需等待，一旦发生冲突，**无锁策略可以采用一种名为CAS的技术来保证线程执行的安全性**，这项CAS技术就是无锁策略实现的关键。
+
+所谓原子操作是指**不会被线程调度机制打断的操作**；**这种操作一旦开始，就一直运行到结束，中间不会有任何context switch**。
+
+**原子类的操作本质上都是CAS算法的实现**。
+
+CAS算法过程：
+CAS包含了3个操作数，需要读写的内存位置V，进行比较的值E(exists)，和要写入的值N(new)。
+**当且仅当V的值等于E的值的时候，才会把V的值设置成N。最后CAS返回V的真实值**。
+
+CAS由于是在硬件方面保证的原子性，不会锁住当前线程，所以执行效率是很高的。
+
+### CAS三大问题
+
+CAS虽然很高效，但是它也存在三大问题：
+
+- **ABA问题**。
+  - CAS需要在操作值的时候检查内存值是否发生变化，没有发生变化才会更新内存值。但是**如果内存值原来是A，后来变成了B，然后又变成了A，那么CAS进行检查时会发现值没有发生变化，但是实际上是有变化的**。
+  - ABA问题的解决思路就是**在变量前面添加版本号**，每次变量更新的时候都把版本号加一，**这样变化过程就从“A－B－A”变成了“1A－2B－3A”**。
+  - JDK从1.5开始提供了`AtomicStampedReference`类来解决ABA问题，具体操作封装在`compareAndSet()`中。`compareAndSet()`首先检查当前引用和当前标志与预期引用和预期标志是否相等，如果都相等，则以原子方式将引用值和标志的值设置为给定的更新值。
+
+- **循环时间长开销大**。
+  - CAS操作如果长时间不成功，会导致其一直自旋，给CPU带来非常大的开销。
+
+- **只能保证一个共享变量的原子操作**。
+  - 对一个共享变量执行操作时，CAS能够保证原子操作，但是对多个共享变量操作时，CAS是无法保证操作的原子性的。
+  - Java从1.5开始JDK提供了`AtomicReference`类来保证引用对象之间的原子性，可以把多个变量放在一个对象里来进行CAS操作。
+
+
+### 原子性操作的三种方式对比
+
+- SYNCHRONIZED关键字：
+  - 不能中断锁，**适合竞争不激烈的情况，竞争激烈后会造成很多线程阻塞**，代码简单，可读性好
+
+- LOCK锁
+  - 可以中断锁，可以选择性的唤醒锁实现多样化同步，竞争激烈时可以维持常态
+
+- ATOMIC原子类
+  - 竞争激烈时性能比Lock锁好，但是**只能同步单一的值**
+
 
 ## synchronized
 
 <div align=center><img src=Thread\并发编程三大核心.png></div>
+
+### synchronized的三种用法
+
+```java
+public class ThreeSync {
+    private static final Object object = new Object();
+    
+    public synchronized void normalSyncMethod(){
+        //临界区
+    }
+    
+    public static synchronized void staticSyncMethod(){
+        //临界区
+    }
+    
+    public void syncBlockMethod(){
+        synchronized (object){
+            //临界区
+        }
+    }
+}
+```
+
+三种`synchronized`锁的内容有一些差别:
+
+- 对于**普通同步方法**，锁的是**当前实例对象**，通常指`this`；
+- 对于**静态同步方法**，锁的是当前类的**Class对象**，如`ThreeSync.class`；
+- 对于**同步方法块**，锁的是**synchronized括号内的对象**。
 
 **原子性问题的源头就是线程切换**，但在多核CPU的大背景下，不允许线程切换是不可能的。
 
@@ -2840,7 +2998,7 @@ thread线程：main线程
 
 ### 临界区
 
-#### synchronized的三种用法
+**synchronized的三种用法**
 
 ```java
 public class ThreeSync {
@@ -3590,6 +3748,34 @@ public class TestThread {
 
 一个同步方法在执行之前需要加锁。锁是一种实现资源排他使用的机制。对于**实例方法**，要给**调用该方法的对象加锁**。对于**静态方法**，要给这个**类**加锁。
 
+#### synchronized的三种用法
+
+```java
+public class ThreeSync {
+    private static final Object object = new Object();
+    
+    public synchronized void normalSyncMethod(){
+        //临界区
+    }
+    
+    public static synchronized void staticSyncMethod(){
+        //临界区
+    }
+    
+    public void syncBlockMethod(){
+        synchronized (object){
+            //临界区
+        }
+    }
+}
+```
+
+三种`synchronized`锁的内容有一些差别:
+
+- 对于**普通同步方法**，锁的是**当前实例对象**，通常指`this`；
+- 对于**静态同步方法**，锁的是当前类的**Class对象**，如`ThreeSync.class`；
+- 对于**同步方法块**，锁的是**synchronized括号内的对象**。
+
 **synchronized锁的对象是方法的调用者（一个对象）**：**先调用先执行**！不看延时情况！
 ```java
 package Lock;
@@ -4055,9 +4241,9 @@ class Phone7
 
 ### 产生死锁的四个必要条件
 
-* **互斥**条件：指线程对己经获取到的资源进行**排它性使用**，即该资源同时只由一个线程占用。如果此时还有其他线程请求获取该资源，则请求者只能等待，直至占有资源的线程释放该资源；
-* **请求并持有**条件：一个线程己经持有了至少一个资源，但又提出了新的资源请求，而新资源己被其他线程占有，所以当前线程会被阻塞，但阻塞的同时并不释放自己己经获取的资源；
-* **不可剥夺条件**：指线程获取到的资源在自己使用完之前不能被其他线程抢占，只有在自己使用完毕后才由自己释放该资源；
+* **互斥**条件：指线程对己经获取到的资源进行**排它性使用**，即**该资源同时只由一个线程占用。如果此时还有其他线程请求获取该资源，则请求者只能等待，直至占有资源的线程释放该资源**；
+* **请求并持有**条件：**一个线程己经持有了至少一个资源，但又提出了新的资源请求，而新资源己被其他线程占有**，所以当前线程会被阻塞，但阻塞的同时并不释放自己己经获取的资源；
+* **不可剥夺条件**：指**线程获取到的资源在自己使用完之前不能被其他线程抢占**，只有在自己使用完毕后才由自己释放该资源；
 * **环路等待**条件：若干线程之间形成一种**头尾相接的循环等待资源关系**。
 
 ### 死锁示例
@@ -4165,7 +4351,7 @@ synchronized内置锁非常执着，它会告诉你「死等」，最终出现�
 
 ### 避免线程死锁
 
-要想避免死锁，只需要破坏掉至少一个构造死锁的必要条件即可。互斥条件是并发编程的根基，这个条件没办法改变。根据操作系统的知识，目前只有**请求并持有**和**环路等待条件**是可以被破坏的。
+要想避免死锁，只需要破坏掉至少一个构造死锁的必要条件即可。**互斥条件是并发编程的根基，这个条件没办法改变**。根据操作系统的知识，目前只有**请求并持有**和**环路等待条件**是可以被破坏的。
 
 造成死锁的原因其实和**申请资源的顺序**有很大关系，**使用资源申请的有序性原则**就可以避免死锁。
 
@@ -4262,7 +4448,7 @@ public class AccountBookManager {
 
 #### 破坏不可剥夺条件
 
-为了解决内置锁的执着，Java显示锁支持通知(notify/notifyall)和等待(wait)，也就是说该功能可以实现喊一嗓子*老铁，铁蛋儿的账本先给我用一下，用完还给你*的功能。
+为了解决内置锁的执着，Java显示锁支持**通知(notify/notifyall)和等待(wait)**，也就是说该功能可以实现喊一嗓子*老铁，铁蛋儿的账本先给我用一下，用完还给你*的功能。
 
 #### 破坏环路等待条件
 
@@ -4493,6 +4679,8 @@ FutureTask中的cancel方法，如果传入的参数为true，它将会在正在
 
 ## Lock锁
 
+<div align=center><img src=Thread\并发编程三大核心.png></div>
+
 &emsp;&emsp;Java可以**显式地加锁**，这给协调线程带来了更多的控制功能。一个锁是一个`Lock`接口的实例，它定义了加锁和释放锁的方法。
 
 * 从`JDK5.0`开始，`Java`提供了更强大的线程同步机制——通过显示定义同步锁对象来实现同步。同步锁使用`Lock`对象充当。
@@ -4538,9 +4726,9 @@ public ReentrantLock(boolean fair)
 
 ### Java SDK为什么要设计Lock
 
-四个可以发生死锁的情形，其中【不可剥夺条件】是指：线程已经获得资源，在未使用完之前，不能被剥夺，只能在使用完时自己释放。
+四个可以发生死锁的情形，其中【不可剥夺条件】是指：**线程已经获得资源，在未使用完之前，不能被剥夺，只能在使用完时自己释放**。
 
-要想破坏这个条件，就需要具有申请不到进一步资源就释放已有资源的能力。很显然，这个能力是synchronized不具备的，使用synchronized，如果线程申请不到资源就会进入阻塞状态，我们做什么也改变不了它的状态，这是synchronized的致命弱点，这就强有力的给了Lock出现的理由。
+**要想破坏这个条件，就需要具有申请不到进一步资源就释放已有资源的能力**。很显然，这个能力是synchronized不具备的，**使用synchronized，如果线程申请不到资源就会进入阻塞状态**，我们做什么也改变不了它的状态，这是synchronized的致命弱点，这就强有力的给了Lock出现的理由。
 
 
 ### 显式锁Lock
@@ -5317,6 +5505,12 @@ https://dayarch.top/p/java-aqs-and-reentrantlock.html
 - 不保证原子性
 - 禁止指令重排
 
+
+**`synchronized`关键字是怎么解决共享变量内存不可见性问题的呢？**
+
+- 【进入】synchronized块的内存语义是**把在synchronized块内使用的变量从线程的工作内存中清除，从主内存中读取**
+- 【退出】synchronized块的内存语义事把在synchronized块内对共享变量的修改**刷新到主内存中**
+
 在多线程下，处理共享变量时Java的内存模型：Java内存模型规定，将所有的变量都存放在**主内存**中，当线程使用变量时，会把主内存里面的变量复制到自己的工作空间或者叫作工作内存，**线程读写变量时操作的是自己工作内存中的变量**，处理完后将变量值更新到主内存。
 
 ### JMM
@@ -6085,6 +6279,15 @@ Monitor是线程私有的数据结构，每一个线程都有一个可用monitor
 
 
 # 线程通信
+
+<div align=center><img src=Thread\并发编程三大核心.png></div>
+
+
+**使用synchronized：`synchronized`、`wait`、`notifyAll`**
+
+**使用JUC.Condition：`lock`、`await`、`signal`**
+
+**`Lock`替换`synchronized`方法和语句的使用；`Condition`取代了对象监视器方法的使用。**
 
 - [并发编程为什么会有等待/通知机制](#破坏不可剥夺条件)？
 - 如何应用等待/通知机制？
@@ -7571,6 +7774,9 @@ public class SemaphoreDemo
 
 
 # 线程池
+
+<div align=center><img src=Thread\并发编程三大核心.png></div>
+
 &emsp;&emsp;**经常创建和销毁、使用量特别大的资源**，比如并发情况下的线程，对性能影响很大。因此，可以**提前创建好多个线程，放入线程池中，使用时直接获取，使用完放回池中**。可以避免频繁创建、销毁，实现重复利用。<font color=red>类似每次需要骑车时，去站点使用共享单车，而不是每次都去买一辆</font>。 
 
 这么做可以：
@@ -7709,6 +7915,8 @@ pool-1-thread-2
 ## 线程池三大方法、七大参数、四种拒绝策略
 
 ### 三大方法
+
+三大方法本质都是调用`ThreadPoolExecutor`
 
 ```java
 ExecutorService threadPool = Executors.newSingleThreadExecutor();// 单个线程
@@ -7849,6 +8057,11 @@ public ThreadPoolExecutor(int corePoolSize,  // 1.核心线程池大小；线程
 
 《阿里巴巴Java手册》建议：**线程池不允许使用`Executors`去创建，而是通过`ThreadPoolExecutor`的方式**，可以更明确线程池的运行规则，规避资源耗尽的风险。
 
+- 情形一：**当池中正在运行的线程数（包括空闲线程数）小于`corePoolSize`时，新建线程执行任务**
+- 情形二：**当池中正在运行的线程数大于等于`corePoolSize`时，**新插入的任务进入`workQueue`排队**(如果`workQueue`长度允许)，等待空闲线程来执行**。
+- 情形三：**当队列里的任务达到上限，并且池中正在进行的线程小于`maxinumPoolSize`，对于新加入的任务，新建线程**。
+- 情形四：**队列里的任务达到上限，并且池中正在运行的线程等于`maximumPoolSize`，对于新加入的任务，执行拒绝策略（线程池默认的策略是抛异常）**。
+
 <div align=center><img src=Thread\ThreadPoolExecutor任务调度流程图.png></div>
 
 
@@ -7863,8 +8076,10 @@ By setting corePoolSize and maximumPoolSize the same, you create a fixed-size th
 
 https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html
 
-1. 当池中正在运行的线程数（包括空闲线程数）小于`corePoolSize`时，新建线程执行任务：
-   `If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.`
+#### 情形一
+
+**当池中正在运行的线程数（包括空闲线程数）小于`corePoolSize`时，新建线程执行任务**：
+`If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.`
 
 ```java
 package Thread;
@@ -7903,8 +8118,10 @@ public class TestThreadPoolExecutor {
 ```
 当执行任务一的线程（thread-1）执行完成之后，任务二并没有去复用thread-1而是新建线程（thread-2）去执行任务
 
-2. 当池中正在运行的线程数大于等于`corePoolSize`时，**新插入的任务进入`workQueue`排队**(如果`workQueue`长度允许)，等待空闲线程来执行。
-   `If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.`
+#### 情形二
+
+**当池中正在运行的线程数大于等于`corePoolSize`时，**新插入的任务进入`workQueue`排队**(如果`workQueue`长度允许)，等待空闲线程来执行**。
+`If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.`
 
 ```java
 package HowJThread.ThreadPools;
@@ -7953,7 +8170,10 @@ public class TestThreadPoolExecutor {
 ```
 任务二在执行过程中，不会为任务三新建线程，因为**有一个空的队列**，先将其放入队列中，等thread-1执行完任务一，再去执行任务三。此时，`maximumPoolSize=3`这个参数不起作用。
 
-3. **当队列里的任务达到上限**，并且池中正在进行的线程小于`maxinumPoolSize`，对于新加入的任务，新建线程。
+
+#### 情形三
+
+**当队列里的任务达到上限，并且池中正在进行的线程小于`maxinumPoolSize`，对于新加入的任务，新建线程**。
 
 ```java
 package HowJThread.ThreadPools;
@@ -8007,7 +8227,10 @@ public class TestThreadPoolExecutor {
 
 任务一、二启动后，**任务三在队列，队列就满了**，由于正在进行的线程数是`2<maximumPoolSize`，只能**新建一个线程**了。然后任务四就进了新线程`thread-3`，任务四结束，队列里的任务四在线程`thread-3`进行处理。
 
-4. 队列里的任务达到上限，并且池中正在运行的线程等于`maximumPoolSize`，对于新加入的任务，执行拒绝策略（线程池默认的策略是抛异常）。
+
+#### 情形四
+
+**队列里的任务达到上限，并且池中正在运行的线程等于`maximumPoolSize`，对于新加入的任务，执行拒绝策略（线程池默认的策略是抛异常）**。
 
 ```java
 package HowJThread.ThreadPools;
@@ -8152,6 +8375,16 @@ public class Pool
 ### 创建多少个线程合适
 
 使用多线程就是在正确的场景下通过设置正确个数的线程来最大化程序的运行速度。将这句话翻译到硬件级别就是要充分的利用CPU和I/O。
+
+- 对于CPU密集型来说，理论上`线程数量 = CPU 核数（逻辑）`就可以了，但是实际上，**数量一般会设置为`CPU核数（逻辑）+ 1`**。
+- I/O密集型程序的最佳线程数就是：`最佳线程数 = CPU核心数 * (1/CPU利用率) = CPU核心数 * （1 + （I/O耗时/CPU耗时)）`
+
+**线程等待时间所占比例越高，需要越多线程；线程CPU时间所占比例越高，需要越少线程。**
+
+
+即便算出了理论线程数，但实际CPU核数不够，会带来线程上下文切换的开销，所以下一步就需要增加CPU核数，那我们盲目的增加CPU核数就一定能解决问题吗？
+
+阿姆达尔定律(处理器并行运算后效率提升的能力)：假如我们的串行率是5%，那么我们无论采用什么技术，最高也就只能提高20倍的性能。
 
 #### CPU密集型程序
 
