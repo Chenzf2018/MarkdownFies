@@ -2488,6 +2488,12 @@ static final int UNTREEIFY_THRESHOLD = 6;
 static final int MIN_TREEIFY_CAPACITY = 64;
 ```
 
+1.8什么场景下会触发扩容？
+
+- 场景1：哈希table为null或长度为0；
+- 场景2：Map中**存储的k-v对数量超过了阈值threshold**；
+- 场景3：**链表中的长度**超过了TREEIFY_THRESHOLD，但**表长度**却小于MIN_TREEIFY_CAPACITY。
+
 **插入数据的区别：**
 <div align=center><img src=DataStructure\HashMap.webp></div>
 
