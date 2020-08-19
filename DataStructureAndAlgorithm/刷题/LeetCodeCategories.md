@@ -2599,7 +2599,52 @@ class Solution {
 - 空间复杂度：$O(N)$。
 
 
+## 1470. 重新排列数组(简单)
 
+给你一个数组nums，数组中有$2n$个元素，按$[x_1, x_2,..., x_n, y_1, y_2,..., y_n]$的格式排列。
+
+请你将数组按$[x_1, y_1, x_2, y_2,..., x_n, y_n]$格式重新排列，返回重排后的数组。
+
+ 
+```
+示例 1：
+
+输入：nums = [2,5,1,3,4,7], n = 3
+输出：[2,3,5,4,1,7] 
+解释：由于 x1=2, x2=5, x3=1, y1=3, y2=4, y3=7 ，所以答案为 [2,3,5,4,1,7]
+
+示例 2：
+
+输入：nums = [1,2,3,4,4,3,2,1], n = 4
+输出：[1,4,2,3,3,2,4,1]
+
+示例 3：
+
+输入：nums = [1,1,2,2], n = 2
+输出：[1,2,1,2]
+```
+
+提示：
+```
+1 <= n <= 500
+nums.length == 2n
+1 <= nums[i] <= 10^3
+```
+
+
+```java
+class Solution {
+    public int[] shuffle(int[] nums, int n) {
+        int temp[] = new int[nums.length];
+        int index = 0;
+        for(int i = 0;i < n;i++){
+            temp[index++] = nums[i];
+            temp[index++] = nums[i + n];
+        }
+        return temp;
+    }
+}
+```
 
 
 
@@ -3538,13 +3583,87 @@ class Solution {
 
 
 
+## *1436. 旅行终点站(简单)
+
+给你一份旅游线路图，该线路图中的旅行线路用数组`paths`表示，其中`paths[i] = [cityAi, cityBi]`表示该线路将会从`cityAi`直接前往`cityBi`。请你**找出这次旅行的终点站**，即没有任何可以通往其他城市的线路的城市。
+
+**题目数据保证线路图会形成一条不存在循环的线路**，因此只会有一个旅行终点站。
+
+ 
+```
+示例 1：
+
+输入：paths = [["London","New York"], ["New York","Lima"], ["Lima","Sao Paulo"]]
+输出："Sao Paulo" 
+解释：从 "London" 出发，最后抵达终点站 "Sao Paulo" 。本次旅行的路线是 "London" -> "New York" -> "Lima" -> "Sao Paulo" 。
+
+示例 2：
+
+输入：paths = [["B","C"], ["D","B"], ["C","A"]]
+输出："A"
+解释：所有可能的线路是：
+"D" -> "B" -> "C" -> "A". 
+"B" -> "C" -> "A". 
+"C" -> "A". 
+"A". 
+显然，旅行终点站是"A"。
+
+示例 3：
+
+输入：paths = [["A","Z"]]
+输出："Z"
+```
+
+提示：
+```
+1 <= paths.length <= 100
+paths[i].length == 2
+1 <= cityAi.length, cityBi.length <= 10
+cityAi != cityBi
+所有字符串均由大小写英文字母和空格字符组成。
+```
+
+```java
+// HashMap.put()
+public V put(K key, V value) {
+    return putVal(hash(key), key, value, false, true);
+}
+// HashMap.get()
+public V get(Object key) {
+    Node<K, V> e;
+    return (e = getNode(hash(key), key)) == null ? null : e.value;
+}
+```
+
+```java
+public class Solution {
+    public String destCity(List<List<String>> paths) {
+        Map<String, String> map = prepare(paths);
+        // 出发城市
+        String from = paths.get(0).get(0);
+        while(true){
+            if(!map.containsKey(from))
+                return from;
+            // get(Object key)
+            from = map.get(from);
+        }
+    }
+
+    private Map<String, String> prepare(List<List<String>> paths){
+        Map<String, String> map = new HashMap<>();
+        for(List<String> path : paths)
+            // key为出发城市；value为到达城市
+            map.put(path.get(0), path.get(1));
+        return map;
+    }
+}
+```
 
 
 
 
 
-
-## 1512. 好数对的数目(简单)
+## *1512. 好数对的数目(简单)
 
 给你一个整数数组`nums`，如果一组数字$(i,j)$满足$nums[i] == nums[j]$且$i < j$，就可以认为这是一组**好数对**。返回好数对的数目。
 
@@ -3636,6 +3755,66 @@ class Solution {
 
 # 数组
 
+
+## 1313. 解压缩编码列表(简单)
+
+给你一个以行程长度编码压缩的整数列表 nums 。
+
+考虑每对相邻的两个元素$[freq, val] = [nums[2*i], nums[2*i+1]]$（其中$i >= 0$），每一对都表示解压后子列表中**有`freq`个值为`val`的元素**，你需要从左到右连接所有子列表以生成解压后的列表。
+
+请你返回解压后的列表。
+
+ 
+```
+示例1：
+
+输入：nums = [1,2,3,4]
+输出：[2,4,4,4]
+解释：第一对 [1,2] 代表着 2 的出现频次为 1，所以生成数组 [2]。
+第二对 [3,4] 代表着 4 的出现频次为 3，所以生成数组 [4,4,4]。
+最后将它们串联到一起 [2] + [4,4,4] = [2,4,4,4]。
+
+示例 2：
+
+输入：nums = [1,1,2,3]
+输出：[1,3,3]
+```
+
+提示：
+```
+2 <= nums.length <= 100
+nums.length % 2 == 0
+1 <= nums[i] <= 100
+```
+
+以步长（step）为2遍历数组nums，对于当前遍历到的元素a和b，我们将a个b添加进答案中即可。
+
+```java
+public class Solution {
+
+    public int[] decompressRLElist(int[] nums) {
+        if (nums.length == 1) {
+            return new int[]{nums[0]};
+        }
+
+        List<Integer> ans = new ArrayList<>();
+        for (int i = 0; i < nums.length; i += 2) {
+            for (int j = 0; j < nums[i]; j++) {
+                ans.add(nums[i + 1]);
+            }
+        }
+        // return ans.stream().mapToInt(i->i).toArray();//这样转耗时较大，不如下面这种
+        int[] res = new int[ans.size()];
+        int index = 0;
+        for (Integer num : ans) {
+            res[index++] = num;
+        }
+        return res;
+    }
+}
+```
+
+
 ## 1365. 有多少小于当前数字的数字(简单)
 
 给你一个数组`nums`，对于其中每个元素`nums[i]`，请你统计数组中比它小的所有数字的数目。
@@ -3697,6 +3876,85 @@ class Solution {
     }
 }
 ```
+
+
+## 1389. 按既定顺序创建目标数组(简单)
+
+给你两个整数数组nums和index。你需要按照以下规则创建目标数组：
+
+- 目标数组target最初为空。
+- 按从左到右的顺序依次读取 nums[i] 和 index[i]，在 target 数组中的下标 index[i] 处插入值 nums[i] 。
+- 重复上一步，直到在 nums 和 index 中都没有要读取的元素。
+
+请你返回目标数组。
+
+题目保证数字插入位置总是存在。
+
+ 
+```
+示例 1：
+
+输入：nums = [0,1,2,3,4], index = [0,1,2,2,1]
+输出：[0,4,1,3,2]
+解释：
+nums       index     target
+0            0        [0]
+1            1        [0,1]
+2            2        [0,1,2]
+3            2        [0,1,3,2]
+4            1        [0,4,1,3,2]
+
+示例 2：
+
+输入：nums = [1,2,3,4,0], index = [0,1,2,3,0]
+输出：[0,1,2,3,4]
+解释：
+nums       index     target
+1            0        [1]
+2            1        [1,2]
+3            2        [1,2,3]
+4            3        [1,2,3,4]
+0            0        [0,1,2,3,4]
+
+示例 3：
+
+输入：nums = [1], index = [0]
+输出：[1]
+```
+
+提示：
+```
+1 <= nums.length, index.length <= 100
+nums.length == index.length
+0 <= nums[i] <= 100
+0 <= index[i] <= i
+```
+
+
+不断在数组的指定的索引`index[i]`处插入元素。这里注意题目提示中有一个限制条件`index[i] <= i`，也就是说**在插入第`i`个元素时，索引最多为最后一个元素**。
+
+有了上述条件，直接使用java中`ArrayList`类中的`add(int index, Object o)`函数即可**将指定元素插入到指定位置**。最后再将List中元素依次放到数组中即可。
+
+```java {.line-numbers highlight=11}
+class Solution {
+    public int[] createTargetArray(int[] nums, int[] index) {
+        int n = nums.length;
+        List<Integer> result = new ArrayList<>();
+        for(int i = 0; i < n; i++){
+            result.add(index[i], nums[i]);
+        }
+        
+        int[] target = new int[n];
+        for(int i = 0; i < n; i++){
+            target[i] = result.get(i);
+        }
+        return target;
+    }
+}
+```
+
+
+
 
 
 
@@ -3761,6 +4019,54 @@ class Solution {
 
 
 
+## 1470. 重新排列数组(简单)
+
+给你一个数组nums，数组中有$2n$个元素，按$[x_1, x_2,..., x_n, y_1, y_2,..., y_n]$的格式排列。
+
+请你将数组按$[x_1, y_1, x_2, y_2,..., x_n, y_n]$格式重新排列，返回重排后的数组。
+
+ 
+```
+示例 1：
+
+输入：nums = [2,5,1,3,4,7], n = 3
+输出：[2,3,5,4,1,7] 
+解释：由于 x1=2, x2=5, x3=1, y1=3, y2=4, y3=7 ，所以答案为 [2,3,5,4,1,7]
+
+示例 2：
+
+输入：nums = [1,2,3,4,4,3,2,1], n = 4
+输出：[1,4,2,3,3,2,4,1]
+
+示例 3：
+
+输入：nums = [1,1,2,2], n = 2
+输出：[1,2,1,2]
+```
+
+提示：
+```
+1 <= n <= 500
+nums.length == 2n
+1 <= nums[i] <= 10^3
+```
+
+
+```java
+class Solution {
+    public int[] shuffle(int[] nums, int n) {
+        int temp[] = new int[nums.length];
+        int index = 0;
+        for(int i = 0;i < n;i++){
+            temp[index++] = nums[i];
+            temp[index++] = nums[i + n];
+        }
+        return temp;
+    }
+}
+```
+
+
 ## 1480. 一维数组的动态和(简单)
 
 给你一个数组`nums`。数组「动态和」的计算公式为：`runningSum[i] = sum(nums[0]…nums[i])`。
@@ -3803,5 +4109,180 @@ class Solution {
         return temp;
     }
 }
+```
+
+
+## 1486. 数组异或操作(简单)
+
+给你两个整数，n和start。
+
+数组nums定义为：$nums[i] = start + 2*i$（下标从0开始）且$n == nums.length$。
+
+请返回nums中所有元素按位异或（XOR）后得到的结果。
+
+ 
+```
+示例 1：
+
+输入：n = 5, start = 0
+输出：8
+解释：数组 nums 为 [0, 2, 4, 6, 8]，其中 (0 ^ 2 ^ 4 ^ 6 ^ 8) = 8 。
+     "^" 为按位异或 XOR 运算符。
+
+示例 2：
+
+输入：n = 4, start = 3
+输出：8
+解释：数组 nums 为 [3, 5, 7, 9]，其中 (3 ^ 5 ^ 7 ^ 9) = 8.
+
+示例 3：
+
+输入：n = 1, start = 7
+输出：7
+
+示例 4：
+
+输入：n = 10, start = 5
+输出：2
+```
+
+提示：
+```
+1 <= n <= 1000
+0 <= start <= 1000
+n == nums.length
+```
+
+```java
+class Solution {
+    public int xorOperation(int n, int start) {
+        int ans = 0;
+        for (int i = 0; i < n; ++i) {
+            ans ^= (start + i * 2);
+        }
+        return ans;
+    }
+}
+```
+
+
+
+# 字符串
+
+
+## 709. 转换成小写字母(简单)
+
+实现函数`ToLowerCase()`，该函数接收一个字符串参数`str`，并将该字符串中的大写字母转换成小写字母，之后返回新的字符串。
+
+ 
+```
+示例 1：
+
+输入: "Hello"
+输出: "hello"
+
+示例 2：
+
+输入: "here"
+输出: "here"
+
+示例 3：
+
+输入: "LOVELY"
+输出: "lovely"
+```
+
+```java
+class Solution {
+    public String toLowerCase(String str) {
+        char[] arr = str.toCharArray();
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] >= 'A' && arr[i] <= 'Z') {
+                // 'a' 97; 'A' 65
+                arr[i] += 'a' - 'A';
+            }
+        }
+        return String.valueOf(arr);
+    }
+}
+```
+
+
+
+## 1108. IP 地址无效化(简单)
+
+给你一个有效的IPv4地址address，返回这个IP地址的无效化版本。所谓无效化IP地址，其实就是用"[.]"代替了每个"."。
+
+```
+示例 1：
+
+输入：address = "1.1.1.1"
+输出："1[.]1[.]1[.]1"
+
+示例 2：
+
+输入：address = "255.100.50.0"
+输出："255[.]100[.]50[.]0"
+```
+
+提示：给出的address是一个有效的IPv4地址
+
+
+### 使用replace方法
+
+```java
+class Solution {
+    public String defangIPaddr(String address) {
+        return address.replace(".", "[.]");
+    }
+}
+/*
+执行用时：0 ms
+内存消耗：37.8 MB
+*/
+```
+
+### 创建StringBuilder
+
+```java
+class Solution {
+    public String defangIPaddr(String address) {
+        StringBuilder s = new StringBuilder(address);
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '.') {
+                s.insert(i + 1, ']');// 先插入后面，此时 i 下标仍是'.'
+                s.insert(i, '[');// 插入 '.' 前面，此时 i 下标是'[' ,i+2 下标为']'
+                i += 3;// 故 i 直接加 3，为下一个字符，注意此时已经是原来 i+1 下标的字符了；
+                //此次循环结束进入下次循环还会进行加 1，不过又因为 ip 地址格式的原因，不会有连续的两个 '.' 连着；
+                //所以这个位置绝不可能是 '.'，所以再加 1，也没问题。
+            }
+        }
+        return s.toString();
+    }
+}
+/*
+执行用时：1 ms
+内存消耗：37.7 MB
+*/
+```
+
+```java
+class Solution {
+    public String defangIPaddr(String address) {
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < address.length(); i++) {
+            if (address.charAt(i) == '.') {
+                s.append("[.]");
+            } else {
+                s.append(address.charAt(i));
+            }
+        }
+        return s.toString();
+    }
+}
+/*
+执行用时：0 ms
+内存消耗：37.6 MB
+*/
 ```
 
