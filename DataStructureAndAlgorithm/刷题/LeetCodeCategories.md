@@ -893,6 +893,136 @@ class Solution {
 # 栈
 
 
+## 144. 二叉树的前序遍历(中等)
+
+给定一个二叉树，返回它的前序遍历
+
+```
+输入: [1,null,2,3]  
+   1
+    \
+     2
+    /
+   3 
+
+输出: [1,2,3]
+```
+
+<div align=center><img src=LeetCode\二叉树遍历.png width=30%></div>
+
+**从子树的角度来观察：**
+
+- 如果按照`根节点 -> 左孩子 -> 右孩子`的方式遍历，即**先序遍历**：`1 2 4 5 3 6 7`；
+- 如果按照`左孩子 -> 根节点 -> 右孩子`的方式遍历，即**中序遍历**：`4 2 5 1 6 3 7`；
+- 如果按照`左孩子 -> 右孩子 -> 根节点`的方式遍历，即**后序遍历**：`4 5 2 6 7 3 1`；
+- **层次遍历**就是按照每一层从左向右的方式进行遍历：`1 2 3 4 5 6 7`。
+
+### 递归
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_144_二叉树的前序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 1.0 递归法
+ */
+
+public class Solution {
+    public List<Integer> preorderTraversal(TreeNode root) {
+        if (root == null) {
+            return new ArrayList<>();
+        }
+
+        List<Integer> result = new ArrayList<>();
+        preorderTraversal(root, result);
+        return result;
+    }
+
+    public void preorderTraversal(TreeNode node, List<Integer> result) {
+        if (node != null) {
+            result.add(node.val);
+            // 把node.left看成以其为根的子树
+            if (node.left != null) {
+                preorderTraversal(node.left, result);
+            }
+            // 把node.right看成以其为根的子树
+            if (node.right != null) {
+                preorderTraversal(node.right, result);
+            }
+        }
+    }
+}
+```
+
+### 迭代-栈
+
+使用**栈**来进行迭代，过程如下：
+- 初始化栈，并将根节点入栈；
+- 当栈不为空时：
+  - 弹出栈顶元素node，并将值添加到结果中；
+  - 如果node的右子树非空，将右子树入栈；
+  - 如果node的左子树非空，将左子树入栈；
+
+由于栈是“先进后出”的顺序，所以入栈时**先将右子树入栈**，这样使得前序遍历结果为 “根->左->右”的顺序。
+
+<div align=center><img src=LeetCode\144.gif></div>
+
+```java
+package solution;
+
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * leetcode_144_二叉树的前序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 2.0 迭代法
+ */
+
+public class PreorderTraversal_v2 {
+    public List<Integer> preorderTraversal(TreeNode root) {
+        LinkedList<TreeNode> stack = new LinkedList<>();
+        LinkedList<Integer> output = new LinkedList<>();
+
+        if (root == null) {
+            return output;
+        }
+        
+        // 从根节点开始，每次迭代弹出当前栈顶元素，并将其孩子节点压入栈中
+        stack.add(root);
+        while (! stack.isEmpty()) {
+            // 每次迭代弹出当前栈顶元素
+            TreeNode node = stack.pollLast();
+            output.add(node.val);
+            
+            // 先压右孩子
+            if (node.right != null) {
+                stack.add(node.right);
+            }
+            
+            // 再压左孩子
+            if (node.left != null) {
+                stack.add(node.left);
+            }
+        }
+        
+        return output;
+    }
+}
+```
+
+**算法复杂度**
+
+- 时间复杂度：**访问每个节点恰好一次**，时间复杂度为$O(N)$，其中$N$是节点的个数，也就是树的大小。
+- 空间复杂度：取决于树的结构，最坏情况存储整棵树，因此空间复杂度是$O(N)$。
+
+
 ## 225. 用队列实现栈(简单)
 
 **题目：**
@@ -2468,6 +2598,57 @@ class Solution {
 - 空间复杂度：$O(\min(m,n))$，其中$m$和$n$分别是两个数组的长度。为返回值创建一个数组 `intersection`，其长度为较短的数组的长度。
 
 
+## 557. 反转字符串中的单词 III(简单)
+
+
+给定一个字符串，你需要反转字符串中每个单词的字符顺序，同时仍保留空格和单词的初始顺序。
+
+```
+示例 1:
+
+输入: "Let's take LeetCode contest"
+输出: "s'teL ekat edoCteeL tsetnoc" 
+```
+
+**思路与算法：**
+
+字符串转数组，遍历数组，每碰到1次空格反转空格前的单词，因为最后一个单词后面没有空格，遍历结束后再反转1次最后一个单词。
+
+```java
+class Solution {
+    public String reverseWords(String s) {
+        char[] charArray = s.toCharArray();
+        int n = charArray.length;
+        int left = 0, right = 0;
+        char temp;
+
+        for (int i = 0; i < n; i++) {
+            if (charArray[i] == ' ') {
+                right = i - 1;
+                while (left < right) {
+                    temp = charArray[left];
+                    charArray[left++] = charArray[right];
+                    charArray[right--] = temp;  
+                }
+                left = i + 1;
+            }
+        }
+
+        // 最后一个单词后面没有空格
+        right = n - 1;
+        while (left < right) {
+            temp= charArray[left];
+            charArray[left++] = charArray[right];
+            charArray[right--] = temp;
+        }
+
+        return new String(charArray);
+    }
+}
+```
+
+
+
 ## 876. 链表的中间结点(简单)
 
 给定一个带有头结点head的非空单链表，返回链表的中间结点。如果有两个中间结点，则返回第二个中间结点。
@@ -3455,6 +3636,251 @@ class Solution {
 
 # 哈希表
 
+## 1. 两数之和(简单)
+
+给定一个整数数组`nums`和一个目标值`target`，请你在该数组中找出**和为目标值**的那**两个整数**，并返回他们的数组**下标**。
+
+你可以假设每种输入只会对应一个答案。但是，数组中同一个元素不能使用两遍。
+
+**示例**：
+```
+给定 nums = [2, 7, 11, 15], target = 9
+
+因为 nums[0] + nums[1] = 2 + 7 = 9
+所以返回 [0, 1]
+```
+
+**思路与算法：**
+
+**暴力法**很简单，遍历每个元素$x$，并查找是否存在一个值与$target - x$相等的目标元素。
+
+
+```java
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        for (int i = 0; i < nums.length; i++) {
+            for (int j = i + 1; j < nums.length; j++) {
+                if (nums[j] == target - nums[i]) {
+                    return new int[] { i, j };
+                }
+            }
+        }
+        throw new IllegalArgumentException("No two sum solution");
+    }
+}
+```
+
+时间复杂度：$O(n^2)$，空间复杂度：$O(1)$。
+
+### HashMap
+
+为了对运行时间复杂度进行优化，我们需要一种更有效的方法来**检查数组中是否存在目标元素**。如果存在，我们需要找出它的索引。保持数组中的每个**元素**与其**索引**相互对应的最好方法是什么？哈希表。
+
+通过**以空间换取速度**的方式，我们可以将查找时间从$O(n)$降低到$O(1)$。哈希表正是为此目的而构建的，它支持**以近似恒定的时间进行快速查找**。用“近似”来描述，是因为一旦出现冲突，查找用时可能会退化到$O(n)$。但只要你仔细地挑选哈希函数，在哈希表中进行查找的用时应当被摊销为$O(1)$。
+
+一个简单的实现使用了**两次迭代**。在**第一次迭代**中，我们**将每个元素的值和它的索引添加到表中**。然后，在**第二次迭代**中，我们将**检查**每个元素所对应的目标元素$(target - nums[i])$是否存在于表中。注意，**该目标元素不能是$nums[i]$本身**！
+
+```java
+hashMap.put(nums[i], i);
+hashMap.containsKey(complement)
+hashMap.get(complement) != i
+throw new IllegalArgumentException("No two sum solution");
+```
+
+**代码：**
+```java {.line-numbers highlight=30}
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * leetcode_1_两数之和
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ */
+
+public class TwoSum {
+    public static int[] twoSum(int[] nums, int target) {
+        // 创建一个HashMap来存储数据，便于查找
+        Map<Integer, Integer> hashMap = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            // V put(K key, V value)
+            hashMap.put(nums[i], i);
+        }
+
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            // 如果hashMap中存在complement且不是nums[i]本身
+            // hashMap.get(Object Key)
+            if (hashMap.containsKey(complement) && hashMap.get(complement) != i) {
+                return new int[] {i, hashMap.get(complement)};
+            }
+        }
+
+        // Missing return statement
+        throw new IllegalArgumentException("No two sum solution");
+    }
+}
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/11
+ */
+
+public class TestTwoSum {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待测数据：");
+            String[] strings = reader.readLine().split(" ");
+            int[] nums = new int[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                nums[i] = Integer.parseInt(strings[i]);
+            }
+            System.out.println("请输入目标值：");
+            int target = Integer.parseInt(reader.readLine());
+
+            // System.out.println(TwoSum.twoSum(nums, target)); // [I@16d3586
+
+            int[] results = TwoSum.twoSum(nums, target);
+            for (int result : results) {
+                System.out.print(result + " ");
+            }
+
+        } catch(IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：$O(n)$
+我们把包含有$n$个元素的列表遍历两次。由于**哈希表将查找时间缩短到**$O(1)$，所以时间复杂度为$O(n)$。
+
+空间复杂度：$O(n)$
+所需的额外空间**取决于哈希表中存储的元素数量**，该表中存储了$n$个元素。
+
+
+
+## 236. 二叉树的最近公共祖先(中等)
+
+**题目描述：**
+
+给定一个二叉树，找到该树中两个指定节点的最近公共祖先。
+
+公共祖先的定义为：“对于有根树T的两个结点p、q，最近公共祖先表示为一个结点x，满足x是 p、q的祖先且**x的深度尽可能大**（一个节点也可以是它自己的祖先）。”
+
+例如，给定如下二叉树:  root = [3,5,1,6,2,0,8,null,null,7,4]
+
+<div align=center><img src=LeetCode\236.png></div>
+
+```
+示例 1:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+输出: 3
+解释: 节点5和节点1的最近公共祖先是节点3。
+
+示例 2:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+输出: 5
+解释: 节点5和节点4的最近公共祖先是节点5。因为根据定义最近公共祖先节点可以为节点本身。
+```
+
+说明:
+- 所有节点的值都是唯一的。
+- p、q为不同节点且均存在于给定的二叉树中。
+
+
+**思路与算法：存储父节点**
+
+
+可以**用哈希表存储所有节点的父节点**，然后我们就可以**利用节点的父节点信息从$p$结点开始不断往上跳，并记录已经访问过的节点；再从$q$节点开始不断往上跳，如果碰到已经访问过的节点，那么这个节点就是我们要找的最近公共祖先**。
+
+**算法**
+- 从根节点开始遍历整棵二叉树，**用哈希表记录每个节点的父节点指针**。
+- 从$p$节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点。
+- 同样，我们再从$q$节点开始不断往它的祖先移动，如果有祖先已经被访问过，即意味着这是$p$和$q$的深度最深的公共祖先，即`LCA节点`。
+
+
+```java
+package solution;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * leetcode_236_二叉树的最近公共祖先
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0 用哈希表存储所有节点的父节点
+ */
+
+public class LowestCommonAncestor {
+    Map<Integer, TreeNode> parent = new HashMap<>();
+    Set<Integer> visited = new HashSet<>();
+
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        // 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+        deepFirstSearch(root);
+
+        // 从p节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点
+        while (p != null) {
+            visited.add(p.val);
+            // 得到p节点所对应的父节点
+            p = parent.get(p.val);
+        }
+
+        // 再从q节点开始不断往它的祖先移动
+        // 如果有祖先已经被访问过，即意味着这是p和q的深度最深的公共祖先
+        while (q != null) {
+            if (visited.contains(q.val)) {
+                return q;
+            }
+            q = parent.get(q.val);
+        }
+
+        return null;
+    }
+
+    /**
+     * 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+     */
+    public void deepFirstSearch(TreeNode root) {
+        if (root.left != null) {
+            parent.put(root.left.val, root);
+            deepFirstSearch(root.left);
+        }
+        if (root.right != null) {
+            parent.put(root.right.val, root);
+            deepFirstSearch(root.right);
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是二叉树的节点数。二叉树的所有节点有且只会被访问一次，从$p$和$q$节点往上跳经过的祖先节点个数不会超过$N$，因此总的时间复杂度为$O(N)$。
+
+- 空间复杂度：$O(N)$，其中$N$是二叉树的节点数。
+  - **递归调用的栈深度取决于二叉树的高度**，二叉树最坏情况下为一条链，此时高度为$N$，因此空间复杂度为$O(N)$。
+  - 哈希表存储每个节点的父节点也需要$O(N)$的空间复杂度
+  - 因此最后总的空间复杂度为$O(N)$。
+
+
+
+
+
 ## 349. 两个数组的交集(简单)
 
 给定两个数组，编写一个函数来计算它们的交集。
@@ -3580,6 +4006,62 @@ class Solution {
 
 - 空间复杂度：$O(J.length)$。
 
+
+## 804. 唯一摩尔斯密码词(简单)
+
+国际摩尔斯密码定义一种标准编码方式，将每个字母对应于一个由一系列点和短线组成的字符串， 比如: `"a"` 对应 `".-"`，`"b"` 对应 `"-..."`，`"c"` 对应 `"-.-."`等等。
+
+为了方便，所有26个英文字母对应摩尔斯密码表如下：
+
+[".-","-...","-.-.","-..",".","..-.","--.","....","..",".---","-.-",".-..","--","-.","---",".--.","--.-",".-.","...","-","..-","...-",".--","-..-","-.--","--.."]
+
+给定一个单词列表，每个单词可以写成每个字母对应摩尔斯密码的组合。例如，"cab" 可以写成 "-.-..--..."，(即 `"-.-." + ".-" + "-..."` 字符串的结合)。我们将这样一个连接过程称作单词翻译。
+
+返回我们可以获得所有词不同单词翻译的数量。
+
+```
+例如:
+输入: words = ["gin", "zen", "gig", "msg"]
+输出: 2
+解释: 
+各单词翻译如下:
+"gin" -> "--...-."
+"zen" -> "--...-."
+"gig" -> "--...--."
+"msg" -> "--...--."
+
+共有 2 种不同翻译, "--...-." 和 "--...--.".
+```
+
+注意:
+```
+单词列表words 的长度不会超过 100。
+每个单词 words[i]的长度范围为 [1, 12]。
+每个单词 words[i]只包含小写字母。
+```
+
+```java
+class Solution {
+    public int uniqueMorseRepresentations(String[] words) {
+        String[] MORSE = new String[] {".-","-...","-.-.","-..",".","..-.","--.", 
+                        "....","..",".---","-.-",".-..","--","-.",
+                        "---",".--.","--.-",".-.","...","-","..-",
+                        "...-",".--","-..-","-.--","--.."};
+
+        Set<String> result = new HashSet();
+
+        for (String word: words) {
+            StringBuilder code = new StringBuilder();
+            for (char c: word.toCharArray()) {
+                code.append(MORSE[c - 'a']);
+            }
+            result.add(code.toString());
+        }
+
+        return result.size();
+    }
+}
+```
 
 
 
@@ -3755,6 +4237,266 @@ class Solution {
 
 # 数组
 
+## 1. 两数之和(简单)
+
+给定一个整数数组`nums`和一个目标值`target`，请你在该数组中找出**和为目标值**的那**两个整数**，并返回他们的数组**下标**。
+
+你可以假设每种输入只会对应一个答案。但是，数组中同一个元素不能使用两遍。
+
+**示例**：
+```
+给定 nums = [2, 7, 11, 15], target = 9
+
+因为 nums[0] + nums[1] = 2 + 7 = 9
+所以返回 [0, 1]
+```
+
+**思路与算法：**
+
+**暴力法**很简单，遍历每个元素$x$，并查找是否存在一个值与$target - x$相等的目标元素。
+
+
+```java
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        for (int i = 0; i < nums.length; i++) {
+            for (int j = i + 1; j < nums.length; j++) {
+                if (nums[j] == target - nums[i]) {
+                    return new int[] { i, j };
+                }
+            }
+        }
+        throw new IllegalArgumentException("No two sum solution");
+    }
+}
+```
+
+时间复杂度：$O(n^2)$，空间复杂度：$O(1)$。
+
+### HashMap
+
+为了对运行时间复杂度进行优化，我们需要一种更有效的方法来**检查数组中是否存在目标元素**。如果存在，我们需要找出它的索引。保持数组中的每个**元素**与其**索引**相互对应的最好方法是什么？哈希表。
+
+通过**以空间换取速度**的方式，我们可以将查找时间从$O(n)$降低到$O(1)$。哈希表正是为此目的而构建的，它支持**以近似恒定的时间进行快速查找**。用“近似”来描述，是因为一旦出现冲突，查找用时可能会退化到$O(n)$。但只要你仔细地挑选哈希函数，在哈希表中进行查找的用时应当被摊销为$O(1)$。
+
+一个简单的实现使用了**两次迭代**。在**第一次迭代**中，我们**将每个元素的值和它的索引添加到表中**。然后，在**第二次迭代**中，我们将**检查**每个元素所对应的目标元素$(target - nums[i])$是否存在于表中。注意，**该目标元素不能是$nums[i]$本身**！
+
+```java
+hashMap.put(nums[i], i);
+hashMap.containsKey(complement)
+hashMap.get(complement) != i
+throw new IllegalArgumentException("No two sum solution");
+```
+
+**代码：**
+```java {.line-numbers highlight=30}
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * leetcode_1_两数之和
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ */
+
+public class TwoSum {
+    public static int[] twoSum(int[] nums, int target) {
+        // 创建一个HashMap来存储数据，便于查找
+        Map<Integer, Integer> hashMap = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            // V put(K key, V value)
+            hashMap.put(nums[i], i);
+        }
+
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            // 如果hashMap中存在complement且不是nums[i]本身
+            // hashMap.get(Object Key)
+            if (hashMap.containsKey(complement) && hashMap.get(complement) != i) {
+                return new int[] {i, hashMap.get(complement)};
+            }
+        }
+
+        // Missing return statement
+        throw new IllegalArgumentException("No two sum solution");
+    }
+}
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/11
+ */
+
+public class TestTwoSum {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待测数据：");
+            String[] strings = reader.readLine().split(" ");
+            int[] nums = new int[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                nums[i] = Integer.parseInt(strings[i]);
+            }
+            System.out.println("请输入目标值：");
+            int target = Integer.parseInt(reader.readLine());
+
+            // System.out.println(TwoSum.twoSum(nums, target)); // [I@16d3586
+
+            int[] results = TwoSum.twoSum(nums, target);
+            for (int result : results) {
+                System.out.print(result + " ");
+            }
+
+        } catch(IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：$O(n)$
+我们把包含有$n$个元素的列表遍历两次。由于**哈希表将查找时间缩短到**$O(1)$，所以时间复杂度为$O(n)$。
+
+空间复杂度：$O(n)$
+所需的额外空间**取决于哈希表中存储的元素数量**，该表中存储了$n$个元素。
+
+
+## 42. 接雨水(困难)
+
+给定$n$个非负整数表示每个宽度为1的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+
+<div align=center><img src=LeetCode\42.png></div>
+
+```
+示例:
+
+输入: [0,1,0,2,1,0,1,3,2,1,2,1]
+输出: 6
+```
+
+### 暴力解法
+
+对于数组中的每个元素，我们**找出<font color=red>下雨后水能达到的最高位置，等于两边最大高度的较小值减去当前高度的值</font>**。
+
+- 初始化$ans=0$
+- 从左向右扫描数组：
+    - 初始化$\text{max\_left}=0$和$\text{max\_right}=0$
+    - **从当前元素向左扫描**并更新：$\text{max\_left}=\max(\text{max\_left},\text{height}[j])$
+    - **从当前元素向右扫描**并更新：$\text{max\_right}=\max(\text{max\_right},\text{height}[j])$
+    - 将$\min(\text{max\_left},\text{max\_right}) - \text{height}[i]$累加到 $\text{ans}$
+
+
+```java
+class Solution {
+    public int trap(int[] height) {
+        int sum = 0;
+        //最两端的列不用考虑，因为一定不会有水。所以下标从1到length - 2
+        for (int i = 1; i < height.length - 1; i++) {
+            int max_left = 0;
+            //找出左边最高
+            for (int j = i - 1; j >= 0; j--) {
+                if (height[j] > max_left) {
+                    max_left = height[j];
+                }
+            }
+
+            int max_right = 0;
+            //找出右边最高
+            for (int j = i + 1; j < height.length; j++) {
+                if (height[j] > max_right) {
+                    max_right = height[j];
+                }
+            }
+
+            //找出两端较小的
+            int min = Math.min(max_left, max_right);
+            //只有较小的一段大于当前列的高度才会有水，其他情况不会有水
+            if (min > height[i]) {
+                sum = sum + (min - height[i]);
+            }
+        }
+        return sum;
+    }
+}
+```
+
+
+
+## *59. 螺旋矩阵 II (中等)
+
+给定一个正整数$n$，生成一个包含1到$n^2$所有元素，且**元素按顺时针顺序螺旋排列**的正方形矩阵。
+
+```
+示例:
+
+输入: 3
+输出:
+[
+ [ 1, 2, 3 ],
+ [ 8, 9, 4 ],
+ [ 7, 6, 5 ]
+]
+```
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/spiral-matrix-ii/solution/spiral-matrix-ii-mo-ni-fa-she-ding-bian-jie-qing-x/
+
+- 生成一个$n×n$空矩阵`mat`，随后模拟整个**向内环绕填入**的过程：
+    - 定义当前左右上下边界`left, right, top, bottom`，初始值`num = 1`，迭代终止值 `tar = n * n`；
+    - 当`num <= tar`时，始终按照`从左到右、从上到下、从右到左、从下到上`填入顺序循环，每次填入后：
+        - 执行`num += 1`：得到下一个需要填入的数字；
+        - 更新边界：例如**从左到右填完后**，上边界`top += 1`，相当于**上边界向内缩1**。
+    - 使用`num <= tar`而不是`left < right || top < bottom`作为迭代条件，是为了解决当n为奇数时，矩阵中心数字无法在迭代过程中被填充的问题。
+- 最终返回`mat`即可。
+
+<div align=center><img src=LeetCode\59.png></div>
+
+
+```java
+class Solution {
+    public int[][] generateMatrix(int n) {
+        int left = 0, right = n - 1, top = 0, bottom = n - 1;
+        int[][] matrix = new int[n][n];
+        int num = 1, tail = n * n;
+
+        while(num <= tail){
+            // left to right.
+            for(int i = left; i <= right; i++) matrix[top][i] = num++;
+            // 进入下一行
+            top++;
+
+            // top to bottom.
+            for(int i = top; i <= bottom; i++) matrix[i][right] = num++;
+            // 进入左边一列
+            right--;
+
+            // right to left.
+            for(int i = right; i >= left; i--) matrix[bottom][i] = num++;
+            // 进入上面一行
+            bottom--;
+
+            // bottom to top.
+            for(int i = bottom; i >= top; i--) matrix[i][left] = num++;
+            // 进入右边一列
+            left++;
+        }
+
+        return matrix;
+    }
+}
+```
+
+
 
 ## 1313. 解压缩编码列表(简单)
 
@@ -3813,6 +4555,14 @@ public class Solution {
     }
 }
 ```
+
+
+
+
+
+
+
+
 
 
 ## 1365. 有多少小于当前数字的数字(简单)
@@ -4170,6 +4920,53 @@ class Solution {
 # 字符串
 
 
+## 657. 机器人能否返回原点(简单)
+
+在二维平面上，有一个机器人从原点 (0, 0) 开始。给出它的移动顺序，判断这个机器人在完成移动后是否在 (0, 0) 处结束。
+
+移动顺序由字符串表示。字符 `move[i]` 表示其第 i 次移动。机器人的有效动作有 R（右），L（左），U（上）和 D（下）。如果机器人在完成所有动作后返回原点，则返回 true。否则，返回 false。
+
+注意：机器人“面朝”的方向无关紧要。 “R” 将始终使机器人向右移动一次，“L” 将始终向左移动等。此外，假设每次移动机器人的移动幅度相同。
+
+ 
+```
+示例 1:
+
+输入: "UD"
+输出: true
+解释：机器人向上移动一次，然后向下移动一次。所有动作都具有相同的幅度，因此它最终回到它开始的原点。因此，我们返回 true。
+
+示例 2:
+
+输入: "LL"
+输出: false
+解释：机器人向左移动两次。它最终位于原点的左侧，距原点有两次 “移动” 的距离。我们返回 false，因为它在移动结束时没有返回原点。
+```
+
+```java {.line-numbers highlight=4}
+class Solution {
+    public boolean judgeCircle(String moves) {
+        int x = 0, y = 0;
+        for (char move: moves.toCharArray()) {
+            if (move == 'U') y++;
+            else if (move == 'D') y--;
+            else if (move == 'L') x--;
+            else if (move == 'R') x++;
+        }
+        return x == 0 && y == 0;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$O(N)$，其中$N$是moves 指令的长度。我们需要遍历字符串一遍。
+
+- 空间复杂度：$O(1)$。在 Java 中，我们字符串数组的长度是$O(N)$。
+
+
+
+
 ## 709. 转换成小写字母(简单)
 
 实现函数`ToLowerCase()`，该函数接收一个字符串参数`str`，并将该字符串中的大写字母转换成小写字母，之后返回新的字符串。
@@ -4207,6 +5004,80 @@ class Solution {
 }
 ```
 
+
+## 893. *特殊等价字符串组(简单)
+
+你将得到一个字符串数组 A，返回 A 中特殊等价字符串组的数量。
+
+每次移动都可以交换 S 的**任意两个偶数下标的字符**或**任意两个奇数下标的字符**。如果经过任意次数的移动，S == T，那么两个字符串 S 和 T 是 特殊等价 的。
+
+例如，S = "zzxy" 和 T = "xyzz" 是一对特殊等价字符串，因为可以先交换 S[0] 和 S[2]，然后交换 S[1] 和 S[3]，使得 "zzxy" -> "xzzy" -> "xyzz" 。
+
+现在规定，A 的 一组特殊等价字符串 就是 A 的一个同时满足下述条件的非空子集：
+
+- 该组中的每一对字符串都是 特殊等价 的
+- 该组字符串已经涵盖了该类别中的所有特殊等价字符串，容量达到理论上的最大值（也就是说，如果一个字符串不在该组中，那么这个字符串就 不会 与该组内任何字符串特殊等价）
+
+
+
+ 
+```
+示例 1：
+
+输入：["abcd","cdab","cbad","xyzz","zzxy","zzyx"]
+输出：3
+解释：
+其中一组为 ["abcd", "cdab", "cbad"]，因为它们是成对的特殊等价字符串，且没有其他字符串与这些字符串特殊等价。
+另外两组分别是 ["xyzz", "zzxy"] 和 ["zzyx"]。特别需要注意的是，"zzxy" 不与 "zzyx" 特殊等价。
+
+示例 2：
+
+输入：["abc","acb","bac","bca","cab","cba"]
+输出：3
+解释：3 组 ["abc","cba"]，["acb","bca"]，["bac","cab"]
+```
+
+提示：
+```
+1 <= A.length <= 1000
+1 <= A[i].length <= 20
+所有 A[i] 都具有相同的长度。
+所有 A[i] 都只由小写字母组成。
+```
+
+**思路与算法：**
+
+先提取出每个子数组奇数和偶数的数；然后对其进行排序组合成一个数组；存入Set中，最后返回set的长度即可。
+
+```java
+class Solution {
+    public int numSpecialEquivGroups(String[] A) {
+        Set<String> set = new HashSet<>();
+
+		for(String str: A) {
+			//这个下标0代表偶数位，先把偶数位的放进sb0中，然后转换成char[]类型进行排序
+			StringBuilder sb0 = new StringBuilder();
+			for(int i = 0; i < str.length(); i += 2) 
+			    sb0.append(str.charAt(i));
+			char[] c0 = sb0.toString().toCharArray();
+			Arrays.sort(c0);
+
+			//这个下标1代表奇数位，先把奇数位的放进sb1中，然后转换成char[]类型进行排序
+			StringBuilder sb1 = new StringBuilder();
+			for(int i = 1; i < str.length(); i += 2)
+				sb1.append(str.charAt(i));
+			char[] c1 = sb1.toString().toCharArray();
+			Arrays.sort(c1);
+
+			//最后把两个char[] c0 和 c1 转换成String 相加添加到set 里面去
+			set.add(String.valueOf(c0) + String.valueOf(c1));
+		}
+        
+		//最后返回set的大小即可
+		return set.size();
+    }
+}
+```
 
 
 ## 1108. IP 地址无效化(简单)
@@ -4286,3 +5157,3557 @@ class Solution {
 */
 ```
 
+
+## 1309. 解码字母到整数映射(简单)
+
+给你一个字符串 s，它由数字（'0' - '9'）和 '#' 组成。我们希望按下述规则将 s 映射为一些小写英文字符：
+
+- 字符（'a' - 'i'）分别用（'1' - '9'）表示。
+- 字符（'j' - 'z'）分别用（'10#' - '26#'）表示。 
+
+返回映射之后形成的新字符串。
+
+题目数据保证映射始终唯一。
+
+ 
+```
+示例 1：
+
+输入：s = "10#11#12"
+输出："jkab"
+解释："j" -> "10#" , "k" -> "11#" , "a" -> "1" , "b" -> "2".
+
+示例 2：
+
+输入：s = "1326#"
+输出："acz"
+
+示例 3：
+
+输入：s = "25#"
+输出："y"
+
+示例 4：
+
+输入：s = "12345678910#11#12#13#14#15#16#17#18#19#20#21#22#23#24#25#26#"
+输出："abcdefghijklmnopqrstuvwxyz"
+```
+
+提示：
+```
+1 <= s.length <= 1000
+s[i] 只包含数字（'0'-'9'）和 '#' 字符。
+s 是映射始终存在的有效字符串。
+```
+
+```java
+class Solution {
+    public String freqAlphabets(String s) {
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < s.length()) {
+            if (i < s.length() - 2 && s.charAt(i + 2) == '#') {
+                sb.append((char) ('a' + Integer.parseInt(s.substring(i, i + 2)) - 1));
+                i += 3;
+            } else {
+                sb.append((char) ('a' + Integer.parseInt(s.substring(i, i + 1)) - 1));
+                i++;
+            }
+        }
+        return sb.toString(); 
+    }
+}
+```
+
+
+## 1370. 上升下降字符串(简单)
+
+给你一个字符串s，请你根据下面的算法重新构造字符串：
+
+1. 从 s 中选出 最小 的字符，将它 接在 结果字符串的后面。
+2. 从 s 剩余字符中选出 最小 的字符，且该字符比上一个添加的字符大，将它 接在 结果字符串后面。
+3. 重复步骤 2 ，直到你没法从 s 中选择字符。
+4. 从 s 中选出 最大 的字符，将它 接在 结果字符串的后面。
+5. 从 s 剩余字符中选出 最大 的字符，且该字符比上一个添加的字符小，将它 接在 结果字符串后面。
+6. 重复步骤 5 ，直到你没法从 s 中选择字符。
+7. 重复步骤 1 到 6 ，直到 s 中所有字符都已经被选过。
+
+在任何一步中，如果最小或者最大字符不止一个 ，你可以选择其中任意一个，并将其添加到结果字符串。
+
+请你返回将 s 中字符重新排序后的 结果字符串 。
+
+ 
+```
+示例 1：
+
+输入：s = "aaaabbbbcccc"
+输出："abccbaabccba"
+解释：第一轮的步骤 1，2，3 后，结果字符串为 result = "abc"
+第一轮的步骤 4，5，6 后，结果字符串为 result = "abccba"
+第一轮结束，现在 s = "aabbcc" ，我们再次回到步骤 1
+第二轮的步骤 1，2，3 后，结果字符串为 result = "abccbaabc"
+第二轮的步骤 4，5，6 后，结果字符串为 result = "abccbaabccba"
+
+示例 2：
+
+输入：s = "rat"
+输出："art"
+解释：单词 "rat" 在上述算法重排序以后变成 "art"
+
+示例 3：
+
+输入：s = "leetcode"
+输出："cdelotee"
+
+示例 4：
+
+输入：s = "ggggggg"
+输出："ggggggg"
+
+示例 5：
+
+输入：s = "spo"
+输出："ops"
+```
+
+提示：
+```
+1 <= s.length <= 500
+s 只包含小写英文字母。
+```
+
+```java
+class Solution {
+    public String sortString(String s) {
+        int[] count = new int[26];
+        // 统计每个字母出现的次数
+        for(char ch : s.toCharArray()) {
+            count[ch - 'a'] += 1;
+        }
+
+        StringBuilder result = new StringBuilder();
+
+        // 每次发现一个桶当中计数值不为 0 的时候，就把这个桶对应的字母添加到结果字符串的最后方，
+        // 然后对计数值减一
+        while(result.length() != s.length()){
+            // 从小到大
+            for(int i = 0; i < 26; i++){
+                if(count[i] == 0)
+                    continue;
+                result.append((char)(i + 'a'));
+                count[i] -= 1;
+            }
+            // 从大到小
+            for(int i = 25; i >= 0; i--){
+                if(count[i] == 0)
+                    continue;
+                result.append((char)(i + 'a'));
+                count[i] -= 1;
+            }
+        }
+        return result.toString();
+    }
+}
+```
+
+
+## 1374. 生成每种字符都是奇数个的字符串(简单)
+
+给你一个整数 n，请你返回一个含 n 个字符的字符串，其中每种字符在该字符串中都恰好出现 奇数次 。
+
+返回的字符串必须只含小写英文字母。如果存在多个满足题目要求的字符串，则返回其中任意一个即可。
+
+ 
+```
+示例 1：
+
+输入：n = 4
+输出："pppz"
+解释："pppz" 是一个满足题目要求的字符串，因为 'p' 出现 3 次，且 'z' 出现 1 次。当然，还有很多其他字符串也满足题目要求，比如："ohhh" 和 "love"。
+
+示例 2：
+
+输入：n = 2
+输出："xy"
+解释："xy" 是一个满足题目要求的字符串，因为 'x' 和 'y' 各出现 1 次。当然，还有很多其他字符串也满足题目要求，比如："ag" 和 "ur"。
+
+示例 3：
+
+输入：n = 7
+输出："holasss"
+```
+
+提示：`1 <= n <= 500`
+
+```java
+class Solution {
+    public String generateTheString(int n) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (n == 0) {
+            return null;
+        }
+        if (n % 2 == 0) {  //偶数
+            for (int i = 0; i < n - 1; i++) {
+                stringBuilder.append('a');
+            }
+            stringBuilder.append('b');
+        } else {
+            for (int i = 0; i < n; i++) {
+                stringBuilder.append('a');
+            }
+        }
+        return stringBuilder.toString();
+    }
+}
+```
+
+# 动态规划
+
+
+## 1035. 不相交的线(简单)
+
+
+
+我们在两条独立的水平线上按给定的顺序写下 A 和 B 中的整数。
+
+现在，我们可以绘制一些连接两个数字 A[i] 和 B[j] 的直线，只要 A[i] == B[j]，且我们**绘制的直线不与任何其他连线（非水平线）相交**。
+
+以这种方法绘制线条，并返回我们可以绘制的最大连线数。
+
+<div align=center><img src=LeetCode\1035.png width=30%></div>
+ 
+```
+示例 1：
+
+输入：A = [1,4,2], B = [1,2,4]
+输出：2
+解释：
+我们可以画出两条不交叉的线，如上图所示。
+我们无法画出第三条不相交的直线，因为从 A[1]=4 到 B[2]=4 的直线将与从 A[2]=2 到 B[1]=2 的直线相交。
+示例 2：
+
+输入：A = [2,5,1,2,5], B = [10,5,2,1,5,2]
+输出：3
+示例 3：
+
+输入：A = [1,3,7,1,7,5], B = [1,9,2,5,1]
+输出：2
+```
+
+提示：
+```
+1 <= A.length <= 500
+1 <= B.length <= 500
+1 <= A[i], B[i] <= 2000
+```
+
+**思路与算法：最长公共子序列**
+
+链接：https://leetcode-cn.com/problems/uncrossed-lines/solution/you-yi-ge-dong-tai-gui-hua-by-johnwii/
+
+举例，
+
+数组 var A = int[] {1, 3, 5, 7, 9, 11, 13, 15, 17}
+数组 var B = int[] {7, 9, 5, 4, 3, 2, 1, 17, 15}
+
+两个数组可以构建出3条不相交的线：
+
+<div align=center><img src=LeetCode\1035_1.png></div>
+
+
+
+<div align=center><img src=LeetCode\1035_2.png></div>
+
+`dp[i][j]`表示A截止到i，B截止到j点，此时的最大连线数。
+
+转移方程为：
+
+- 当`A[i] == B[j]`时: `dp[i][j] = dp[i - 1][j - 1] + 1`
+- 当`A[i] != B[j]`时: `dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])`
+
+```java
+class Solution {
+    public int maxUncrossedLines(int[] A, int[] B) {
+        int[][] dp = new int[A.length + 1][B.length + 1];
+        for (int i = 1; i <= A.length; i ++) {
+            for (int j = 1; j <= B.length; j ++) {
+                dp[i][j] = A[i - 1] == B[j - 1] ? dp[i - 1][j - 1] + 1 :
+                                                  Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+        return dp[A.length][B.length];
+    }
+}
+```
+
+## 1143. 最长公共子序列(中等)
+
+给定两个字符串`text1`和`text2`，返回这两个字符串的最长公共子序列的长度。
+
+一个字符串的**子序列**是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。
+
+例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。两个字符串的「公共子序列」是这两个字符串所共同拥有的子序列。
+
+若这两个字符串没有公共子序列，则返回 0。
+
+ 
+```
+示例 1:
+
+输入：text1 = "abcde", text2 = "ace" 
+输出：3  
+解释：最长公共子序列是 "ace"，它的长度为 3。
+
+示例 2:
+
+输入：text1 = "abc", text2 = "abc"
+输出：3
+解释：最长公共子序列是 "abc"，它的长度为 3。
+
+示例 3:
+
+输入：text1 = "abc", text2 = "def"
+输出：0
+解释：两个字符串没有公共子序列，返回 0。
+```
+
+提示:
+```
+1 <= text1.length <= 1000
+1 <= text2.length <= 1000
+输入的字符串只含有小写英文字符。
+```
+
+**思路与算法：**
+链接：https://leetcode-cn.com/problems/longest-common-subsequence/solution/dong-tai-gui-hua-tu-wen-jie-xi-by-yijiaoqian/
+
+最长公共子序列（Longest Common Subsequence，简称 LCS）是一道非常经典的面试题目，因为它的解法是典型的**二维动态规划**，大部分比较困难的字符串问题都和这个问题一个套路，比如说**编辑距离**。而且，这个算法稍加改造就可以用于解决其他问题，所以说LCS算法是值得掌握的。
+
+所谓子序列，就是要保留原始顺序，但可以是不连续的。审题之后你可能会有疑问，这个问题为啥就是动态规划来解决呢？
+
+因为子序列类型的问题，穷举出所有可能的结果都不容易，而动态规划算法做的就是**穷举 + 剪枝**，它俩天生一对儿。所以可以说只要涉及子序列问题，十有八九都需要动态规划来解决。
+
+
+**第一步，一定要明确 dp 数组的含义。**
+
+对于两个字符串的动态规划问题，套路是通用的。
+
+比如说对于字符串 s1 和 s2，它们的长度分别是 m、n，一般来说都要构造一个这样的 DP table：`int[][] dp = new int[m+1][n+1]`。
+
+这里为什么要加1，原因是你可以不加1，但是不加1你就会用其它限制条件来确保这个index是有效的，而当你加1之后你就不需要去判断只是**让索引为0的行和列表示空串**。
+
+
+**第二步，定义 base case**
+我们专门**让索引为0的行和列表示空串**，`dp[0][...]` 和 `dp[...][0]` 都**应该初始化为0**，这就是base case。
+
+**第三部，找状态转移方程**
+
+这是动态规划最难的一步，我们来通过案例推导出来。
+
+对于 `text1：abcde` 和 `text2：ace` 两个字符串，我们定义两个指针进行遍历 `i` 和 `j`。
+
+遍历 `text1` 长度为 `m`，定义指针 `i`，从 $0～m$。**固定 `i` 指针（i == 1）位置**，接下来开始遍历 `text2` 长度为 `n`，定义指针 `j`，从 $0～n$。
+
+
+
+<div align=center><img src=LeetCode\1143.jpeg></div>
+
+- 第一次遍历 `i = 1, j = 1`，两个a相同所以 `dp[1][1] = 1`
+
+- 第二次遍历 `i = 1, j = 2`，a与c不等，也不能是0，这里**需转换成 a 与 ac 最长子序列**，这里需要把之前的关系传递过来，所以`dp[1][2] = 1`
+
+- 第三次遍历 `i = 1, j = 3`，a与e不相同，把之前的关系传递过来，所以`dp[1][3] = 1`
+`text2：ace` 已经走完来第一轮，接下来`text1：abcde` 走到来b字符。
+
+- 第四次遍历 `i = 2, j = 1`，就是需要比较ab与a的最长子串，**把之前的关系传递过来**，所以`dp[2][1] = 1`依次类推...
+
+我们会发现遍历两个串字符，**当不同时，需要考虑两层遍历前面的值（关系传递），也就是<font color=red>左边和上边的其中较大的值</font>，当相同时，需要考虑各自不包含当前字符串的子序列长度，再加上1**。
+
+因此可以得出：
+
+- 现在对比的这**两个字符不相同**的，那么我们要取它的「**要么是text1往前退一格，要么是text2往前退一格，两个的最大值**」：`dp[i + 1][j + 1] = Math.max(dp[i+1][j], dp[i][j+1]);`
+
+- 对比的**两个字符相同**，去找它们前面各退一格的值加1即可：`dp[i+1][j+1] = dp[i][j] + 1;`
+
+
+```java
+class Solution {
+    public int longestCommonSubsequence(String text1, String text2) {
+        int m = text1.length(), n = text2.length();
+        int[][] dp = new int[m + 1][n + 1];
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                // 获取两个串字符
+                char c1 = text1.charAt(i), c2 = text2.charAt(j);
+                if (c1 == c2) {
+                    // 去找它们前面各退一格的值加1即可
+                    dp[i + 1][j + 1] = dp[i][j] + 1;
+                } else {
+                    //要么是text1往前退一格，要么是text2往前退一格，两个的最大值
+                    dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+                }
+            }
+        }
+        return dp[m][n];
+    }
+}
+```
+
+
+# 树
+
+## 面试题 04.02. 最小高度树(简单)
+
+给定一个有序整数数组，元素各不相同且按升序排列，编写一个算法，创建一棵**高度最小的二叉搜索树**。
+
+```
+示例:
+给定有序数组: [-10,-3,0,5,9],
+
+一个可能的答案是：[0,-3,9,-10,null,5]，它可以表示下面这个高度平衡二叉搜索树：
+
+          0 
+         / \ 
+       -3   9 
+       /   / 
+     -10  5 
+```
+
+二叉查找树（Binary Search Tree），（又：二叉搜索树，二叉排序树）它或者是一棵空树，或者是具有下列性质的二叉树： 
+
+- 若它的左子树不空，则**左子树上所有结点的值均小于它的根结点的值**； 
+- 若它的右子树不空，则**右子树上所有结点的值均大于它的根结点的值**； 
+- 它的左、右子树也分别为二叉排序树。
+
+二叉搜索树作为一种经典的数据结构，它既有链表的快速插入与删除操作的特点，又有数组快速查找的优势；所以应用十分广泛，例如在文件系统和数据库系统一般会采用这种数据结构进行高效率的排序与检索操作。
+
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/minimum-height-tree-lcci/solution/di-gui-gou-jian-by-zui-weng-jiu-xian/
+
+要求高度最小，保持高度平衡，也就是说**左右子树的节点个数应该尽可能接近**，那么可以
+
+1. **用nums数组的中间值mid作为根节点**，根据mid划分左子数组和右子数组。左子数组构建左子树，右子数组构建右子树。
+
+2. 那么现在的问题就转化为**怎么用左子数组构建左子树/右子数组构建右子树**
+
+3. 以左子数组构建左子树为例；为了保持高度平衡，继续采用1中的划分方法，划分出新的左子数组和右子数组；
+
+4. 当左子数组/右子数组为空时，返回null。
+
+右子数组构建右子树的过程与上述相同。
+
+<div align=center><img src=LeetCode\4.2.png width=60%></div>
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode sortedArrayToBST(int[] nums) {
+        return helper(nums, 0, nums.length - 1);
+    }
+
+    public TreeNode helper(int[] nums, int low, int high) {
+        // low > high表示子数组为空
+        if (low > high) {
+            return null;
+        }
+
+        // 以mid作为根节点；
+        // 计算时要加low，防止最后出现mid=(4-4)/0=0，实际位置应为(4-4)/0+4
+        int mid = (high - low) / 2 + low;
+        TreeNode root = new TreeNode(nums[mid]);
+
+        // 左子数组[low, mid -1]构建左子树
+        root.left = helper(nums, low, mid - 1);
+
+        // 右子数组[mid + 1, high]构建右子树
+        root.right = helper(nums, mid + 1, high);
+
+        return root;
+    }
+}
+```
+
+复杂度分析：
+
+- 数组中的元素都使用1次，时间复杂度为$O(n)$。
+
+- 递归使用栈辅助空间，空间复杂度$O(n)$。
+
+
+## 遍历树
+
+<div align=center><img src=LeetCode\遍历树.jpg></div>
+
+## 94. 二叉树的中序遍历(中等)
+
+
+
+给定一个二叉树，返回它的中序遍历。
+
+```
+输入: [1,null,2,3]
+   1
+    \
+     2
+    /
+   3
+
+输出: [1,3,2]
+```
+
+### 递归
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_94_二叉树的中序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 1.0 递归法
+ */
+
+public class InorderTraversal_v1 {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        List<Integer> result = new ArrayList<>();
+        inorderTraversal(root, result);
+        return result;
+    }
+
+    public void inorderTraversal(TreeNode node, List<Integer> result) {
+        if (node != null) {
+            if (node.left != null) {
+                inorderTraversal(node.left, result);
+            }
+            result.add(node.val);
+            if (node.right != null) {
+                inorderTraversal(node.right, result);
+            }
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$。递归函数$T(n) = 2 \cdot T(n/2)+1$。
+- 空间复杂度：最坏情况下需要空间$O(n)$，平均情况为$O(\log n)$。
+
+
+
+
+### 迭代
+
+使用栈：
+<div align=center><img src=LeetCode\94.gif></div>
+<div align=center><img src=LeetCode\94.jpg></div>
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
+/**
+ * leetcode_94_二叉树的中序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 2.0 迭代法
+ */
+
+public class InorderTraversal_v2 {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        List<Integer> result = new ArrayList<>();
+        Stack<TreeNode> stack = new Stack<>();
+        TreeNode curr = root;
+
+        while (curr != null || ! stack.isEmpty()) {
+            // 先将根节点cur和所有的左孩子入栈并加入结果中，直至cur为空
+            while (curr != null) {
+                stack.push(curr);
+                curr = curr.left;
+            }
+
+            // 每弹出一个栈顶元素，就到达它的右孩子
+            // 再将这个节点当作 cur 重新按上面的步骤来一遍，直至栈为空
+            curr = stack.pop();
+            result.add(curr.val);
+            curr = curr.right;
+        }
+
+        return result;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$。
+- 空间复杂度：$O(n)$。
+
+
+
+
+
+
+## 102. 二叉树的层序遍历(中等)
+
+**题目描述：**
+
+给一个二叉树，请返回其按层序遍历得到的节点值。即逐层地，从左到右访问所有节点。
+
+**示例：**
+
+```
+二叉树：[3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+
+返回其层次遍历结果：
+
+[[3],[9,20],[15,7]]
+```
+
+<div align=center><img src=LeetCode\102.png width=80%></div>
+
+
+### 队列
+
+链接：https://leetcode-cn.com/problems/binary-tree-level-order-traversal/solution/die-dai-di-gui-duo-tu-yan-shi-102er-cha-shu-de-cen/
+
+BFS使用**队列**，把每个还没有搜索到的点依次放入队列，然后再弹出队列的头部元素当做当前遍历点。
+
+
+广度优先需要用队列作为辅助结构，我们先将根节点放到队列中，然后不断遍历队列。
+
+<div align=center><img src=LeetCode\102.jpg width=60%></div>
+
+**首先拿出根节点，如果左子树/右子树不为空，就将他们放入队列中**。第一遍处理完后，根节点已经从队列中拿走了，而根节点的两个孩子已放入队列中了，现在队列中就有两个节点 2 和 5。
+
+<div align=center><img src=LeetCode\102_1.jpg width=60%></div>
+
+第二次处理，会将 2 和 5 这两个节点从队列中拿走，然后再将 2 和 5 的子节点放入队列中，现在队列中就有三个节点 3，4，6。
+
+<div align=center><img src=LeetCode\102_2.jpg width=60%></div>
+
+```java
+import java.util.*;	
+class Solution {
+    public List<List<Integer>> levelOrderBottom(TreeNode root) {
+        if(root == null) {
+            return new ArrayList<List<Integer>>();
+        }
+		
+        List<List<Integer>> res = new ArrayList<List<Integer>>();
+        LinkedList<TreeNode> queue = new LinkedList<TreeNode>();
+        // 将根节点放入队列中，然后不断遍历队列
+        queue.add(root);
+        while(queue.size() > 0) {
+            // 获取当前队列的长度，这个长度相当于 当前这一层的节点个数
+            int size = queue.size();
+            ArrayList<Integer> tmp = new ArrayList<Integer>();
+            // 将队列中的元素都拿出来(也就是获取这一层的节点)，放到临时list中
+            // 如果节点的左/右子树不为空，也放入队列中
+            for(int i = 0; i < size; i++) {
+                TreeNode t = queue.remove();
+                tmp.add(t.val);
+                if(t.left != null) {
+                    queue.add(t.left);
+                }
+                if(t.right != null) {
+                    queue.add(t.right);
+                }
+            }
+            // 将临时list加入最终返回结果中
+            res.add(0, tmp);
+        }
+        return res;
+    }
+}
+```
+
+- 时间复杂度：$O(n)$
+- 空间复杂度：$O(n)$
+
+
+BFS总共有两个模板：
+
+1. 如果**不需要确定当前遍历到了哪一层**，BFS模板如下
+```
+while queue 不空：
+    cur = queue.pop()
+    for 节点 in cur的所有相邻节点：
+        if 该节点有效且未访问过：
+            queue.push(该节点)
+```
+
+2. 如果要确定当前遍历到了哪一层，BFS模板如下
+这里增加了level表示当前遍历到二叉树中的哪一层了，也可以理解为在一个图中，现在已经走了多少步了。size表示在当前遍历层有多少个元素，也就是队列中的元素数，我们把这些元素一次性遍历完，即把当前层的所有元素都向外走了一步。
+
+```
+level = 0
+while queue 不空：
+    size = queue.size()
+    while (size --) {
+        cur = queue.pop()
+        for 节点 in cur的所有相邻节点：
+            if 该节点有效且未被访问过：
+                queue.push(该节点)
+    }
+    level ++;
+```
+
+本题要求二叉树的层次遍历，所以同一层的节点应该放在一起，故使用模板二。
+
+使用队列保存每层的所有节点，每次把队列里的原先所有节点进行出队列操作，再把每个元素的非空左右子节点进入队列。因此即可得到每层的遍历。
+
+
+**代码实现：**
+
+```java {.line-numbers highlight=37-40}
+package solution;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.LinkedList;
+
+/**
+ * leetcode_102_二叉树的层序遍历
+ */
+
+public class BinaryTreeLevelOrder {
+    public List<List<Integer>> levelOrder(TreeNode node) {
+        // 最后输出结果
+        List<List<Integer>> result = new ArrayList<>();
+        // 存放每层的结点
+        Queue<TreeNode> queue = new LinkedList<>();
+
+        queue.offer(node);
+
+        while (! queue.isEmpty()) {
+            int size = queue.size();
+
+            // 每一层的遍历结果
+            List<Integer> level = new LinkedList<>();
+
+            for (int i = 0; i < size; i++) {
+                // queue.peek()返回队列的头元素，不删除
+                TreeNode currentNode = queue.peek();
+                /*
+                Queue中remove()和poll()都是用来从队列头部删除一个元素。
+                在队列元素为空的情况下，remove() 方法会抛出NoSuchElementException异常，
+                poll() 方法只会返回null
+                 */
+                queue.poll();
+
+                // 防止当结点的左结点为null，右结点不为null时，出现queue=[null, XX]
+                if (currentNode == null) {
+                    continue;
+                }
+
+                level.add(currentNode.val);
+
+                // 利用完当前结点后，将其左、右结点加入队列中
+                queue.offer(currentNode.left);
+                queue.offer(currentNode.right);
+            }
+
+            if (! level.isEmpty()) {
+                // 将每一层的结果加入最终结果列表中
+                result.add(level);
+            }
+        }
+
+        return result;
+    }
+}
+```
+
+
+
+
+
+
+
+
+## 104. 二叉树的最大深度(简单)
+
+**题目：**
+
+给定一个二叉树，找出其最大深度。二叉树的深度为根节点到最远叶子节点的最长路径上的节点数。
+
+说明: 叶子节点是指没有子节点的节点。
+
+**示例：**
+```
+给定二叉树 [3,9,20,null,null,15,7]，
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回它的最大深度 3 。
+```
+
+### 递归，DFS(深度优先搜索)
+
+$H(1) = 1 + max(H(2), H(7))$
+即$H(1) = 1 + max(H(1).left, H(1).right)$
+<div align=center><img src=LeetCode\104.jpg></div>
+
+**代码：**
+```java
+package solution;
+
+/**
+ * leetcode_104_二叉树最大深度
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ *
+ * Definition for a binary tree node.
+ *
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *
+ *     TreeNode(int val) {
+ *         this.val = val;
+ *     }
+ *
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+
+public class MaximumDepthOfBinaryTree {
+    public int maxDepth(TreeNode node) {
+        if (node == null) {
+            return 0;
+        } else {
+            int leftHeight = maxDepth(node.left);
+            int rightHeight = maxDepth(node.right);
+            return Math.max(leftHeight, rightHeight) + 1;
+        }
+    }
+}
+```
+
+**复杂度分析：**
+
+时间复杂度：我们每个结点只访问一次，因此时间复杂度为$O(N)$，其中$N$是结点的数量。
+
+空间复杂度：在最糟糕的情况下，树是完全不平衡的，例如每个结点只剩下左子结点，递归将会被调用$N$次（树的高度），因此保持调用栈的存储将是$O(N)$。但在最好的情况下（树是完全平衡的），树的高度将是$\log(N)$。因此，在这种情况下的空间复杂度将是$O(\log(N))$。
+
+
+在递归中，如果层级过深，很可能保存过多的临时变量，导致栈溢出。
+
+事实上，**函数调用的参数是通过栈空间来传递的**，在调用过程中会占用线程的栈资源。而递归调用，只有走到最后的结束点后函数才能依次退出，而未到达最后的结束点之前，占用的栈空间一直没有释放，如果递归调用次数过多，就可能导致占用的栈资源超过线程的最大值，从而导致栈溢出，导致程序的异常退出。
+
+99%的递归转非递归，都可以通过栈来进行实现。 
+
+
+
+
+## 107. 二叉树的层次遍历 II 从下到上(简单)
+
+给定一个二叉树，返回其节点值**自底向上的层次遍历**。（即按从叶子节点所在层到根节点所在的层，逐层从左向右遍历）
+
+例如：
+给定二叉树 `[3,9,20,null,null,15,7]`
+
+```
+    3
+   / \
+  9  20
+    /  \
+   15   7
+```
+
+返回其自底向上的层次遍历为：
+```
+[
+  [15,7],
+  [9,20],
+  [3]
+]
+```
+
+
+
+
+## 144. 二叉树的前序遍历(中等)
+
+给定一个二叉树，返回它的前序遍历
+
+```
+输入: [1,null,2,3]  
+   1
+    \
+     2
+    /
+   3 
+
+输出: [1,2,3]
+```
+
+<div align=center><img src=LeetCode\二叉树遍历.png width=30%></div>
+
+**从子树的角度来观察：**
+
+- 如果按照`根节点 -> 左孩子 -> 右孩子`的方式遍历，即**先序遍历**：`1 2 4 5 3 6 7`；
+- 如果按照`左孩子 -> 根节点 -> 右孩子`的方式遍历，即**中序遍历**：`4 2 5 1 6 3 7`；
+- 如果按照`左孩子 -> 右孩子 -> 根节点`的方式遍历，即**后序遍历**：`4 5 2 6 7 3 1`；
+- **层次遍历**就是按照每一层从左向右的方式进行遍历：`1 2 3 4 5 6 7`。
+
+### 递归
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_144_二叉树的前序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 1.0 递归法
+ */
+
+public class Solution {
+    public List<Integer> preorderTraversal(TreeNode root) {
+        if (root == null) {
+            return new ArrayList<>();
+        }
+
+        List<Integer> result = new ArrayList<>();
+        preorderTraversal(root, result);
+        return result;
+    }
+
+    public void preorderTraversal(TreeNode node, List<Integer> result) {
+        if (node != null) {
+            result.add(node.val);
+            // 把node.left看成以其为根的子树
+            if (node.left != null) {
+                preorderTraversal(node.left, result);
+            }
+            // 把node.right看成以其为根的子树
+            if (node.right != null) {
+                preorderTraversal(node.right, result);
+            }
+        }
+    }
+}
+```
+
+### 迭代
+
+使用**栈**来进行迭代，过程如下：
+- 初始化栈，并将根节点入栈；
+- 当栈不为空时：
+  - 弹出栈顶元素node，并将值添加到结果中；
+  - 如果node的右子树非空，将右子树入栈；
+  - 如果node的左子树非空，将左子树入栈；
+
+由于栈是“先进后出”的顺序，所以入栈时**先将右子树入栈**，这样使得前序遍历结果为 “根->左->右”的顺序。
+
+<div align=center><img src=LeetCode\144.gif></div>
+
+```java
+package solution;
+
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * leetcode_144_二叉树的前序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 2.0 迭代法
+ */
+
+public class PreorderTraversal_v2 {
+    public List<Integer> preorderTraversal(TreeNode root) {
+        LinkedList<TreeNode> stack = new LinkedList<>();
+        LinkedList<Integer> output = new LinkedList<>();
+
+        if (root == null) {
+            return output;
+        }
+        
+        // 从根节点开始，每次迭代弹出当前栈顶元素，并将其孩子节点压入栈中
+        stack.add(root);
+        while (! stack.isEmpty()) {
+            // 每次迭代弹出当前栈顶元素
+            TreeNode node = stack.pollLast();
+            output.add(node.val);
+            
+            // 先压右孩子
+            if (node.right != null) {
+                stack.add(node.right);
+            }
+            
+            // 再压左孩子
+            if (node.left != null) {
+                stack.add(node.left);
+            }
+        }
+        
+        return output;
+    }
+}
+```
+
+**算法复杂度**
+
+- 时间复杂度：**访问每个节点恰好一次**，时间复杂度为$O(N)$，其中$N$是节点的个数，也就是树的大小。
+- 空间复杂度：取决于树的结构，最坏情况存储整棵树，因此空间复杂度是$O(N)$。
+
+
+
+
+
+
+
+
+
+## 145. 二叉树的后序遍历(困难)
+
+给定一个二叉树，返回它的后序遍历。
+```
+输入: [1,null,2,3]  
+   1
+    \
+     2
+    /
+   3 
+
+输出: [3,2,1]
+```
+
+### 递归
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_145_二叉树的后序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 1.0 递归
+ */
+
+public class PostorderTraversal {
+    public List<Integer> postorderTraversal(TreeNode root) {
+        List<Integer> result = new ArrayList<>();
+        postorderTraversal(root, result);
+        return result;
+    }
+    
+    public void postorderTraversal(TreeNode node, List<Integer> result) {
+        if (node != null) {
+            if (node.left != null) {
+                postorderTraversal(node.left, result);
+            }
+            if (node.right != null) {
+                postorderTraversal(node.right,result);
+            }
+            result.add(node.val);
+        }
+    }
+}
+```
+
+### 迭代
+
+https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/di-gui-die-dai-qu-qiao-san-chong-fang-fa-quan-jie-/
+
+从根节点开始依次迭代，弹出栈顶元素输出到输出列表中，然后依次压入它的所有孩子节点，**按照从上到下、从左至右的顺序依次压入栈中**。因为深度优先搜索后序遍历的顺序是从下到上、从左至右，所以需要**将输出列表逆序输出**。
+
+我们已知**后序遍历**的节点访问顺序为：`左 → 右 → 中`；我们将这个次序颠倒过来：`中 → 右 → 左`；有没有想到前序遍历的节点访问顺序呢——`中 → 左 → 右`；因此，我们可以**将前序遍历代码中的压栈顺序进行调整，并将结果逆序输出就可以啦**！
+
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * leetcode_145_二叉树的后序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 2.0 迭代
+ */
+
+public class PostorderTraversal_v2 {
+    public List<Integer> postorderTraversal(TreeNode root) {
+        LinkedList<TreeNode> stack = new LinkedList<>();
+        LinkedList<Integer> output = new LinkedList<>();
+        
+        if (root == null) {
+            return output;
+        }
+        
+        stack.add(root);
+        while (! stack.isEmpty()) {
+            TreeNode node = stack.pollLast();
+            // 每次在链表的头部插入元素
+            output.addFirst(node.val);
+            
+            if (node.left != null) {
+                stack.add(node.left);
+            }
+            
+            if (node.right != null) {
+                stack.add(node.right);
+            }
+        }
+        
+        return output;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：**访问每个节点恰好一次**，因此时间复杂度为$O(N)$，其中$N$是节点的个数，也就是树的大小。
+- 空间复杂度：取决于树的结构，最坏情况需要保存整棵树，因此空间复杂度为$O(N)$。
+
+
+
+
+## 226. 翻转二叉树(简单)
+
+翻转一棵二叉树。
+
+```
+示例：
+
+输入：
+
+     4
+   /   \
+  2     7
+ / \   / \
+1   3 6   9
+
+输出：
+
+     4
+   /   \
+  7     2
+ / \   / \
+9   6 3   1
+```
+
+反转一棵空树结果还是一颗空树。
+
+对于一棵根为$r$，左子树为$left$， 右子树为$right$的树来说，它的反转树是一颗根为$r$，左子树为$left$的反转树，右子树为$right$的反转树的树。
+
+```java
+class Solution {
+    public TreeNode invertTree(TreeNode root) {
+        if (root == null) {
+            return null;
+        }
+
+        TreeNode right = invertTree(root.right);
+        TreeNode left = invertTree(root.left);
+        root.left = right;
+        root.right = left;
+    
+        return root;
+    }
+}
+```
+
+复杂度分析：
+
+- 既然树中的**每个节点都只被访问一次**，那么**时间复杂度就是$O(n)$**，其中$n$是树中节点的个数。在反转之前，不论怎样我们至少都得访问每个节点至少一次，因此这个问题无法做地比$O(n)$更好了。
+
+- 本方法使用了递归，在最坏情况下**栈内需要存放$O(h)$个方法调用**，其中$h$是树的高度。由于$h\in O(n)$，可得出**空间复杂度为$O(n)$**。
+
+
+
+## 230. 二叉搜索树中第K小的元素(中等)
+
+
+给定一个二叉搜索树，编写一个函数 kthSmallest 来查找其中第 k 个最小的元素。
+
+说明：
+你可以假设 k 总是有效的，1 ≤ k ≤ 二叉搜索树元素个数。
+
+```
+示例 1:
+
+输入: root = [3,1,4,null,2], k = 1
+   3
+  / \
+ 1   4
+  \
+   2
+输出: 1
+
+示例 2:
+
+输入: root = [5,3,6,2,4,null,null,1], k = 3
+       5
+      / \
+     3   6
+    / \
+   2   4
+  /
+ 1
+输出: 3
+```
+
+**思路与算法：**
+
+**<font color=red>BST的中序遍历是升序序列！</font>**
+
+<div align=center><img src=LeetCode\230.jpg></div>
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public int kthSmallest(TreeNode root, int k) {
+        ArrayList<Integer> nums = inorder(root, new ArrayList<Integer>());
+        return nums.get(k - 1);
+    }
+
+    public ArrayList<Integer> inorder(TreeNode root, ArrayList<Integer> arr) {
+        if (root == null) return arr;
+
+        inorder(root.left, arr);
+        arr.add(root.val);
+        inorder(root.right, arr);
+
+        return arr;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，遍历了整个树。
+- 空间复杂度：$O(N)$，用了一个数组存储中序序列。
+
+
+## 235. 二叉搜索树的最近公共祖先(简单)
+
+给定一个二叉搜索树, 找到该树中两个指定节点的最近公共祖先。
+
+公共祖先的定义为：“对于有根树T的两个结点p、q，最近公共祖先表示为一个结点x，满足x是 p、q的祖先且**x的深度尽可能大**（一个节点也可以是它自己的祖先）。”
+
+例如，给定如下二叉搜索树:  `root = [6,2,8,0,4,7,9,null,null,3,5]`
+
+<div align=center><img src=LeetCode\235.png></div>
+
+```
+示例 1:
+
+输入: root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 8
+输出: 6 
+解释: 节点 2 和节点 8 的最近公共祖先是 6。
+
+示例 2:
+
+输入: root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 4
+输出: 2
+解释: 节点 2 和节点 4 的最近公共祖先是 2, 因为根据定义最近公共祖先节点可以为节点本身。
+```
+
+说明:
+```
+所有节点的值都是唯一的。
+p、q 为不同节点且均存在于给定的二叉搜索树中。
+```
+
+**存储父节点**
+
+可以**用哈希表存储所有节点的父节点**，然后我们就可以**利用节点的父节点信息从$p$结点开始不断往上跳，并记录已经访问过的节点；再从$q$节点开始不断往上跳，如果碰到已经访问过的节点，那么这个节点就是我们要找的最近公共祖先**。
+
+**算法**
+- 从根节点开始遍历整棵二叉树，**用哈希表记录每个节点的父节点指针**。
+- 从$p$节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点。
+- 同样，我们再从$q$节点开始不断往它的祖先移动，如果有祖先已经被访问过，即意味着这是$p$和$q$的深度最深的公共祖先，即`LCA节点`。
+
+
+```java
+package solution;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * leetcode_236_二叉树的最近公共祖先
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0 用哈希表存储所有节点的父节点
+ */
+
+public class LowestCommonAncestor {
+    Map<Integer, TreeNode> parent = new HashMap<>();
+    Set<Integer> visited = new HashSet<>();
+
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        // 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+        deepFirstSearch(root);
+
+        // 从p节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点
+        while (p != null) {
+            visited.add(p.val);
+            // 得到p节点所对应的父节点
+            p = parent.get(p.val);
+        }
+
+        // 再从q节点开始不断往它的祖先移动
+        // 如果有祖先已经被访问过，即意味着这是p和q的深度最深的公共祖先
+        while (q != null) {
+            if (visited.contains(q.val)) {
+                return q;
+            }
+            q = parent.get(q.val);
+        }
+
+        return null;
+    }
+
+    /**
+     * 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+     */
+    public void deepFirstSearch(TreeNode root) {
+        if (root.left != null) {
+            parent.put(root.left.val, root);
+            deepFirstSearch(root.left);
+        }
+        if (root.right != null) {
+            parent.put(root.right.val, root);
+            deepFirstSearch(root.right);
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是二叉树的节点数。二叉树的所有节点有且只会被访问一次，从$p$和$q$节点往上跳经过的祖先节点个数不会超过$N$，因此总的时间复杂度为$O(N)$。
+
+- 空间复杂度：$O(N)$，其中$N$是二叉树的节点数。
+  - **递归调用的栈深度取决于二叉树的高度**，二叉树最坏情况下为一条链，此时高度为$N$，因此空间复杂度为$O(N)$。
+  - 哈希表存储每个节点的父节点也需要$O(N)$的空间复杂度
+  - 因此最后总的空间复杂度为$O(N)$。
+
+
+## 236. 二叉树的最近公共祖先(中等)
+
+**题目描述：**
+
+给定一个二叉树，找到该树中两个指定节点的最近公共祖先。
+
+公共祖先的定义为：“对于有根树T的两个结点p、q，最近公共祖先表示为一个结点x，满足x是 p、q的祖先且**x的深度尽可能大**（一个节点也可以是它自己的祖先）。”
+
+例如，给定如下二叉树:  `root = [3,5,1,6,2,0,8,null,null,7,4]`
+
+<div align=center><img src=LeetCode\236.png></div>
+
+```
+示例 1:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+输出: 3
+解释: 节点5和节点1的最近公共祖先是节点3。
+
+示例 2:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+输出: 5
+解释: 节点5和节点4的最近公共祖先是节点5。因为根据定义最近公共祖先节点可以为节点本身。
+```
+
+说明:
+- 所有节点的值都是唯一的。
+- p、q为不同节点且均存在于给定的二叉树中。
+
+
+**存储父节点**
+
+可以**用哈希表存储所有节点的父节点**，然后我们就可以**利用节点的父节点信息从$p$结点开始不断往上跳，并记录已经访问过的节点；再从$q$节点开始不断往上跳，如果碰到已经访问过的节点，那么这个节点就是我们要找的最近公共祖先**。
+
+**算法**
+- 从根节点开始遍历整棵二叉树，**用哈希表记录每个节点的父节点指针**。
+- 从$p$节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点。
+- 同样，我们再从$q$节点开始不断往它的祖先移动，如果有祖先已经被访问过，即意味着这是$p$和$q$的深度最深的公共祖先，即`LCA节点`。
+
+
+```java
+package solution;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * leetcode_236_二叉树的最近公共祖先
+ * @author Chenzf
+ * @date 2020/7/25
+ * @version 1.0 用哈希表存储所有节点的父节点
+ */
+
+public class LowestCommonAncestor {
+    Map<Integer, TreeNode> parent = new HashMap<>();
+    Set<Integer> visited = new HashSet<>();
+
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        // 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+        deepFirstSearch(root);
+
+        // 从p节点开始不断往它的祖先移动，并用数据结构记录已经访问过的祖先节点
+        while (p != null) {
+            visited.add(p.val);
+            // 得到p节点所对应的父节点
+            p = parent.get(p.val);
+        }
+
+        // 再从q节点开始不断往它的祖先移动
+        // 如果有祖先已经被访问过，即意味着这是p和q的深度最深的公共祖先
+        while (q != null) {
+            if (visited.contains(q.val)) {
+                return q;
+            }
+            q = parent.get(q.val);
+        }
+
+        return null;
+    }
+
+    /**
+     * 从根节点开始遍历整棵二叉树，用哈希表记录每个节点的父节点指针
+     */
+    public void deepFirstSearch(TreeNode root) {
+        if (root.left != null) {
+            parent.put(root.left.val, root);
+            deepFirstSearch(root.left);
+        }
+        if (root.right != null) {
+            parent.put(root.right.val, root);
+            deepFirstSearch(root.right);
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是二叉树的节点数。二叉树的所有节点有且只会被访问一次，从$p$和$q$节点往上跳经过的祖先节点个数不会超过$N$，因此总的时间复杂度为$O(N)$。
+
+- 空间复杂度：$O(N)$，其中$N$是二叉树的节点数。
+  - **递归调用的栈深度取决于二叉树的高度**，二叉树最坏情况下为一条链，此时高度为$N$，因此空间复杂度为$O(N)$。
+  - 哈希表存储每个节点的父节点也需要$O(N)$的空间复杂度
+  - 因此最后总的空间复杂度为$O(N)$。
+
+
+
+
+## 257. 二叉树的所有路径(简单)
+
+给定一个二叉树，返回所有从根节点到叶子节点的路径。
+
+说明: 叶子节点是指没有子节点的节点。
+
+```
+示例:
+
+输入:
+
+   1
+ /   \
+2     3
+ \
+  5
+
+输出: ["1->2->5", "1->3"]
+```
+
+解释: 所有根节点到叶子节点的路径为: `1->2->5, 1->3`
+
+
+**思路与算法：**
+
+在递归遍历二叉树时，需要考虑当前的节点和它的孩子节点。
+
+- 如果**当前的节点不是叶子节点**，则在当前的路径末尾添加该节点，并递归遍历该节点的每一个孩子节点。
+- 如果**当前的节点是叶子节点**，则在当前的路径末尾添加该节点后，就得到了一条从根节点到叶子节点的路径，可以把该路径加入到答案中。
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public List<String> binaryTreePaths(TreeNode root) {
+        LinkedList<String> paths = new LinkedList();
+        construct_paths(root, "", paths);
+        return paths;
+    }
+
+    public void construct_paths(TreeNode root, String path, LinkedList<String> paths) {
+        if (root != null) {
+            path += Integer.toString(root.val);
+            // 当前节点是叶子节点
+            if ((root.left == null) && (root.right == null))
+                // 把路径加入到答案中
+                paths.add(path);  
+            else {
+                // 当前节点不是叶子节点，继续递归遍历
+                path += "->";
+                construct_paths(root.left, path, paths);
+                construct_paths(root.right, path, paths);
+            }
+        }
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：每个节点只会被访问一次，因此时间复杂度为$O(N)$，其中$N$表示节点数目。
+- 空间复杂度：$O(N)$。这里不考虑存储答案 paths 使用的空间，仅考虑额外的空间复杂度。
+  额外的空间复杂度为**递归时使用的栈空间**，在最坏情况下，当二叉树中每个节点只有一个孩子节点时，递归的层数为$N$，此时空间复杂度为$O(N)$。**在最好情况下，当二叉树为平衡二叉树时，它的高度为$\log(N)$，此时空间复杂度为$O(\log(N))$**。
+
+
+
+
+
+
+## 429. N叉树的层序遍历(简单)
+
+给定一个 N 叉树，返回其节点值的层序遍历。 (即从左到右，逐层遍历)。
+
+例如，给定一个 3叉树 :
+
+<div align=center><img src=LeetCode\590.png width=50%></div>
+
+返回其层序遍历:
+```
+[
+    [1],
+    [3,2,4],
+    [5,6]
+]
+```
+
+说明:
+
+- 树的深度不会超过 1000。
+- 树的节点总数不会超过 5000。
+
+
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public List<Node> children;
+
+    public Node() {}
+
+    public Node(int _val) {
+        val = _val;
+    }
+
+    public Node(int _val, List<Node> _children) {
+        val = _val;
+        children = _children;
+    }
+};
+*/
+
+class Solution {
+    public List<List<Integer>> levelOrder(Node root) {      
+        List<List<Integer>> result = new ArrayList<>();
+        if (root == null) return result;
+        Queue<Node> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            List<Integer> level = new ArrayList<>();
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                Node node = queue.poll();
+                level.add(node.val);
+                queue.addAll(node.children);
+            }
+            result.add(level);
+        }
+        return result;
+    }
+}
+```
+
+
+## 559. N叉树的最大深度(简单)
+
+给定一个 N 叉树，找到其最大深度。
+
+最大深度是指从根节点到最远叶子节点的最长路径上的节点总数。
+
+例如，给定一个 3叉树 :
+
+<div align=center><img src=LeetCode\590.png width=50%></div>
+
+我们应返回其最大深度：3。
+
+说明:
+
+- 树的深度不会超过 1000。
+- 树的节点总不会超过 5000。
+
+
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public List<Node> children;
+
+    public Node() {}
+
+    public Node(int _val) {
+        val = _val;
+    }
+
+    public Node(int _val, List<Node> _children) {
+        val = _val;
+        children = _children;
+    }
+};
+*/
+
+class Solution {
+    public int maxDepth(Node root) {
+        if (root == null) {
+            return 0;
+        } else if (root.children.isEmpty()) {
+            return 1;  
+        } else {
+            List<Integer> heights = new LinkedList<>();
+            for (Node item : root.children) {
+                heights.add(maxDepth(item)); 
+            }
+            return Collections.max(heights) + 1;
+        }
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：**每个节点遍历一次**，所以时间复杂度是$O(N)$，其中$N$为节点数。
+
+- 空间复杂度：最坏情况下，树完全非平衡，例如每个节点有且仅有一个孩子节点，递归调用会发生$N$次（等于树的深度），所以存储调用栈需要$O(N)$。但是在最好情况下（树完全平衡），树的高度为$\log(N)$。所以在此情况下空间复杂度为$O(\log(N))$。
+
+
+
+
+## 589. N叉树的前序遍历(简单)
+
+给定一个N叉树，返回其节点值的前序遍历。
+
+例如，给定一个3叉树：
+
+<div align=center><img src=LeetCode\590.png width=50%></div>
+
+返回其前序遍历: [1,3,5,6,2,4]。
+
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public List<Node> children;
+
+    public Node() {}
+
+    public Node(int _val) {
+        val = _val;
+    }
+
+    public Node(int _val, List<Node> _children) {
+        val = _val;
+        children = _children;
+    }
+};
+*/
+
+class Solution {
+    public List<Integer> list = new ArrayList<>();
+
+    public List<Integer> preorder(Node root) {
+        // 如果给出的树节点为空，直接返回，这里是递归的出口
+        if(root == null) {
+            return list;
+        }
+
+        // 如果该节点没有孩子节点了，就把该节点的value值加入list
+        if(root.children.size() == 0) {
+            list.add(root.val);
+        } else {
+            //关键在这，别忘了把这个父节点加入list
+            list.add(root.val);
+            // 遍历该节点的所有孩子节点
+            for(Node node : root.children) {
+                // 把孩子节点继续递归遍历
+                preorder(node);
+            }
+        }
+        return list;
+    }
+}
+```
+
+## 590. N叉树的后序遍历(简单)
+
+给定一个N叉树，返回其节点值的后序遍历。
+
+例如，给定一个3叉树：
+
+<div align=center><img src=LeetCode\590.png width=50%></div>
+
+返回其后序遍历: [5,6,3,2,4,1]
+
+```java {.line-numbers highlight=38}
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public List<Node> children;
+
+    public Node() {}
+
+    public Node(int _val) {
+        val = _val;
+    }
+
+    public Node(int _val, List<Node> _children) {
+        val = _val;
+        children = _children;
+    }
+};
+*/
+class Solution {
+    public List<Integer> list = new ArrayList<>();
+
+    public List<Integer> postorder(Node root) {
+        // 如果给出的树节点为空，直接返回，这里是递归的出口
+        if(root == null) {
+            return list;
+        }
+
+        // 如果该节点没有孩子节点了，就把该节点的value值加入list
+        if(root.children.size() == 0) {
+            list.add(root.val);
+        } else {
+            // 遍历该节点的所有孩子节点
+            for(Node node : root.children) {
+                // 把孩子节点继续递归遍历
+                postorder(node);
+            }
+            //关键在这，别忘了把这个父节点加入list
+            list.add(root.val);
+        }
+        return list;
+    }
+}
+```
+
+## 617. 合并二叉树(简单)
+
+给定两个二叉树，想象当你将它们中的一个覆盖到另一个上时，两个二叉树的一些节点便会重叠。
+
+你需要将他们合并为一个新的二叉树。合并的规则是**如果两个节点重叠，那么将他们的值相加作为节点合并后的新值**，否则不为NULL的节点将直接作为新二叉树的节点。
+
+```
+示例 1:
+
+输入: 
+	Tree 1                     Tree 2                  
+          1                         2                             
+         / \                       / \                            
+        3   2                     1   3                        
+       /                           \   \                      
+      5                             4   7                  
+输出: 
+合并后的树:
+	     3
+	    / \
+	   4   5
+	  / \   \ 
+	 5   4   7
+```
+
+注意: 合并必须从两个树的根节点开始。
+
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/merge-two-binary-trees/solution/dong-hua-yan-shi-di-gui-die-dai-617he-bing-er-cha-/
+
+遍历二叉树很简单，用前序遍历就可以了，再依次把访问到的节点值相加，因为题目没有说不能改变树的值和结构，我们**不用再创建新的节点了，直接将树2合并到树1上再返回**就可以了。
+
+递归的条件：
+
+- 终止条件：树1的节点为null，或者树2的节点为null
+- 递归函数内：将两个树的节点相加后，再赋给树1的节点。再递归的执行两个树的左节点，递归执行两个树的右节点
+
+
+<div align=center><img src=LeetCode\617.gif width=80%></div>
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Solution {
+    public TreeNode mergeTrees(TreeNode t1, TreeNode t2) {
+        if (t1 == null)
+            return t2;
+        if (t2 == null)
+            return t1;
+
+        t1.val += t2.val;
+        t1.left = mergeTrees(t1.left, t2.left);
+        t1.right = mergeTrees(t1.right, t2.right);
+        
+        return t1;
+    }
+}
+```
+
+
+复杂度分析
+
+- 时间复杂度：$O(N)$，其中$N$是两棵树中节点个数的较小值。
+
+- 空间复杂度：$O(N)$，在最坏情况下，会**递归$N$层**，需要$O(N)$的**栈空间**。
+
+
+
+## 637. 二叉树的层平均值(简单)
+
+给定一个非空二叉树，返回一个由每层节点平均值组成的数组。
+
+```
+输入：
+    3
+   / \
+  9  20
+    /  \
+   15   7
+输出：[3, 14.5, 11]
+解释：
+第 0 层的平均值是 3 ,  第1层是 14.5 , 第2层是 11 。因此返回 [3, 14.5, 11] 。
+```
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Solution {
+    public List <Double> averageOfLevels(TreeNode root) {
+        List <Double> res = new ArrayList < > ();
+        Queue <TreeNode> queue = new LinkedList < > ();
+
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            long sum = 0, count = 0;
+            Queue <TreeNode> temp = new LinkedList<>();
+            while (!queue.isEmpty()) {
+                TreeNode n = queue.remove();
+                sum += n.val;
+                count++;
+                if (n.left != null)
+                    temp.add(n.left);
+                if (n.right != null)
+                    temp.add(n.right);
+            }
+            queue = temp;
+            res.add(sum * 1.0 / count);
+        }
+        return res;
+    }
+}
+```
+
+
+## 669. 修剪二叉搜索树(简单)
+
+给定一个二叉搜索树，同时给定最小边界L 和最大边界 R。通过修剪二叉搜索树，使得所有节点的值在[L, R]中 (R>=L) 。你可能需要改变树的根节点，所以结果应当返回修剪好的二叉搜索树的新的根节点。
+
+```
+示例 1:
+
+输入: 
+    1
+   / \
+  0   2
+
+  L = 1
+  R = 2
+
+输出: 
+    1
+      \
+       2
+
+示例 2:
+
+输入: 
+    3
+   / \
+  0   4
+   \
+    2
+   /
+  1
+
+  L = 1
+  R = 3
+
+输出: 
+      3
+     / 
+   2   
+  /
+ 1
+```
+
+
+**思路与算法：**
+
+- 当$\text{node.val > R}$，那么修剪后的二叉树必定出现在节点的左边。
+- 当$\text{node.val < L}$，那么修剪后的二叉树出现在节点的右边。
+- 否则，我们将会修剪树的两边。
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode trimBST(TreeNode root, int L, int R) {
+        if (root == null) return root;
+        if (root.val > R) return trimBST(root.left, L, R);
+        if (root.val < L) return trimBST(root.right, L, R);
+
+        root.left = trimBST(root.left, L, R);
+        root.right = trimBST(root.right, L, R);
+        return root;
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是给定的树的全部节点。我们**最多访问每个节点一次**。
+
+- 空间复杂度：$O(N)$，即使我们没有明确使用任何额外的内存，在最糟糕的情况下，我们**递归调用的栈可能与节点数一样大**。
+
+
+
+
+
+## 700. 二叉搜索树中的搜索(简单)
+
+**题目描述：**
+
+给定二叉搜索树(BST)的根节点和一个值。 你需要在BST中找到节点值等于给定值的节点。返回以该节点为根的子树。如果节点不存在，则返回NULL。
+
+**示例：**
+
+```
+给定二叉搜索树:
+
+        4
+       / \
+      2   7
+     / \
+    1   3
+
+和值: 2
+
+你应该返回如下子树:
+
+      2     
+     / \   
+    1   3
+
+在上述示例中，如果要找的值是 5，但因为没有节点值为 5，我们应该返回 NULL。
+```
+
+<div align=center><img src=LeetCode\700_1.png width=70%></div>
+
+
+**思路与算法：**
+
+**递归**实现非常简单：
+
+- 如果根节点为空`root == null`或者根节点的值等于搜索值`val == root.val`，返回根节点。
+- 如果`val < root.val`，进入根节点的左子树查找`searchBST(root.left, val)`。
+- 如果`val > root.val`，进入根节点的右子树查找`searchBST(root.right, val)`。
+- 返回根节点。
+
+<div align=center><img src=LeetCode\700_2.png width=70%></div>
+
+```java {.line-numbers highlight=16}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf 
+ * @date 2020/7/12
+ * @version 1.0 递归
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        if (node == null || value == node.val) {
+            return node;
+        }
+        
+        return value < node.val ? searchBST(node.left, value) : searchBST(node.right, value);
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+
+- 空间复杂度：$\mathcal{O}(H)$，**递归栈**的深度为$H$。平均情况下深度为$\mathcal{O}(\log N)$，最坏情况下深度为$\mathcal{O}(N)$。
+
+
+为了降低空间复杂度，将递归转换为**迭代**：
+
+- 如果根节点不空`root != null`且根节点不是目的节点`val != root.val`：
+  - 如果`val < root.val`，进入根节点的左子树查找`root = root.left`。
+  - 如果`val > root.val`，进入根节点的右子树查找`root = root.right`。
+- 返回root。
+
+<div align=center><img src=LeetCode\700_3.png width=70%></div>
+
+```java {.line-numbers highlight=12-13}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf
+ * @date 2020/7/12
+ * @version 2.0 迭代
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        while (node != null && value != node.val) {
+            node = value < node.val ? node.left : node.right;
+        }
+        
+        return node;
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+- 空间复杂度：$\mathcal{O}(1)$，恒定的额外空间。
+
+
+**递归与迭代的区别：**
+
+- 递归：**重复调用函数自身**实现循环称为递归；
+- 迭代：利用变量的**原值推出新值**称为迭代，或者说迭代是**函数内某段代码实现循环**；
+
+
+## 897. 递增顺序查找树(简单)
+
+给你一个树，请你 按中序遍历 重新排列树，使树中最左边的结点现在是树的根，并且每个结点没有左子结点，只有一个右子结点。
+
+ 
+```
+示例 ：
+
+输入：[5,3,6,2,4,null,8,1,null,null,null,7,9]
+
+       5
+      / \
+    3    6
+   / \    \
+  2   4    8
+ /        / \ 
+1        7   9
+
+输出：[1,null,2,null,3,null,4,null,5,null,6,null,7,null,8,null,9]
+
+ 1
+  \
+   2
+    \
+     3
+      \
+       4
+        \
+         5
+          \
+           6
+            \
+             7
+              \
+               8
+                \
+                 9  
+```
+
+提示：
+```
+给定树中的结点数介于 1 和 100 之间。
+每个结点都有一个从 0 到 1000 范围内的唯一整数值。
+```
+
+
+**思路与算法：**
+
+我们在树上进行**中序遍历**，就**可以<font color=red>从小到大</font>得到树上的节点**。我们把这些节点的对应的值存放在数组中，它们已经有序。接着我们直接根据数组构件题目要求的树即可。
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {    
+    public TreeNode increasingBST(TreeNode root) {
+        List<Integer> vals = new ArrayList();
+        inorder(root, vals);
+        TreeNode ans = new TreeNode(0), cur = ans;
+        // 创建树
+        for (int v: vals) {
+            cur.right = new TreeNode(v);
+            cur = cur.right;
+        }
+        return ans.right;
+    }
+
+    public void inorder(TreeNode node, List<Integer> vals) {
+        if (node == null) return;
+        inorder(node.left, vals);
+        vals.add(node.val);
+        inorder(node.right, vals);
+    }
+}
+```
+
+复杂度分析
+
+- 时间复杂度：$O(N)$，其中$N$是树上的节点个数。
+
+- 空间复杂度：$O(N)$。
+
+
+## *938. 二叉搜索树的范围和(简单)
+
+给定二叉搜索树的根结点 root，返回 L 和 R（含）之间的所有结点的值的和。
+
+二叉搜索树保证具有唯一的值。
+
+ 
+```
+示例 1：
+
+输入：root = [10,5,15,3,7,null,18], L = 7, R = 15
+输出：32
+
+示例 2：
+
+输入：root = [10,5,15,3,7,13,18,1,null,6], L = 6, R = 10
+输出：23
+```
+
+提示：
+```
+树中的结点数量最多为 10000 个。
+最终的答案保证小于 2^31。
+```
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/range-sum-of-bst/solution/hua-jie-suan-fa-938-er-cha-sou-suo-shu-de-fan-wei-/
+
+递归终止条件：
+- 当前节点为 null 时返回 0
+- 当前节点 X < L 时则返回右子树之和
+- 当前节点 X > R 时则返回左子树之和
+- 当前节点 X >= L 且 X <= R 时则返回：当前节点值 + 左子树之和 + 右子树之和
+
+<div align=center><img src=LeetCode\938.jpg></div>
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int rangeSumBST(TreeNode root, int L, int R) {
+        if (root == null) {
+            return 0;
+        }
+        if (root.val < L) {
+            return rangeSumBST(root.right, L, R);
+        }
+        if (root.val > R) {
+            return rangeSumBST(root.left, L, R);
+        }
+        return root.val + rangeSumBST(root.left, L, R) + rangeSumBST(root.right, L, R);
+    }
+}
+
+
+class Solution {
+    int ans;
+    public int rangeSumBST(TreeNode root, int L, int R) {
+        ans = 0;
+        dfs(root, L, R);
+        return ans;
+    }
+
+    public void dfs(TreeNode node, int L, int R) {
+        if (node != null) {
+            if (L <= node.val && node.val <= R)
+                ans += node.val;
+            if (L < node.val)
+                dfs(node.left, L, R);
+            if (node.val < R)
+                dfs(node.right, L, R);
+        }
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是树中的节点数目。
+
+- 空间复杂度：$O(H)$，其中$H$是树的高度。
+
+
+
+## 965. 单值二叉树(简单)
+
+如果二叉树每个节点都具有相同的值，那么该二叉树就是单值二叉树。
+
+只有给定的树是单值二叉树时，才返回 true；否则返回 false。
+
+```
+输入：[1,1,1,1,1,null,1]
+输出：true
+
+输入：[2,2,2,5,2]
+输出：false
+```
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    List<Integer> vals;
+    public boolean isUnivalTree(TreeNode root) {
+        vals = new ArrayList();
+        dfs(root);
+        for (int v: vals)
+            if (v != vals.get(0))
+                return false;
+        return true;
+    }
+
+    public void dfs(TreeNode node) {
+        if (node != null) {
+            vals.add(node.val);
+            dfs(node.left);
+            dfs(node.right);
+        }
+    }
+}
+```
+
+
+
+## *1022. 从根到叶的二进制数之和(简单)
+
+给出一棵二叉树，其上每个结点的值都是 0 或 1 。每一条从根到叶的路径都代表一个从最高有效位开始的二进制数。例如，如果路径为`0 -> 1 -> 1 -> 0 -> 1`，那么它表示二进制数·，也就是13。
+
+对树上的每一片叶子，我们都要找出从根到该叶子的路径所表示的数字。
+
+以 10^9 + 7 为模，返回这些数字之和。
+
+<div align=center><img src=LeetCode\1022.png width=40%></div>
+
+```
+输入：[1,0,1,0,1,0,1]
+输出：22
+解释：(100) + (101) + (110) + (111) = 4 + 5 + 6 + 7 = 22
+```
+
+提示：
+```
+树中的结点数介于 1 和 1000 之间。
+node.val 为 0 或 1 。
+```
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/sum-of-root-to-leaf-binary-numbers/solution/jie-jin-shuang-bai-cong-gen-dao-xie-de-er-jin-zhi-/
+
+- 对于一个二进制数110，我们知道$(110)_2=1×2^2 + 1×2^1+0×2^0 = 6$
+- 但是由于我们由顶到底，而顶是最高位，我们不知道有多少层，也就不知道要乘2的几次方。
+- 解决方法：每次往下一层，对上一层的结果乘2。如递归构建101这条路径时：
+    - 访问1时：$0×2 + 1$
+    - 访问0时：$(0×2 + 1)×2 + 0$
+    - 访问1时：$((0×2 + 1)×2 + 0)×2 + 1$
+    - 把最终结果展开得到$0×2^3 + 1×2^2+0×2^1+ 1 = 5$
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    int ans = 0;    // 存放结果
+    int mod = 1000000000 + 7;   // 用作取模
+
+    public int sumRootToLeaf(TreeNode root) {
+        helper(root, 0);
+        return ans % mod;
+    }
+
+    public void helper(TreeNode root, int sum) {
+        if (root != null) {      
+            sum = sum * 2 + root.val;   
+            if (root.left == null && root.right == null) {
+                // 到达叶子节点，得到一个和，加到结果上
+                ans += sum;     
+            } else {    // 没有到达叶子节点，继续递归
+                helper(root.left, sum);
+                helper(root.right, sum);
+            }
+        }
+    }
+}
+```
+
+
+
+# 递归
+
+## 面试题 04.02. 最小高度树(简单)
+
+给定一个有序整数数组，元素各不相同且按升序排列，编写一个算法，创建一棵**高度最小的二叉搜索树**。
+
+```
+示例:
+给定有序数组: [-10,-3,0,5,9],
+
+一个可能的答案是：[0,-3,9,-10,null,5]，它可以表示下面这个高度平衡二叉搜索树：
+
+          0 
+         / \ 
+       -3   9 
+       /   / 
+     -10  5 
+```
+
+二叉查找树（Binary Search Tree），（又：二叉搜索树，二叉排序树）它或者是一棵空树，或者是具有下列性质的二叉树： 
+
+- 若它的左子树不空，则**左子树上所有结点的值均小于它的根结点的值**； 
+- 若它的右子树不空，则**右子树上所有结点的值均大于它的根结点的值**； 
+- 它的左、右子树也分别为二叉排序树。
+
+二叉搜索树作为一种经典的数据结构，它既有链表的快速插入与删除操作的特点，又有数组快速查找的优势；所以应用十分广泛，例如在文件系统和数据库系统一般会采用这种数据结构进行高效率的排序与检索操作。
+
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/minimum-height-tree-lcci/solution/di-gui-gou-jian-by-zui-weng-jiu-xian/
+
+要求高度最小，保持高度平衡，也就是说**左右子树的节点个数应该尽可能接近**，那么可以
+
+1. **用nums数组的中间值mid作为根节点**，根据mid划分左子数组和右子数组。左子数组构建左子树，右子数组构建右子树。
+
+2. 那么现在的问题就转化为**怎么用左子数组构建左子树/右子数组构建右子树**
+
+3. 以左子数组构建左子树为例；为了保持高度平衡，继续采用1中的划分方法，划分出新的左子数组和右子数组；
+
+4. 当左子数组/右子数组为空时，返回null。
+
+右子数组构建右子树的过程与上述相同。
+
+<div align=center><img src=LeetCode\4.2.png width=60%></div>
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode sortedArrayToBST(int[] nums) {
+        return helper(nums, 0, nums.length - 1);
+    }
+
+    public TreeNode helper(int[] nums, int low, int high) {
+        // low > high表示子数组为空
+        if (low > high) {
+            return null;
+        }
+
+        // 以mid作为根节点；
+        // 计算时要加low，防止最后出现mid=(4-4)/0=0，实际位置应为(4-4)/0+4
+        int mid = (high - low) / 2 + low;
+        TreeNode root = new TreeNode(nums[mid]);
+
+        // 左子数组[low, mid -1]构建左子树
+        root.left = helper(nums, low, mid - 1);
+
+        // 右子数组[mid + 1, high]构建右子树
+        root.right = helper(nums, mid + 1, high);
+
+        return root;
+    }
+}
+```
+
+复杂度分析：
+
+- 数组中的元素都使用1次，时间复杂度为$O(n)$。
+
+- 递归使用栈辅助空间，空间复杂度$O(n)$。
+
+
+
+## 104. 二叉树的最大深度(简单)
+
+**题目：**
+
+给定一个二叉树，找出其最大深度。二叉树的深度为根节点到最远叶子节点的最长路径上的节点数。
+
+说明: 叶子节点是指没有子节点的节点。
+
+**示例：**
+```
+给定二叉树 [3,9,20,null,null,15,7]，
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回它的最大深度 3 。
+```
+
+### 递归，DFS(深度优先搜索)
+
+$H(1) = 1 + max(H(2), H(7))$
+即$H(1) = 1 + max(H(1).left, H(1).right)$
+<div align=center><img src=LeetCode\104.jpg></div>
+
+**代码：**
+```java
+package solution;
+
+/**
+ * leetcode_104_二叉树最大深度
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ *
+ * Definition for a binary tree node.
+ *
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *
+ *     TreeNode(int val) {
+ *         this.val = val;
+ *     }
+ *
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+
+public class MaximumDepthOfBinaryTree {
+    public int maxDepth(TreeNode node) {
+        if (node == null) {
+            return 0;
+        } else {
+            int leftHeight = maxDepth(node.left);
+            int rightHeight = maxDepth(node.right);
+            return Math.max(leftHeight, rightHeight) + 1;
+        }
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：我们每个结点只访问一次，因此时间复杂度为$O(N)$，其中$N$是结点的数量。
+
+- 空间复杂度：在最糟糕的情况下，树是完全不平衡的，例如每个结点只剩下左子结点，递归将会被调用$N$次（树的高度），因此保持调用栈的存储将是$O(N)$。但在最好的情况下（树是完全平衡的），树的高度将是$\log(N)$。因此，在这种情况下的空间复杂度将是$O(\log(N))$。
+
+
+在递归中，如果层级过深，很可能保存过多的临时变量，导致栈溢出。
+
+事实上，**函数调用的参数是通过栈空间来传递的**，在调用过程中会占用线程的栈资源。而递归调用，只有走到最后的结束点后函数才能依次退出，而未到达最后的结束点之前，占用的栈空间一直没有释放，如果递归调用次数过多，就可能导致占用的栈资源超过线程的最大值，从而导致栈溢出，导致程序的异常退出。
+
+99%的递归转非递归，都可以通过栈来进行实现。 
+
+
+
+
+## 226. 翻转二叉树(简单)
+
+翻转一棵二叉树。
+
+```
+示例：
+
+输入：
+
+     4
+   /   \
+  2     7
+ / \   / \
+1   3 6   9
+
+输出：
+
+     4
+   /   \
+  7     2
+ / \   / \
+9   6 3   1
+```
+
+反转一棵空树结果还是一颗空树。
+
+对于一棵根为$r$，左子树为$left$， 右子树为$right$的树来说，它的反转树是一颗根为$r$，左子树为$left$的反转树，右子树为$right$的反转树的树。
+
+```java
+class Solution {
+    public TreeNode invertTree(TreeNode root) {
+        if (root == null) {
+            return null;
+        }
+
+        TreeNode right = invertTree(root.right);
+        TreeNode left = invertTree(root.left);
+        root.left = right;
+        root.right = left;
+    
+        return root;
+    }
+}
+```
+
+复杂度分析：
+
+- 既然树中的**每个节点都只被访问一次**，那么**时间复杂度就是$O(n)$**，其中$n$是树中节点的个数。在反转之前，不论怎样我们至少都得访问每个节点至少一次，因此这个问题无法做地比$O(n)$更好了。
+
+- 本方法使用了递归，在最坏情况下**栈内需要存放$O(h)$个方法调用**，其中$h$是树的高度。由于$h\in O(n)$，可得出**空间复杂度为$O(n)$**。
+
+
+## 617. 合并二叉树(简单)
+
+给定两个二叉树，想象当你将它们中的一个覆盖到另一个上时，两个二叉树的一些节点便会重叠。
+
+你需要将他们合并为一个新的二叉树。合并的规则是**如果两个节点重叠，那么将他们的值相加作为节点合并后的新值**，否则不为NULL的节点将直接作为新二叉树的节点。
+
+```
+示例 1:
+
+输入: 
+	Tree 1                     Tree 2                  
+          1                         2                             
+         / \                       / \                            
+        3   2                     1   3                        
+       /                           \   \                      
+      5                             4   7                  
+输出: 
+合并后的树:
+	     3
+	    / \
+	   4   5
+	  / \   \ 
+	 5   4   7
+```
+
+注意: 合并必须从两个树的根节点开始。
+
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/merge-two-binary-trees/solution/dong-hua-yan-shi-di-gui-die-dai-617he-bing-er-cha-/
+
+遍历二叉树很简单，用前序遍历就可以了，再依次把访问到的节点值相加，因为题目没有说不能改变树的值和结构，我们**不用再创建新的节点了，直接将树2合并到树1上再返回**就可以了。
+
+递归的条件：
+
+- 终止条件：树1的节点为null，或者树2的节点为null
+- 递归函数内：将两个树的节点相加后，再赋给树1的节点。再递归的执行两个树的左节点，递归执行两个树的右节点
+
+
+<div align=center><img src=LeetCode\617.gif width=80%></div>
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Solution {
+    public TreeNode mergeTrees(TreeNode t1, TreeNode t2) {
+        if (t1 == null)
+            return t2;
+        if (t2 == null)
+            return t1;
+
+        t1.val += t2.val;
+        t1.left = mergeTrees(t1.left, t2.left);
+        t1.right = mergeTrees(t1.right, t2.right);
+        
+        return t1;
+    }
+}
+```
+
+
+复杂度分析
+
+- 时间复杂度：$O(N)$，其中$N$是两棵树中节点个数的较小值。
+
+- 空间复杂度：$O(N)$，在最坏情况下，会**递归$N$层**，需要$O(N)$的**栈空间**。
+
+
+## 700. 二叉搜索树中的搜索(简单)
+
+**题目描述：**
+
+给定二叉搜索树(BST)的根节点和一个值。 你需要在BST中找到节点值等于给定值的节点。返回以该节点为根的子树。如果节点不存在，则返回NULL。
+
+**示例：**
+
+```
+给定二叉搜索树:
+
+        4
+       / \
+      2   7
+     / \
+    1   3
+
+和值: 2
+
+你应该返回如下子树:
+
+      2     
+     / \   
+    1   3
+
+在上述示例中，如果要找的值是 5，但因为没有节点值为 5，我们应该返回 NULL。
+```
+
+<div align=center><img src=LeetCode\700_1.png width=70%></div>
+
+
+**思路与算法：**
+
+**递归**实现非常简单：
+
+- 如果根节点为空`root == null`或者根节点的值等于搜索值`val == root.val`，返回根节点。
+- 如果`val < root.val`，进入根节点的左子树查找`searchBST(root.left, val)`。
+- 如果`val > root.val`，进入根节点的右子树查找`searchBST(root.right, val)`。
+- 返回根节点。
+
+<div align=center><img src=LeetCode\700_2.png width=70%></div>
+
+```java {.line-numbers highlight=16}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf 
+ * @date 2020/7/12
+ * @version 1.0 递归
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        if (node == null || value == node.val) {
+            return node;
+        }
+        
+        return value < node.val ? searchBST(node.left, value) : searchBST(node.right, value);
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+
+- 空间复杂度：$\mathcal{O}(H)$，**递归栈**的深度为$H$。平均情况下深度为$\mathcal{O}(\log N)$，最坏情况下深度为$\mathcal{O}(N)$。
+
+
+为了降低空间复杂度，将递归转换为**迭代**：
+
+- 如果根节点不空`root != null`且根节点不是目的节点`val != root.val`：
+  - 如果`val < root.val`，进入根节点的左子树查找`root = root.left`。
+  - 如果`val > root.val`，进入根节点的右子树查找`root = root.right`。
+- 返回root。
+
+<div align=center><img src=LeetCode\700_3.png width=70%></div>
+
+```java {.line-numbers highlight=12-13}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf
+ * @date 2020/7/12
+ * @version 2.0 迭代
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        while (node != null && value != node.val) {
+            node = value < node.val ? node.left : node.right;
+        }
+        
+        return node;
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+- 空间复杂度：$\mathcal{O}(1)$，恒定的额外空间。
+
+
+**递归与迭代的区别：**
+
+- 递归：**重复调用函数自身**实现循环称为递归；
+- 迭代：利用变量的**原值推出新值**称为迭代，或者说迭代是**函数内某段代码实现循环**；
+
+
+
+## *938. 二叉搜索树的范围和(简单)
+
+给定二叉搜索树的根结点 root，返回 L 和 R（含）之间的所有结点的值的和。
+
+二叉搜索树保证具有唯一的值。
+
+ 
+```
+示例 1：
+
+输入：root = [10,5,15,3,7,null,18], L = 7, R = 15
+输出：32
+
+示例 2：
+
+输入：root = [10,5,15,3,7,13,18,1,null,6], L = 6, R = 10
+输出：23
+```
+
+提示：
+```
+树中的结点数量最多为 10000 个。
+最终的答案保证小于 2^31。
+```
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/range-sum-of-bst/solution/hua-jie-suan-fa-938-er-cha-sou-suo-shu-de-fan-wei-/
+
+递归终止条件：
+- 当前节点为 null 时返回 0
+- 当前节点 X < L 时则返回右子树之和
+- 当前节点 X > R 时则返回左子树之和
+- 当前节点 X >= L 且 X <= R 时则返回：当前节点值 + 左子树之和 + 右子树之和
+
+<div align=center><img src=LeetCode\938.jpg></div>
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+
+
+class Solution {
+    int ans;
+    public int rangeSumBST(TreeNode root, int L, int R) {
+        ans = 0;
+        dfs(root, L, R);
+        return ans;
+    }
+
+    public void dfs(TreeNode node, int L, int R) {
+        if (node != null) {
+            if (L <= node.val && node.val <= R)
+                ans += node.val;
+            if (L < node.val)
+                dfs(node.left, L, R);
+            if (node.val < R)
+                dfs(node.right, L, R);
+        }
+    }
+}
+
+
+class Solution {
+    public int rangeSumBST(TreeNode root, int L, int R) {
+        if (root == null) {
+            return 0;
+        }
+        if (root.val < L) {
+            return rangeSumBST(root.right, L, R);
+        }
+        if (root.val > R) {
+            return rangeSumBST(root.left, L, R);
+        }
+        return root.val + rangeSumBST(root.left, L, R) + rangeSumBST(root.right, L, R);
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是树中的节点数目。
+
+- 空间复杂度：$O(H)$，其中$H$是树的高度。
+
+
+
+# 深度优先遍历
+
+
+## 144. 二叉树的前序遍历(中等)
+
+给定一个二叉树，返回它的前序遍历
+
+```
+输入: [1,null,2,3]  
+   1
+    \
+     2
+    /
+   3 
+
+输出: [1,2,3]
+```
+
+<div align=center><img src=LeetCode\二叉树遍历.png width=30%></div>
+
+**从子树的角度来观察：**
+
+- 如果按照`根节点 -> 左孩子 -> 右孩子`的方式遍历，即**先序遍历**：`1 2 4 5 3 6 7`；
+- 如果按照`左孩子 -> 根节点 -> 右孩子`的方式遍历，即**中序遍历**：`4 2 5 1 6 3 7`；
+- 如果按照`左孩子 -> 右孩子 -> 根节点`的方式遍历，即**后序遍历**：`4 5 2 6 7 3 1`；
+- **层次遍历**就是按照每一层从左向右的方式进行遍历：`1 2 3 4 5 6 7`。
+
+### 递归
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_144_二叉树的前序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 1.0 递归法
+ */
+
+public class Solution {
+    public List<Integer> preorderTraversal(TreeNode root) {
+        if (root == null) {
+            return new ArrayList<>();
+        }
+
+        List<Integer> result = new ArrayList<>();
+        preorderTraversal(root, result);
+        return result;
+    }
+
+    public void preorderTraversal(TreeNode node, List<Integer> result) {
+        if (node != null) {
+            result.add(node.val);
+            // 把node.left看成以其为根的子树
+            if (node.left != null) {
+                preorderTraversal(node.left, result);
+            }
+            // 把node.right看成以其为根的子树
+            if (node.right != null) {
+                preorderTraversal(node.right, result);
+            }
+        }
+    }
+}
+```
+
+### 迭代——栈
+
+使用**栈**来进行迭代，过程如下：
+- 初始化栈，并将根节点入栈；
+- 当栈不为空时：
+  - 弹出栈顶元素node，并将值添加到结果中；
+  - 如果node的右子树非空，将右子树入栈；
+  - 如果node的左子树非空，将左子树入栈；
+
+由于栈是“先进后出”的顺序，所以入栈时**先将右子树入栈**，这样使得前序遍历结果为 “根->左->右”的顺序。
+
+<div align=center><img src=LeetCode\144.gif></div>
+
+```java
+package solution;
+
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * leetcode_144_二叉树的前序遍历
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 2.0 迭代法
+ */
+
+public class PreorderTraversal_v2 {
+    public List<Integer> preorderTraversal(TreeNode root) {
+        LinkedList<TreeNode> stack = new LinkedList<>();
+        LinkedList<Integer> output = new LinkedList<>();
+
+        if (root == null) {
+            return output;
+        }
+        
+        // 从根节点开始，每次迭代弹出当前栈顶元素，并将其孩子节点压入栈中
+        stack.add(root);
+        while (! stack.isEmpty()) {
+            // 每次迭代弹出当前栈顶元素
+            TreeNode node = stack.pollLast();
+            output.add(node.val);
+            
+            // 先压右孩子
+            if (node.right != null) {
+                stack.add(node.right);
+            }
+            
+            // 再压左孩子
+            if (node.left != null) {
+                stack.add(node.left);
+            }
+        }
+        
+        return output;
+    }
+}
+```
+
+**算法复杂度**
+
+- 时间复杂度：**访问每个节点恰好一次**，时间复杂度为$O(N)$，其中$N$是节点的个数，也就是树的大小。
+- 空间复杂度：取决于树的结构，最坏情况存储整棵树，因此空间复杂度是$O(N)$。
+
+
+## 617. 合并二叉树(简单)
+
+给定两个二叉树，想象当你将它们中的一个覆盖到另一个上时，两个二叉树的一些节点便会重叠。
+
+你需要将他们合并为一个新的二叉树。合并的规则是**如果两个节点重叠，那么将他们的值相加作为节点合并后的新值**，否则不为NULL的节点将直接作为新二叉树的节点。
+
+```
+示例 1:
+
+输入: 
+	Tree 1                     Tree 2                  
+          1                         2                             
+         / \                       / \                            
+        3   2                     1   3                        
+       /                           \   \                      
+      5                             4   7                  
+输出: 
+合并后的树:
+	     3
+	    / \
+	   4   5
+	  / \   \ 
+	 5   4   7
+```
+
+注意: 合并必须从两个树的根节点开始。
+
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/merge-two-binary-trees/solution/dong-hua-yan-shi-di-gui-die-dai-617he-bing-er-cha-/
+
+遍历二叉树很简单，用前序遍历就可以了，再依次把访问到的节点值相加，因为题目没有说不能改变树的值和结构，我们**不用再创建新的节点了，直接将树2合并到树1上再返回**就可以了。
+
+递归的条件：
+
+- 终止条件：树1的节点为null，或者树2的节点为null
+- 递归函数内：将两个树的节点相加后，再赋给树1的节点。再递归的执行两个树的左节点，递归执行两个树的右节点
+
+
+<div align=center><img src=LeetCode\617.gif width=80%></div>
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Solution {
+    public TreeNode mergeTrees(TreeNode t1, TreeNode t2) {
+        if (t1 == null)
+            return t2;
+        if (t2 == null)
+            return t1;
+
+        t1.val += t2.val;
+        t1.left = mergeTrees(t1.left, t2.left);
+        t1.right = mergeTrees(t1.right, t2.right);
+        
+        return t1;
+    }
+}
+```
+
+
+复杂度分析
+
+- 时间复杂度：$O(N)$，其中$N$是两棵树中节点个数的较小值。
+
+- 空间复杂度：$O(N)$，在最坏情况下，会**递归$N$层**，需要$O(N)$的**栈空间**。
+
+
+
+## 700. 二叉搜索树中的搜索(简单)
+
+**题目描述：**
+
+给定二叉搜索树(BST)的根节点和一个值。 你需要在BST中找到节点值等于给定值的节点。返回以该节点为根的子树。如果节点不存在，则返回NULL。
+
+**示例：**
+
+```
+给定二叉搜索树:
+
+        4
+       / \
+      2   7
+     / \
+    1   3
+
+和值: 2
+
+你应该返回如下子树:
+
+      2     
+     / \   
+    1   3
+
+在上述示例中，如果要找的值是 5，但因为没有节点值为 5，我们应该返回 NULL。
+```
+
+<div align=center><img src=LeetCode\700_1.png width=70%></div>
+
+
+**思路与算法：**
+
+**递归**实现非常简单：
+
+- 如果根节点为空`root == null`或者根节点的值等于搜索值`val == root.val`，返回根节点。
+- 如果`val < root.val`，进入根节点的左子树查找`searchBST(root.left, val)`。
+- 如果`val > root.val`，进入根节点的右子树查找`searchBST(root.right, val)`。
+- 返回根节点。
+
+<div align=center><img src=LeetCode\700_2.png width=70%></div>
+
+```java {.line-numbers highlight=16}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf 
+ * @date 2020/7/12
+ * @version 1.0 递归
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        if (node == null || value == node.val) {
+            return node;
+        }
+        
+        return value < node.val ? searchBST(node.left, value) : searchBST(node.right, value);
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+
+- 空间复杂度：$\mathcal{O}(H)$，**递归栈**的深度为$H$。平均情况下深度为$\mathcal{O}(\log N)$，最坏情况下深度为$\mathcal{O}(N)$。
+
+
+为了降低空间复杂度，将递归转换为**迭代**：
+
+- 如果根节点不空`root != null`且根节点不是目的节点`val != root.val`：
+  - 如果`val < root.val`，进入根节点的左子树查找`root = root.left`。
+  - 如果`val > root.val`，进入根节点的右子树查找`root = root.right`。
+- 返回root。
+
+<div align=center><img src=LeetCode\700_3.png width=70%></div>
+
+```java {.line-numbers highlight=12-13}
+package solution;
+
+/**
+ * leetcode_700_二叉搜索树中的搜索
+ * @author Chenzf
+ * @date 2020/7/12
+ * @version 2.0 迭代
+ */
+
+public class SearchInBinarySearchTree {
+    public TreeNode searchBST(TreeNode node, int value) {
+        while (node != null && value != node.val) {
+            node = value < node.val ? node.left : node.right;
+        }
+        
+        return node;
+    }
+}
+```
+
+**递归复杂度分析：**
+
+- 时间复杂度：$\mathcal{O}(H)$，其中$H$是树高。平均时间复杂度为$\mathcal{O}(\log N)$，最坏时间复杂度为$\mathcal{O}(N)$。
+- 空间复杂度：$\mathcal{O}(1)$，恒定的额外空间。
+
+
+**递归与迭代的区别：**
+
+- 递归：**重复调用函数自身**实现循环称为递归；
+- 迭代：利用变量的**原值推出新值**称为迭代，或者说迭代是**函数内某段代码实现循环**；
+
+
+
+
+## *938. 二叉搜索树的范围和(简单)
+
+给定二叉搜索树的根结点 root，返回 L 和 R（含）之间的所有结点的值的和。
+
+二叉搜索树保证具有唯一的值。
+
+ 
+```
+示例 1：
+
+输入：root = [10,5,15,3,7,null,18], L = 7, R = 15
+输出：32
+
+示例 2：
+
+输入：root = [10,5,15,3,7,13,18,1,null,6], L = 6, R = 10
+输出：23
+```
+
+提示：
+```
+树中的结点数量最多为 10000 个。
+最终的答案保证小于 2^31。
+```
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/range-sum-of-bst/solution/hua-jie-suan-fa-938-er-cha-sou-suo-shu-de-fan-wei-/
+
+递归终止条件：
+- 当前节点为 null 时返回 0
+- 当前节点 X < L 时则返回右子树之和
+- 当前节点 X > R 时则返回左子树之和
+- 当前节点 X >= L 且 X <= R 时则返回：当前节点值 + 左子树之和 + 右子树之和
+
+<div align=center><img src=LeetCode\938.jpg></div>
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+
+
+class Solution {
+    int ans;
+    public int rangeSumBST(TreeNode root, int L, int R) {
+        ans = 0;
+        dfs(root, L, R);
+        return ans;
+    }
+
+    public void dfs(TreeNode node, int L, int R) {
+        if (node != null) {
+            if (L <= node.val && node.val <= R)
+                ans += node.val;
+            if (L < node.val)
+                dfs(node.left, L, R);
+            if (node.val < R)
+                dfs(node.right, L, R);
+        }
+    }
+}
+
+
+class Solution {
+    public int rangeSumBST(TreeNode root, int L, int R) {
+        if (root == null) {
+            return 0;
+        }
+        if (root.val < L) {
+            return rangeSumBST(root.right, L, R);
+        }
+        if (root.val > R) {
+            return rangeSumBST(root.left, L, R);
+        }
+        return root.val + rangeSumBST(root.left, L, R) + rangeSumBST(root.right, L, R);
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$，其中$N$是树中的节点数目。
+
+- 空间复杂度：$O(H)$，其中$H$是树的高度。
+
+
+# 广度优先搜索
+
+## 102. 二叉树的层序遍历(中等)
+
+**题目描述：**
+
+给一个二叉树，请返回其按层序遍历得到的节点值。即逐层地，从左到右访问所有节点。
+
+**示例：**
+
+```
+二叉树：[3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+
+返回其层次遍历结果：
+
+[[3],[9,20],[15,7]]
+```
+
+<div align=center><img src=LeetCode\102.png width=80%></div>
+
+
+### 队列
+
+链接：https://leetcode-cn.com/problems/binary-tree-level-order-traversal/solution/die-dai-di-gui-duo-tu-yan-shi-102er-cha-shu-de-cen/
+
+BFS使用**队列**，把每个还没有搜索到的点依次放入队列，然后再弹出队列的头部元素当做当前遍历点。
+
+
+广度优先需要用队列作为辅助结构，我们先将根节点放到队列中，然后不断遍历队列。
+
+<div align=center><img src=LeetCode\102.jpg width=60%></div>
+
+**首先拿出根节点，如果左子树/右子树不为空，就将他们放入队列中**。第一遍处理完后，根节点已经从队列中拿走了，而根节点的两个孩子已放入队列中了，现在队列中就有两个节点 2 和 5。
+
+<div align=center><img src=LeetCode\102_1.jpg width=60%></div>
+
+第二次处理，会将 2 和 5 这两个节点从队列中拿走，然后再将 2 和 5 的子节点放入队列中，现在队列中就有三个节点 3，4，6。
+
+<div align=center><img src=LeetCode\102_2.jpg width=60%></div>
+
+```java
+import java.util.*;	
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        if(root == null) {
+            return new ArrayList<List<Integer>>();
+        }
+		
+        List<List<Integer>> res = new ArrayList<List<Integer>>();
+        LinkedList<TreeNode> queue = new LinkedList<TreeNode>();
+        // 将根节点放入队列中，然后不断遍历队列
+        queue.add(root);
+        while(queue.size() > 0) {
+            // 获取当前队列的长度，这个长度相当于 当前这一层的节点个数
+            int size = queue.size();
+            ArrayList<Integer> tmp = new ArrayList<Integer>();
+            // 将队列中的元素都拿出来(也就是获取这一层的节点)，放到临时list中
+            // 如果节点的左/右子树不为空，也放入队列中
+            for(int i = 0; i < size; i++) {
+                TreeNode t = queue.remove();
+                tmp.add(t.val);
+                if(t.left != null) {
+                    queue.add(t.left);
+                }
+                if(t.right != null) {
+                    queue.add(t.right);
+                }
+            }
+            // 将临时list加入最终返回结果中
+            res.add(tmp);
+        }
+        return res;
+    }
+}
+```
+
+- 时间复杂度：$O(n)$
+- 空间复杂度：$O(n)$
+
+
+BFS总共有两个模板：
+
+1. 如果**不需要确定当前遍历到了哪一层**，BFS模板如下
+```
+while queue 不空：
+    cur = queue.pop()
+    for 节点 in cur的所有相邻节点：
+        if 该节点有效且未访问过：
+            queue.push(该节点)
+```
+
+2. 如果要确定当前遍历到了哪一层，BFS模板如下
+这里增加了level表示当前遍历到二叉树中的哪一层了，也可以理解为在一个图中，现在已经走了多少步了。size表示在当前遍历层有多少个元素，也就是队列中的元素数，我们把这些元素一次性遍历完，即把当前层的所有元素都向外走了一步。
+
+```
+level = 0
+while queue 不空：
+    size = queue.size()
+    while (size --) {
+        cur = queue.pop()
+        for 节点 in cur的所有相邻节点：
+            if 该节点有效且未被访问过：
+                queue.push(该节点)
+    }
+    level ++;
+```
+
+本题要求二叉树的层次遍历，所以同一层的节点应该放在一起，故使用模板二。
+
+使用队列保存每层的所有节点，每次把队列里的原先所有节点进行出队列操作，再把每个元素的非空左右子节点进入队列。因此即可得到每层的遍历。
+
+
+**代码实现：**
+
+```java {.line-numbers highlight=37-40}
+package solution;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.LinkedList;
+
+/**
+ * leetcode_102_二叉树的层序遍历
+ */
+
+public class BinaryTreeLevelOrder {
+    public List<List<Integer>> levelOrder(TreeNode node) {
+        // 最后输出结果
+        List<List<Integer>> result = new ArrayList<>();
+        // 存放每层的结点
+        Queue<TreeNode> queue = new LinkedList<>();
+
+        queue.offer(node);
+
+        while (! queue.isEmpty()) {
+            int size = queue.size();
+
+            // 每一层的遍历结果
+            List<Integer> level = new LinkedList<>();
+
+            for (int i = 0; i < size; i++) {
+                // queue.peek()返回队列的头元素，不删除
+                TreeNode currentNode = queue.peek();
+                /*
+                Queue中remove()和poll()都是用来从队列头部删除一个元素。
+                在队列元素为空的情况下，remove() 方法会抛出NoSuchElementException异常，
+                poll() 方法只会返回null
+                 */
+                queue.poll();
+
+                // 防止当结点的左结点为null，右结点不为null时，出现queue=[null, XX]
+                if (currentNode == null) {
+                    continue;
+                }
+
+                level.add(currentNode.val);
+
+                // 利用完当前结点后，将其左、右结点加入队列中
+                queue.offer(currentNode.left);
+                queue.offer(currentNode.right);
+            }
+
+            if (! level.isEmpty()) {
+                // 将每一层的结果加入最终结果列表中
+                result.add(level);
+            }
+        }
+
+        return result;
+    }
+}
+```
