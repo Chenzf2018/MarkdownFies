@@ -2990,6 +2990,8 @@ class Solution {
 
 
 
+
+
 ## 160. *相交链表(简单)
 
 **题目描述：**
@@ -3453,6 +3455,20 @@ public class PalindromeLinkedList_v2 {
 - 不要从你的函数中返回任何结果。
 
 
+
+**思路与算法：**
+
+从链表里删除一个节点 node 的最常见方法是**修改之前节点的 next 指针，使其指向之后的节点**。
+<div align=center><img src=LeetCode\237_1.png width=50%></div>
+
+因为，我们**无法访问我们想要删除的节点 之前 的节点**，我们始终不能修改该节点的 next 指针。
+
+**我们可以将想要删除的节点的值替换为它后面节点中的值，然后删除它之后的节点**。
+
+
+<div align=center><img src=LeetCode\237_3.jpg width=50%></div>
+
+
 ```java
 /**
  * Definition for singly-linked list.
@@ -3636,6 +3652,81 @@ class Solution {
 
 # 哈希表
 
+## 常用方法
+
+`map.containsKey(string.charAt(i))`
+`map.put(string.charAt(i), map.get(string.charAt(i)) + 1)`
+
+```java
+Map<Integer, Integer> counts = countNums(nums);
+Map.Entry<Integer, Integer> majorityEntry = null;
+
+for (Map.Entry<Integer, Integer> entry : counts.entrySet()) {
+    if (majorityEntry == null || entry.getValue() > majorityEntry.getValue()) {
+        majorityEntry = entry;
+    }
+}
+```
+
+```java
+public int[] set_intersection(HashSet<Integer> set1, HashSet<Integer> set2) {
+    int [] output = new int[set1.size()];
+    int index = 0;
+    for (Integer s : set1) {
+        if (set2.contains(s)) {
+            output[index++] = s;
+        }
+    }
+    return Arrays.copyOf(output, index);
+}
+```
+
+
+## 遍历添加元素
+
+`242：有效的字母异位词(简单)`
+
+```java {.line-numbers highlight=11-14}
+class Solution {
+    public boolean isAnagram(String s, String t) {
+        if(s.length() != t.length()) {
+            return false;
+        }
+
+        HashMap<Character,Integer> map = new HashMap<>();
+
+        for (int i = 0; i < s.length(); i++) {
+            // 如果map中不包含s当前的字符，则添加
+            if(!map.containsKey(s.charAt(i))) {
+                map.put(s.charAt(i), 1);
+            } else {
+                map.put(s.charAt(i), map.get(s.charAt(i)) + 1);
+            }
+        }
+
+        for(int i = 0; i < t.length(); i++) {
+            // 如果map中不包含t当前的字符，则添加
+            if(!map.containsKey(t.charAt(i))){
+                map.put(t.charAt(i), 1);
+            }
+            map.put(t.charAt(i), map.get(t.charAt(i)) - 1);
+        }
+
+        ArrayList<Integer> list = new ArrayList<>(map.values());
+
+        for(int a : list) {
+            if(a != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+```
+
+
+
 ## 1. 两数之和(简单)
 
 给定一个整数数组`nums`和一个目标值`target`，请你在该数组中找出**和为目标值**的那**两个整数**，并返回他们的数组**下标**。
@@ -3767,6 +3858,187 @@ public class TestTwoSum {
 
 空间复杂度：$O(n)$
 所需的额外空间**取决于哈希表中存储的元素数量**，该表中存储了$n$个元素。
+
+
+
+## 169. 多数元素(简单)
+
+给定一个大小为 n 的数组，找到其中的多数元素。多数元素是指在数组中出现次数大于 ⌊ n/2 ⌋ 的元素。
+
+你可以假设数组是非空的，并且给定的数组总是存在多数元素。
+
+```
+示例 1:
+
+输入: [3,2,3]
+输出: 3
+
+示例 2:
+
+输入: [2,2,1,1,1,2,2]
+输出: 2
+```
+
+使用哈希映射（HashMap）来存储每个元素以及出现的次数。对于哈希映射中的每个键值对，**键表示一个元素，值表示该元素出现的次数**。
+
+我们用一个循环遍历数组 nums 并将数组中的每个元素加入哈希映射中。在这之后，我们遍历哈希映射中的所有键值对，返回值最大的键。我们同样也可以**在遍历数组 nums 时候使用打擂台的方法，维护最大的值**，这样省去了最后对哈希映射的遍历。
+
+
+```java {.line-numbers highlight=6}
+class Solution {
+    public int majorityElement(int[] nums) {
+        Map<Integer, Integer> counts = countNums(nums);
+        Map.Entry<Integer, Integer> majorityEntry = null;
+        
+        for (Map.Entry<Integer, Integer> entry : counts.entrySet()) {
+            if (majorityEntry == null || entry.getValue() > majorityEntry.getValue()) {
+                majorityEntry = entry;
+            }
+        }
+
+        return majorityEntry.getKey();
+    }
+
+    private Map<Integer, Integer> countNums(int[] nums) {
+        Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
+        for (int num : nums) {
+            if (!counts.containsKey(num)) {
+                counts.put(num, 1);
+            }
+            else {
+                counts.put(num, counts.get(num) + 1);
+            }
+        }
+        return counts;
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是数组 nums 的长度。
+- 空间复杂度：$O(n)$。
+
+
+如果将数组 nums 中的所有元素**按照单调递增或单调递减的顺序排序**，那么下标为$\lfloor \dfrac{n}{2} \rfloor$的元素（下标从 0 开始）一定是众数。
+
+```java
+class Solution {
+    public int majorityElement(int[] nums) {
+        Arrays.sort(nums);
+        return nums[nums.(length/2)];
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n\log n)$。将数组排序的时间复杂度为$O(n\log n)$。
+
+- 空间复杂度：$O(\log n)$。如果**使用语言自带的排序算法，需要使用$O(\log n)$的栈空间**。如果自己编写堆排序，则只需要使用$O(1)$的额外空间。
+
+
+
+
+## *202. 快乐数(简单)
+
+编写一个算法来判断一个数 n 是不是快乐数。
+
+「快乐数」定义为：对于一个正整数，每一次将该数替换为它每个位置上的数字的平方和，然后重复这个过程直到这个数变为 1，也可能是 无限循环 但始终变不到 1。如果 可以变为  1，那么这个数就是快乐数。
+
+如果 n 是快乐数就返回 True ；不是，则返回 False 。
+
+ 
+```
+示例：
+
+输入：19
+输出：true
+解释：
+12 + 92 = 82
+82 + 22 = 68
+62 + 82 = 100
+12 + 02 + 02 = 1
+```
+
+**思路与算法：**
+
+从$7$开始。则下一个数字是$49$（因为$7^2=49$），然后下一个数字是$97$（因为$4^2+9^2=97$）。我们可以不断重复该的过程，直到我们得到$1$。因为我们得到了$1$，我们知道 $7$是一个快乐数，函数应该返回 `true`。
+
+<div align=center><img src=Leetcode\202.png></div>
+
+
+我们从$116$开始。通过反复通过平方和计算下一个数字，我们最终得到$58$，再继续计算之后，我们又回到$58$。由于我们回到了一个已经计算过的数字，可以知道有一个循环，因此不可能达到$1$。所以对于$116$，函数应该返回 `false`。
+
+<div align=center><img src=Leetcode\202_2.png width=70%></div>
+
+
+根据我们的探索，我们猜测会有以下三种可能：
+
+- 最终会得到1。
+- 最终会进入循环。
+- 值会越来越大，最后接近无穷大。
+
+第三个情况比较难以检测和处理。我们怎么知道它会继续变大，而不是最终得到1呢？
+
+我们可以仔细想一想，每一位数的最大数字的下一位数是多少。
+
+| Digits |    Largest    | Next |
+|:------:|:-------------:|:----:|
+|    1   |       9       |  81  |
+|    2   |       99      |  162 |
+|    3   |      999      |  243 |
+|    4   |      9999     |  324 |
+|   13   | 9999999999999 | 1053 |
+
+
+对于3位数的数字，它不可能大于243。这意味着它要么被困在243以下的循环内，要么跌到 1。4位或4位以上的数字在每一步都会丢失一位，直到降到3位为止。所以我们知道，**最坏的情况下，算法可能会在243以下的所有数字上循环，然后回到它已经到过的一个循环或者回到1**。但它不会无限期地进行下去，所以我们排除第三种选择。
+
+
+算法分为两部分：
+
+- 给一个数字n，它的下一个数字是什么？
+- 按照一系列的数字来判断我们是否进入了一个循环。
+
+第1部分我们按照题目的要求做**数位分离**，求平方和。
+
+第2部分可以使用HashSe 完成。每次生成链中的下一个数字时，我们都会检查它是否已经在HashSet中。
+
+- 如果它不在 HashSet 中，我们应该添加它。
+- 如果它在 HashSet 中，这意味着我们处于一个循环中，因此应该返回 false。
+
+我们使用 HashSet 而不是向量、列表或数组的原因是因为我们反复检查其中是否存在某数字。**检查数字是否在哈希集中需要$O(1)$的时间**，而对于其他数据结构，则需要$O(n)$的时间。选择正确的数据结构是解决这些问题的关键部分。
+
+```java
+class Solution {
+    public boolean isHappy(int n) {
+        Set<Integer> set = new HashSet<>();
+        while (n != 1 && !set.contains(n)) {
+            set.add(n);
+            n = getNext(n);
+        }
+        return n == 1;
+    }
+
+    private int getNext(int n) {
+        int totalSum = 0;
+        while (n > 0) {
+            int d = n % 10;
+            n = n / 10;
+            totalSum += d * d;
+        }
+        return totalSum;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$O(\log n)$
+- 空间复杂度：$O(\log n)$
+
+
 
 
 
@@ -3956,6 +4228,52 @@ class Solution {
 
 - 时间复杂度：$O(m+n)$，其中$n$和$m$是数组的长度。将`nums1`转换为集合需要$O(n)$的时间，类似地，将`nums2`转换为集合需要$O(m)$的时间。而在平均情况下，集合的`in/contains`操作只需要$O(1)$的时间。
 - 空间复杂度：$O(m+n)$，最坏的情况是数组中的所有元素都不同。
+
+
+
+## 268. 缺失数字(简单)
+
+给定一个包含 `0, 1, 2, ..., n` 中 **n 个数**的序列，找出 `0 .. n` 中没有出现在序列中的那个数。
+
+```
+示例 1:
+
+输入: [3,0,1]
+输出: 2
+
+示例 2:
+
+输入: [9,6,4,2,3,5,7,0,1]
+输出: 8
+```
+
+```java
+class Solution {
+    public int missingNumber(int[] nums) {
+        Set<Integer> numSet = new HashSet<Integer>();
+        for (int num : nums) {
+            numSet.add(num);
+        }
+
+        int expectedNumCount = nums.length + 1;
+        for (int number = 0; number < expectedNumCount; number++) {
+            if (!numSet.contains(number)) {
+                return number;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$。集合的插入操作的时间复杂度都是$O(1)$，一共插入了$n$个数，时间复杂度为$O(n)$。集合的查询操作的时间复杂度同样是$O(1)$，最多查询$n+1$次，时间复杂度为 $O(n)$。因此总的时间复杂度为$O(n)$。
+- 空间复杂度：$O(n)$。集合中会存储$n$个数，因此空间复杂度为$O(n)$。
+
+
+
+
 
 
 
@@ -4429,6 +4747,75 @@ class Solution {
 }
 ```
 
+**复杂性分析**
+
+- 时间复杂度：$O(n^2)$。数组中的每个元素都需要向左向右扫描。
+
+- 空间复杂度：$O(1)$的额外空间。
+
+
+
+### 动态规划
+
+在暴力方法中，我们仅仅为了找到最大值每次都要向左和向右扫描一次。但是我们可以提前存储这个值。
+
+提前存储每个位置上所有左边柱子高度的最大值和所有右边柱子高度的最大值
+
+- 找到数组中**从下标 i 到最左端**最高的条形块高度$\text{left\_max}$。
+- 找到数组中从下标 i 到最右端最高的条形块高度$\text{right\_max}$。
+
+
+<div align=center><img src=LeetCode\42_1.jpg></div>
+
+- 扫描数组 $\text{height}$ 并更新答案：
+    - 累加 $\min(\text{max\_left}[i],\text{max\_right}[i]) - \text{height}[i]$到 $ans$ 上
+
+```java
+class Solution {
+    public int trap(int[] height) {
+        int ans = 0;
+        int len = height.length;
+        if (len < 3) {
+            return 0;
+        }
+
+        int[] leftMaxArr = new int[len];
+        int[] rightMaxArr = new int[len];
+        leftMaxArr[0] = height[0];
+        rightMaxArr[len - 1] = height[len - 1];
+
+        for (int i = 1; i < len; i++) {
+            leftMaxArr[i] = Math.max(leftMaxArr[i - 1], height[i]);
+        }
+
+        for (int i = len - 2; i >= 0; i--) {
+            rightMaxArr[i] = Math.max(rightMaxArr[i + 1], height[i]);
+        }
+
+        for (int i = 0; i < len; i++) {
+            ans += Math.min(leftMaxArr[i], rightMaxArr[i]) - height[i];
+        }
+
+        return ans;
+    }
+}
+```
+
+
+**复杂性分析**
+
+- 时间复杂度：$O(n)$。
+
+    - 存储最大高度数组，需要两次遍历，每次$O(n)$。
+    - 最终使用存储的数据更新$\text{ans}$，$O(n)$。
+
+- 空间复杂度：$O(n)$额外空间。
+
+    - 和方法 1 相比使用了额外的$O(n)$空间用来放置$\text{left\_max}$和$\text{right\_max}$数组。
+
+
+
+
 
 
 ## *59. 螺旋矩阵 II (中等)
@@ -4497,6 +4884,369 @@ class Solution {
 ```
 
 
+## 121. 买卖股票的最佳时机(简单)
+
+给定一个数组，它的第i个元素是一支给定股票第i天的价格。
+
+如果你**最多只允许完成一笔交易**（即买入和卖出一支股票一次），设计一个算法来计算你所能获取的最大利润。
+
+注意：你不能在买入股票前卖出股票。
+
+
+```
+示例 1:
+
+输入: [7,1,5,3,6,4]
+输出: 5
+
+解释: 在第2天（股票价格 = 1）的时候买入，在第5天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5。
+注意：利润不能是 7-1 = 6, 因为卖出价格需要大于买入价格；同时，你不能在买入前卖出股票。
+
+
+示例 2:
+
+输入: [7,6,4,3,1]
+输出: 0
+解释: 在这种情况下, 没有交易完成, 所以最大利润为0。
+```
+
+**思路与算法：滑动窗口**
+
+- 我们需要找出给定数组中两个数字之间的最大差值（即，最大利润）。此外，第二个数字（卖出价格）必须大于第一个数字（买入价格）。
+- 用一个变量记录一个历史最低价格`minPrice`，那么在第i天卖出股票能得到的利润就是`prices[i] - minprice`。
+
+```java
+package solution;
+
+/**
+ * leetcode_121_买卖股票的最佳时机
+ * @author Chenzf 
+ * @date 2020/7/29
+ * @version 1.0
+ */
+
+public class BestTimeBuySellStock {
+    public int maxProfit(int[] prices) {
+        int minPrice = Integer.MAX_VALUE;
+        int maxPrice = 0;
+        
+        for (int i = 0; i < prices.length; i++) {
+            // 确保了买进在卖出之前
+            if (prices[i] < minPrice) {
+                minPrice = prices[i];
+            } else if (prices[i] - minPrice > maxPrice) {
+                maxPrice = prices[i] - minPrice;
+            }
+        }
+        
+        return maxPrice;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，**只需要遍历一次**。
+- 空间复杂度：$O(1)$，**只使用了常数个变量**。
+
+
+
+
+
+
+
+## 122. 买卖股票的最佳时机II(简单)
+
+**题目：**
+
+给定一个数组，它的第`i`个元素是一支给定股票第`i`天的价格。
+
+设计一个算法来计算你所能获取的最大利润。你可以**尽可能地完成更多的交易**（多次买卖一支股票）。
+
+注意：你不能同时参与多笔交易（你**必须在再次购买前出售掉之前的股票**）。
+
+**示例：**
+```
+输入: [7,1,5,3,6,4]
+输出: 7
+解释: 在第 2 天（股票价格 = 1）的时候买入，在第 3 天（股票价格 = 5）的时候卖出, 这笔交易所能获得利润 = 5-1 = 4 。
+     随后，在第 4 天（股票价格 = 3）的时候买入，在第 5 天（股票价格 = 6）的时候卖出, 这笔交易所能获得利润 = 6-3 = 3 。
+
+输入: [1,2,3,4,5]
+输出: 4
+解释: 在第 1 天（股票价格 = 1）的时候买入，在第 5 天 （股票价格 = 5）的时候卖出, 这笔交易所能获得利润 = 5-1 = 4 。
+     注意你不能在第1天和第2天接连购买股票，之后再将它们卖出。
+     因为这样属于同时参与了多笔交易，你必须在再次购买前出售掉之前的股票。
+
+输入: [7,6,4,3,1]
+输出: 0
+解释: 在这种情况下, 没有交易完成, 所以最大利润为 0。
+```
+
+**思路与算法：**
+
+这道题 “贪心” 的地方在于，对于`今天的股价 - 昨天的股价`，得到的结果有3种可能：
+- 正数
+- 0
+- 负数。
+  
+贪心算法的决策是：**只加正数**。
+
+- **股票买卖策略：**
+
+  - 单独交易日：设今天价格$p_1$、明天价格$p_2$，则**今天买入、明天卖出**可赚取金额$p_2 - p_1$（负值代表亏损）。
+  - 连续上涨交易日：设此上涨交易日股票价格分别为$p_1, p_2, ... , p_n$，则**第一天买最后一天卖收益最大**，即$p_n - p_1$；**等价于每天都买卖**，即$p_n - p_1=(p_2 - p_1)+(p_3 - p_2)+...+(p_n - p_{n-1})$。
+  - 连续下降交易日：则**不买卖收益最大**，即不会亏钱。
+
+**代码：**
+```java
+class BestTimeToBuyAndSellStockII {
+    public int maxProfit(int[] prices) {
+        int maxProfit = 0;
+        for(int i = 1; i< prices.length; i++){
+            if(prices[i] > prices[i - 1])
+                maxProfit += prices[i] - prices[i - 1];
+        }
+
+        return maxProfit;
+    }
+}
+```
+
+**复杂度分析：**
+时间复杂度：$O(n)$，遍历一次。
+空间复杂度：$O(1)$，需要常量的空间。
+
+
+
+
+
+## 189. 旋转数组—移位(简单)
+
+给定一个数组，将数组中的元素向右移动k个位置，其中k是非负数。
+
+```
+示例 1:
+输入: [1,2,3,4,5,6,7] 和 k = 3
+输出: [5,6,7,1,2,3,4]
+
+解释:
+向右旋转 1 步: [7,1,2,3,4,5,6]
+向右旋转 2 步: [6,7,1,2,3,4,5]
+向右旋转 3 步: [5,6,7,1,2,3,4]
+
+示例 2:
+输入: [-1,-100,3,99] 和 k = 2
+输出: [3,99,-1,-100]
+
+解释: 
+向右旋转 1 步: [99,-1,-100,3]
+向右旋转 2 步: [3,99,-1,-100]
+```
+
+**思路与算法：**
+
+如果我们直接**把每一个数字放到它最后的位置**，但这样的后果是遗失原来的元素。因此，我们需要把被替换的数字保存在变量`temp`里面。然后，我们将被替换数字(`temp`)放到它正确的位置，并继续这个过程$n$次，$n$是数组的长度。这是因为我们需要将数组里所有的元素都移动。
+
+但是，这种方法可能会有个问题，如果$n\%k==0$，其中$k=k\%n$（因为如果$k$大于$n$，移动$k$次实际上相当于移动$k\%n$次）。这种情况下，我们会发现在没有遍历所有数字的情况下回到出发数字。此时，我们应该从下一个数字开始再重复相同的过程。
+
+<div align=center><img src=LeetCode\189.png></div>
+
+```java
+package solution;
+
+/**
+ * leetcode_189_旋转数组
+ * @author Chenzf
+ * @date 2020/7/26
+ * @version 1.0
+ */
+
+public class RotateArray {
+    public void rotate(int[] nums, int k) {
+        k = k % nums.length;
+        int count = 0;
+        for (int start = 0; count < nums.length; start++) {
+            int current = start;
+            int prev = nums[start];
+            do {
+                int next = (current + k) % nums.length;
+                int temp = nums[next];
+                nums[next] = prev;
+                prev = temp;
+                current = next;
+                count++;
+            } while (start != current);
+        }
+    }
+}
+```
+
+**使用额外的数组：**
+
+可以用一个额外的数组来将每个元素放到正确的位置上。
+即，原本数组里下标为$i$的，我们把它放到$(i+k)\%数组长度$的位置。然后把新的数组拷贝到原数组中。
+
+```java
+public class Solution {
+    public void rotate(int[] nums, int k) {
+        int[] a = new int[nums.length];
+        for (int i = 0; i < nums.length; i++) {
+            a[(i + k) % nums.length] = nums[i];
+        }
+        for (int i = 0; i < nums.length; i++) {
+            nums[i] = a[i];
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$。将数字放到新的数组中需要一遍遍历，另一边来把新数组的元素拷贝回原数组。
+- 空间复杂度：$O(n)$。另一个数组需要原数组长度的空间。
+
+
+## 面试题 01.07. 旋转矩阵—90度(中等)
+
+给你一幅由$N × N$矩阵表示的图像，其中每个像素的大小为 4 字节。请你设计一种算法，将图像旋转 90 度。
+
+不占用额外内存空间能否做到？
+
+```
+示例 1:
+
+给定 matrix = 
+[
+  [1,2,3],
+  [4,5,6],
+  [7,8,9]
+],
+
+原地旋转输入矩阵，使其变为:
+[
+  [7,4,1],
+  [8,5,2],
+  [9,6,3]
+]
+示例 2:
+
+给定 matrix =
+[
+  [ 5, 1, 9,11],
+  [ 2, 4, 8,10],
+  [13, 3, 6, 7],
+  [15,14,12,16]
+], 
+
+原地旋转输入矩阵，使其变为:
+[
+  [15,13, 2, 5],
+  [14, 3, 4, 1],
+  [12, 6, 8, 9],
+  [16, 7,10,11]
+]
+```
+
+**思路与算法：**
+
+<font color=red>先由对角线` [1, 5, 9]` 为轴进行翻转</font>，于是数组
+
+```
+[1,2,3]
+[4,5,6]
+[7,8,9]
+```
+
+变成了:
+```
+[1,4,7]
+[2,5,8]
+[3,6,9]
+```
+
+<font color=red>再对每一行以中点进行翻转</font>，就得到了：
+
+```
+[7,4,1]
+[8,5,2]
+[9,6,3]
+```
+
+
+```java
+class Solution {
+    public void rotate(int[][] matrix) {
+        int n = matrix.length;
+        // 先以对角线（左上-右下）为轴进行翻转
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = i + 1; j < n; j++) {
+                int tmp = matrix[i][j];
+                matrix[i][j] = matrix[j][i];
+                matrix[j][i] = tmp;
+            }
+        }
+        // 再对每一行以中点进行翻转
+        int mid = n >> 1;  // 相当于n除以2
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < mid; j++) {
+                int tmp = matrix[i][j];
+                matrix[i][j] = matrix[i][n - 1 - j];
+                matrix[i][n - 1 - j] = tmp;
+            }
+        }
+    }
+}
+```
+
+
+
+## 283. 移动零(简单)
+
+给定一个数组nums，编写一个函数将所有0移动到数组的末尾，同时保持非零元素的相对顺序。
+
+```
+示例:
+
+输入: [0,1,0,3,12]
+输出: [1,3,12,0,0]
+```
+
+说明:
+
+- 必须在原数组上操作，不能拷贝额外的数组。
+- 尽量减少操作次数。
+
+```java {.line-numbers highlight=7-14}
+class Solution {
+	public void moveZeroes(int[] nums) {
+        if (nums == null) {
+            return;
+        }
+        
+        //第一次遍历的时候，j指针记录非0的个数，只要是非0的统统都赋给nums[j]
+        int j = 0;
+
+        for (int i = 0; i < nums.length; i++) {
+            if(nums[i] != 0) {
+                // 不用再额外的创建新数组
+                nums[j++] = nums[i];
+            }
+        }
+        
+        //非0元素统计完了，剩下的都是0了。所以第二次遍历把末尾的元素都赋为0即可
+        for (int i = j; i < nums.length; i++) {
+            nums[i] = 0;
+        }
+    }
+}
+```
+
+- 时间复杂度：$O(n)$
+- 空间复杂度：$O(1)$
+
+
+
 
 ## 1313. 解压缩编码列表(简单)
 
@@ -4557,7 +5307,33 @@ public class Solution {
 ```
 
 
+## 1330. 翻转子数组得到最大的数组值(困难)
 
+
+给你一个整数数组 nums 。「数组值」定义为所有满足 `0 <= i < nums.length-1` 的 `|nums[i]-nums[i+1]|` 的和。
+
+你可以选择给定数组的任意子数组，并将该子数组翻转。但你只能执行这个操作 一次 。
+
+请你找到可行的最大 数组值 。
+
+ 
+```
+示例 1：
+
+输入：nums = [2,3,1,5,4]
+输出：10
+解释：通过翻转子数组 [3,1,5] ，数组变成 [2,5,1,3,4] ，数组值为 10 。
+示例 2：
+
+输入：nums = [2,4,9,24,2,1,10]
+输出：68
+```
+
+提示：
+```
+1 <= nums.length <= 3*10^4
+-10^5 <= nums[i] <= 10^5
+```
 
 
 
@@ -4918,6 +5694,402 @@ class Solution {
 
 
 # 字符串
+
+## 将字符串转换为字符数组
+
+```java
+public boolean isAnagram(String s, String t) {
+    if (s.length() != t.length()) {
+        return false;
+    }
+
+    // 将字符串转为字符数组
+    char[] str1 = s.toCharArray();
+    char[] str2 = t.toCharArray();
+    Arrays.sort(str1);
+    Arrays.sort(str2);
+
+    return Arrays.equals(str1, str2);
+}
+```
+
+
+
+
+## 13. 罗马数字转整数(简单)
+
+罗马数字包含以下七种字符:` I， V， X， L，C，D` 和 `M`。
+
+```
+字符          数值
+I             1
+V             5
+X             10
+L             50
+C             100
+D             500
+M             1000
+```
+
+例如， 罗马数字 2 写做 `II` ，即为两个并列的 `I`。12 写做 `XII` ，即为 `X + II` 。 27 写做  `XXVII`， 即为 `XX + V + II` 。
+
+通常情况下，罗马数字中小的数字在大的数字的右边。但也存在特例，例如 4 不写做 IIII，而是`IV`。数字 1 在数字 5 的左边，所表示的数等于大数 5 减小数 1 得到的数值 4 。同样地，数字 9 表示为 IX。这个特殊的规则只适用于以下六种情况：
+
+I 可以放在 V (5) 和 X (10) 的左边，来表示 4 和 9。
+X 可以放在 L (50) 和 C (100) 的左边，来表示 40 和 90。 
+C 可以放在 D (500) 和 M (1000) 的左边，来表示 400 和 900。
+
+给定一个罗马数字，将其转换成整数。输入确保在 1 到 3999 的范围内。
+
+```
+示例 1:
+
+输入: "III"
+输出: 3
+
+示例 2:
+
+输入: "IV"
+输出: 4
+
+示例 3:
+
+输入: "IX"
+输出: 9
+
+示例 4:
+
+输入: "LVIII"
+输出: 58
+解释: L = 50, V= 5, III = 3.
+
+示例 5:
+
+输入: "MCMXCIV"
+输出: 1994
+解释: M = 1000, CM = 900, XC = 90, IV = 4.
+```
+
+
+**思路与算法：**
+
+按照题目的描述，可以总结如下规则：
+
+- 罗马数字由 `I,V,X,L,C,D,M` 构成；
+- **当小值在大值的左边，则减小值**，如 IV=5-1=4；
+- **当小值在大值的右边，则加小值**，如 VI=5+1=6；
+- 由上可知，右值永远为正，因此最后一位必然为正。
+
+一言蔽之，**把一个小值放在大值的左边，就是做减法，否则为加法**。
+
+
+在代码实现上，可以**往后看多一位，对比当前位与后一位的大小关系**，从而确定当前位是加还是减法。当没有下一位时，做加法即可。
+
+也可**保留当前位的值，当遍历到下一位的时，对比保留值与遍历位的大小关系**，再确定保留值为加还是减。最后一位做加法即可。
+
+
+```java
+import java.util.*;
+
+class Solution {
+    public int romanToInt(String s) {
+        int sum = 0;
+        int preNum = getValue(s.charAt(0));
+        for(int i = 1; i < s.length(); i ++) {
+            int num = getValue(s.charAt(i));
+            if(preNum < num) {
+                sum -= preNum;
+            } else {
+                sum += preNum;
+            }
+            preNum = num;
+        }
+        sum += preNum;
+        return sum;
+    }
+    
+    private int getValue(char ch) {
+        switch(ch) {
+            case 'I': return 1;
+            case 'V': return 5;
+            case 'X': return 10;
+            case 'L': return 50;
+            case 'C': return 100;
+            case 'D': return 500;
+            case 'M': return 1000;
+            default: return 0;
+        }
+    }
+}
+```
+
+
+## *38. 外观数列(简单)
+
+给定一个正整数 n（1 ≤ n ≤ 30），输出外观数列的第 n 项。
+
+注意：整数序列中的每一项将表示为一个字符串。
+
+「外观数列」是一个整数序列，从数字 1 开始，序列中的每一项都是对前一项的描述。前五项如下：
+
+```
+1.     1
+2.     11
+3.     21
+4.     1211
+5.     111221
+```
+
+第一项是数字 1
+
+描述前一项，这个数是 1 即 “一个 1 ”，记作 11
+
+描述前一项，这个数是 11 即 “两个 1 ” ，记作 21
+
+描述前一项，这个数是 21 即 “一个 2 一个 1 ” ，记作 1211
+
+描述前一项，这个数是 1211 即 “一个 1 一个 2 两个 1 ” ，记作 111221
+
+ 
+```
+示例 1:
+
+输入: 1
+输出: "1"
+解释：这是一个基本样例。
+
+示例 2:
+
+输入: 4
+输出: "1211"
+解释：当 n = 3 时，序列是 "21"，其中我们有 "2" 和 "1" 两组，"2" 可以读作 "12"，也就是出现频次 = 1 而 值 = 2；类似 "1" 可以读作 "11"。所以答案是 "12" 和 "11" 组合在一起，也就是 "1211"。
+```
+
+```java {.line-numbers highlight=23}
+class Solution {
+    public String countAndSay(int n) {
+        if (n <= 0) {
+            return "";
+        }
+        String[] seq = new String[n];
+        seq[0] = "1";
+        for (int i = 1; i < n; i++) {
+            seq[i] = convert(seq[i - 1]);
+        }
+        return seq[n - 1];
+    }
+
+    public String convert(String str) {
+        StringBuilder ans = new StringBuilder();
+        int count = 1;
+        for (int i = 0; i < str.length(); i++) {
+            // 这一部分是"count", 记录连续出现x个y
+            if (i < str.length() - 1 && str.charAt(i) == str.charAt(i + 1)) {
+                count++;
+            } else {
+            // 这一部分是"say"，将上面"count"的结果"xy"作为下一个数的一部分（若上面记录到2个1，就拼接"21"）
+                ans.append(count).append(str.charAt(i));
+                count = 1;
+            }
+        }
+        return new String(ans);
+    }
+}
+```
+
+
+
+## 171. Excel表列序号(简单)
+
+给定一个Excel表格中的列名称，返回其相应的列序号。
+
+```
+例如，
+
+A -> 1
+B -> 2
+C -> 3
+...
+Z -> 26
+    
+AA -> 27
+AB -> 28 
+...
+```
+
+
+```java
+class Solution {
+    public int titleToNumber(String s) {
+        int ans = 0;
+        for(int i = 0; i < s.length(); i++) {
+            int num = s.charAt(i) - 'A' + 1;
+            ans = ans * 26 + num;
+        }
+        return ans;
+    }
+}
+```
+
+
+
+## 242. 有效的字母异位词(简单)
+
+给定两个字符串 s 和 t ，编写一个函数来判断 t 是否是 s 的字母异位词。
+
+```
+示例 1:
+
+输入: s = "anagram", t = "nagaram"
+输出: true
+
+示例 2:
+
+输入: s = "rat", t = "car"
+输出: false
+```
+
+说明：可以假设字符串只包含小写字母。
+
+
+### 排序
+
+```java
+class Solution {
+    public boolean isAnagram(String s, String t) {
+        if (s.length() != t.length()) {
+            return false;
+        }
+
+        // 将字符串转为字符数组
+        char[] str1 = s.toCharArray();
+        char[] str2 = t.toCharArray();
+        Arrays.sort(str1);
+        Arrays.sort(str2);
+
+        return Arrays.equals(str1, str2);
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$O(n \log n)$，假设$n$是$s$的长度，排序成本$O(n\log n)$和比较两个字符串的成本$O(n)$。排序时间占主导地位，总体时间复杂度为$O(n \log n)$。
+- 空间复杂度：$O(1)$，空间取决于排序实现，如果使用 `heapsort`，通常需要$O(1)$辅助空间。注意，在 Java 中，`toCharArray()` 制作了一个字符串的拷贝，所以它花费$O(n)$额外的空间，但是我们忽略了这一复杂性分析，因为：这依赖于语言的细节。这取决于函数的设计方式。例如，可以将函数参数类型更改为 char[]。
+
+
+### HashMap
+
+利用hash保存每一位s的出现次数，然后减去t出现的次数，最后值全为0说明符合条件。
+
+```java
+class Solution {
+    public boolean isAnagram(String s, String t) {
+        if(s.length() != t.length()) {
+            return false;
+        }
+
+        HashMap<Character,Integer> map = new HashMap<>();
+
+        for (int i = 0; i < s.length(); i++) {
+            // 如果map中不包含s当前的字符，则添加
+            if(!map.containsKey(s.charAt(i))) {
+                map.put(s.charAt(i), 1);
+            } else {
+                map.put(s.charAt(i), map.get(s.charAt(i)) + 1);
+            }
+        }
+
+        for(int i = 0; i < t.length(); i++) {
+            // 如果map中不包含t当前的字符，则添加
+            if(!map.containsKey(t.charAt(i))){
+                map.put(t.charAt(i), 1);
+            }
+            map.put(t.charAt(i), map.get(t.charAt(i)) - 1);
+        }
+
+        ArrayList<Integer> list = new ArrayList<>(map.values());
+
+        for(int a : list) {
+            if(a != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+```
+
+
+
+
+## 412. Fizz Buzz(简单)
+
+写一个程序，输出从 1 到 n 数字的字符串表示。
+
+1. 如果 n 是3的倍数，输出“Fizz”；
+
+2. 如果 n 是5的倍数，输出“Buzz”；
+
+3. 如果 n 同时是3和5的倍数，输出 “FizzBuzz”。
+
+```
+示例：
+
+n = 15,
+
+返回:
+[
+    "1",
+    "2",
+    "Fizz",
+    "4",
+    "Buzz",
+    "Fizz",
+    "7",
+    "8",
+    "Fizz",
+    "Buzz",
+    "11",
+    "Fizz",
+    "13",
+    "14",
+    "FizzBuzz"
+]
+```
+
+```java {.line-numbers highlight=21}
+class Solution {
+    public List<String> fizzBuzz(int n) {
+
+        List<String> ans = new ArrayList<String>();
+
+        for (int num = 1; num <= n; num++) {
+            boolean divisibleBy3 = (num % 3 == 0);
+            boolean divisibleBy5 = (num % 5 == 0);
+            
+            if (divisibleBy3 && divisibleBy5) {
+                // Divides by both 3 and 5, add FizzBuzz
+                ans.add("FizzBuzz");
+            } else if (divisibleBy3) {
+                // Divides by 3, add Fizz
+                ans.add("Fizz");
+            } else if (divisibleBy5) {
+                // Divides by 5, add Buzz
+                ans.add("Buzz");
+            } else {
+                // Not divisible by 3 or 5, add the number
+                ans.add(Integer.toString(num));
+            }
+        }
+
+        return ans;
+    }
+}
+```
+
 
 
 ## 657. 机器人能否返回原点(简单)
@@ -5364,6 +6536,71 @@ class Solution {
 # 动态规划
 
 
+## 118. 杨辉三角(简单)
+
+<div align=center><img src=LeetCode\118.gif></div>
+
+在杨辉三角中，每个数是它左上方和右上方的数的和。
+
+```
+示例:
+
+输入: 5
+输出:
+[
+ [1],
+ [1,1],
+ [1,2,1],
+ [1,3,3,1],
+ [1,4,6,4,1]
+]
+```
+
+```java
+class Solution {
+    public List<List<Integer>> generate(int numRows) {
+        List<List<Integer>> triangle = new ArrayList<List<Integer>>();
+
+        // First base case; if user requests zero rows, they get zero rows.
+        if (numRows == 0) {
+            return triangle;
+        }
+
+        // Second base case; first row is always [1].
+        triangle.add(new ArrayList<>());
+        triangle.get(0).add(1);
+
+        for (int rowNum = 1; rowNum < numRows; rowNum++) {
+            List<Integer> row = new ArrayList<>();
+            List<Integer> prevRow = triangle.get(rowNum-1);
+
+            // The first row element is always 1.
+            row.add(1);
+
+            // Each triangle element (other than the first and last of each row)
+            // is equal to the sum of the elements above-and-to-the-left and above-and-to-the-right.
+            for (int j = 1; j < rowNum; j++) {
+                row.add(prevRow.get(j-1) + prevRow.get(j));
+            }
+
+            // The last row element is always 1.
+            row.add(1);
+
+            triangle.add(row);
+        }
+
+        return triangle;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(numRows^2)$
+- 空间复杂度：$O(numRows^2)$，需要存储在triangle中更新的每个数字。
+
+
+
 ## 1035. 不相交的线(简单)
 
 
@@ -5648,6 +6885,13 @@ class Solution {
 ## 遍历树
 
 <div align=center><img src=LeetCode\遍历树.jpg></div>
+
+
+
+
+
+
+
 
 ## 94. 二叉树的中序遍历(中等)
 
@@ -6358,6 +7602,133 @@ class Solution {
 - 既然树中的**每个节点都只被访问一次**，那么**时间复杂度就是$O(n)$**，其中$n$是树中节点的个数。在反转之前，不论怎样我们至少都得访问每个节点至少一次，因此这个问题无法做地比$O(n)$更好了。
 
 - 本方法使用了递归，在最坏情况下**栈内需要存放$O(h)$个方法调用**，其中$h$是树的高度。由于$h\in O(n)$，可得出**空间复杂度为$O(n)$**。
+
+
+
+
+## **108. 将有序数组转换为二叉搜索树(简单)
+
+将一个按照**升序**排列的有序数组，转换为一棵高度平衡二叉搜索树。
+
+**高度平衡二叉树定义：**
+
+一个高度平衡二叉树是指一个二叉树**每个节点的左右两个子树的高度差的绝对值不超过1**。
+
+**二叉搜索树定义：**
+
+二叉查找树（Binary Search Tree），（又：二叉搜索树，二叉排序树）它或者是一棵空树，或者是具有下列性质的二叉树：
+- 若它的左子树不空，则**左子树上所有结点的值均小于它的根结点的值**； 
+- 若它的右子树不空，则**右子树上所有结点的值均大于它的根结点的值**； 
+- 它的左、右子树也分别为二叉排序树。
+
+**示例：**
+```
+给定有序数组: [-10,-3,0,5,9],
+
+一个可能的答案是：[0,-3,9,-10,null,5]，它可以表示下面这个高度平衡二叉搜索树：
+
+      0
+     / \
+   -3   9
+   /   /
+ -10  5
+```
+
+**思路与算法：**
+
+遍历树的两种通用策略：
+
+- 深度优先遍历（DFS）
+
+    这种方法以深度depth优先为策略，从根节点开始一直遍历到某个叶子节点，然后回到根节点，再遍历另外一个分支。根据根节点，左孩子节点和右孩子节点的访问顺序又可以将`DFS`细分为**先序遍历**`preorder`，**中序遍历**`inorder`和**后序遍历**`postorder`。
+
+- 广度优先遍历（BFS）
+
+    按照高度顺序，从上往下逐层遍历节点。先遍历上层节点再遍历下层节点。
+
+下图中按照不同的方法遍历对应子树，得到的遍历顺序都是`1-2-3-4-5`：
+<div align=center><img src=LeetCode\bfs_dfs.png></div>
+
+**将有序数组转换为二叉搜索树的结果为什么*不唯一*？**
+
+**<font color=red>二叉搜索树的中序遍历是一个升序序列</font>**。将有序数组作为输入，可以把该问题看做**根据中序遍历序列创建二叉搜索树**。
+
+这个问题的答案唯一吗？例如：是否可以根据中序遍历序列和二叉搜索树之间是否一一对应，答案是否定的。
+
+下面是一些关于`BST`（二叉查找树）的知识：
+- 中序遍历不能唯一确定一棵二叉搜索树。
+- 先序和后序遍历不能唯一确定一棵二叉搜索树。
+- 先序/后序遍历和中序遍历的关系：`inorder = sorted(postorder) = sorted(preorder)`
+- **<font color=red>中序+后序、中序+先序可以唯一确定一棵二叉树</font>**。
+
+因此，**“有序数组 -> BST”有多种答案**。
+
+<div align=center><img src=LeetCode\bfs_dfs1.png></div>
+
+如果添加一个附件条件：树的高度应该是平衡的。例如：**每个节点的两棵子树高度差不超过1**。这种情况下答案唯一吗？
+
+仍然不是唯一的：
+<div align=center><img src=LeetCode\bfs_dfs2.png></div>
+
+**高度平衡意味着每次必须选择中间数字作为根节点**。这对于**奇数个数**的数组是有用的，但对**偶数个数**的数组没有预定义的选择方案。
+
+<div align=center><img src=LeetCode\bfs_dfs3.png></div>
+
+对于偶数个数的数组，要么选择中间位置左边的元素作为根节点，要么选择中间位置右边的元素作为根节点，不同的选择方案会创建不同的平衡二叉搜索树。
+
+**方法：**
+中序遍历：始终选择**中间位置左边元素**作为根节点
+<div align=center><img src=LeetCode\bfs_dfs4.png></div>
+
+- 方法`helper(left, right)`使用数组`numsnums`中索引从`left`到`right`的元素创建`BST`：
+    - 如果`left > right`，子树中不存在元素，返回空。
+    - 找出中间元素：`p = (left + right) // 2`。
+    - 创建根节点：`root = TreeNode(nums[p])`。
+    - 递归创建左子树`root.left = helper(left, p - 1)`和右子树`root.right = helper(p + 1, right)`。
+
+- 返回`helper(0, len(nums) - 1)`。
+
+**代码：**
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode sortedArrayToBST(int[] nums) {
+        return helper(nums, 0, nums.length - 1);
+    }
+
+    public TreeNode helper(int[] nums, int left, int right) {
+        if (left > right) {
+            return null;
+        }
+
+        // 总是选择中间位置左边的数字作为根节点
+        int mid = (left + right) / 2;
+
+        TreeNode root = new TreeNode(nums[mid]);
+        root.left = helper(nums, left, mid - 1);
+        root.right = helper(nums, mid + 1, right);
+        return root;
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$O(n)$，其中$n$是数组的长度。每个数字只访问一次。
+
+- 空间复杂度：$O(\log n)$，其$n$是数组的长度。空间复杂度不考虑返回值，因此空间复杂度主要取决于递归栈的深度，递归栈的深度是$O(\log n)$。
+
+
+
+
 
 
 
@@ -8711,3 +10082,214 @@ public class BinaryTreeLevelOrder {
     }
 }
 ```
+
+
+# 位运算
+
+
+## 136. 只出现一次的数字(简单)
+
+给定一个非空整数数组，除了某个元素只出现一次以外，其余每个元素均出现两次。找出那个只出现了一次的元素。
+
+说明：
+
+你的算法应该**具有线性时间复杂度**。 你可以**不使用额外空间**来实现吗？
+
+```
+示例 1:
+
+输入: [2,2,1]
+输出: 1
+
+示例 2:
+
+输入: [4,1,2,1,2]
+输出: 4
+```
+
+**思路与算法：**
+
+如果没有时间复杂度和空间复杂度的限制，这道题有很多种解法，可能的解法有如下几种。
+
+- 使用**集合**存储数字。遍历数组中的每个数字，如果集合中没有该数字，则将该数字加入集合，**如果集合中已经有该数字，则将该数字从集合中删除**，最后剩下的数字就是只出现一次的数字。
+
+- 使用**哈希表**存储**每个数字和该数字出现的次数**。遍历数组即可得到每个数字出现的次数，并更新哈希表，最后遍历哈希表，得到只出现一次的数字。
+
+
+
+上述解法都**需要额外使用$O(n)$的空间**，其中$n$是数组长度。如果要求使用线性时间复杂度和常数空间复杂度，上述三种解法显然都不满足要求。那么，如何才能做到线性时间复杂度和常数空间复杂度呢？
+
+答案是使用**位运算**。对于这道题，可使用**异或**运算$\oplus$。
+
+异或运算有以下三个性质。
+
+- **任何数和0做异或运算，结果仍然是原来的数**，即$a \oplus 0=a$。
+- 任何数和其自身做异或运算，结果是0，即 $a \oplus a=0$。
+- 异或运算满足交换律和结合律，即$a \oplus b \oplus a=b \oplus a \oplus a=b \oplus (a \oplus a)=b \oplus0=b$。
+
+
+假设数组中有$2m+1$个数，其中有$m$个数各出现两次，一个数出现一次。令$a_{1}、a_{2}、\ldots…、a_{m}$为出现两次的$m$个数，$a_{m+1}$为出现一次的数。根据性质 3，数组中的全部元素的异或运算结果总是可以写成如下形式：
+
+$(a_{1} \oplus a_{1}) \oplus (a_{2} \oplus a_{2}) \oplus \cdots \oplus (a_{m} \oplus a_{m}) \oplus a_{m+1}$
+ 
+
+根据性质 2 和性质 1，上式可化简和计算得到如下结果：
+
+$0 \oplus 0 \oplus \cdots \oplus 0 \oplus a_{m+1}=a_{m+1}$
+
+因此，**数组中的全部元素的异或运算结果即为数组中只出现一次的数字**。
+
+
+```java
+class Solution {
+    public int singleNumber(int[] nums) {
+        int single = 0;
+        for (int num : nums) {
+            single ^= num;
+        }
+        return single;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是数组长度。只需要对数组遍历一次。
+
+- 空间复杂度：$O(1)$。
+
+
+
+## 191. 位1的个数(简单)
+
+编写一个函数，输入是一个无符号整数，返回其二进制表达式中数字位数为 ‘1’ 的个数（也被称为汉明重量）。
+
+ 
+```
+示例 1：
+
+输入：00000000000000000000000000001011
+输出：3
+解释：输入的二进制串 00000000000000000000000000001011 中，共有三位为 '1'。
+
+示例 2：
+
+输入：00000000000000000000000010000000
+输出：1
+解释：输入的二进制串 00000000000000000000000010000000 中，共有一位为 '1'。
+
+示例 3：
+
+输入：11111111111111111111111111111101
+输出：31
+解释：输入的二进制串 11111111111111111111111111111101 中，共有 31 位为 '1'。
+```
+
+
+**思路与算法：**
+
+遍历数字的 32 位。如果某一位是 1 ，将计数器加一。
+
+我们使用 **位掩码** 来检查数字的第$i^{th}$ 位。
+
+一开始，掩码$m=1$因为1的二进制表示是`0000 0000 0000 0000 0000 0000 0000 0001`，显然，任何数字跟掩码 1 进行**逻辑与运算**，都可以让我们**获得这个数字的最低位**。
+
+**检查下一位时，我们将掩码左移一位**：`0000 0000 0000 0000 0000 0000 0000 0010`，并重复此过程。
+
+
+```java
+class Solution {
+    public int hammingWeight(int n) {
+        int bits = 0;
+        int mask = 1;
+        for (int i = 0; i < 32; i++) {
+            if ((n & mask) != 0) {
+                bits++;
+            }
+            mask <<= 1;
+        }
+        return bits;
+    }
+}
+```
+
+
+## 268. 缺失数字(简单)
+
+给定一个包含 `0, 1, 2, ..., n` 中 **n 个数**的序列，找出 `0 .. n` 中没有出现在序列中的那个数。
+
+```
+示例 1:
+
+输入: [3,0,1]
+输出: 2
+
+示例 2:
+
+输入: [9,6,4,2,3,5,7,0,1]
+输出: 8
+```
+
+
+**HashMap：**
+
+```java
+class Solution {
+    public int missingNumber(int[] nums) {
+        Set<Integer> numSet = new HashSet<Integer>();
+        for (int num : nums) {
+            numSet.add(num);
+        }
+
+        int expectedNumCount = nums.length + 1;
+        for (int number = 0; number < expectedNumCount; number++) {
+            if (!numSet.contains(number)) {
+                return number;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$。集合的插入操作的时间复杂度都是$O(1)$，一共插入了$n$个数，时间复杂度为$O(n)$。集合的查询操作的时间复杂度同样是$O(1)$，最多查询$n+1$次，时间复杂度为 $O(n)$。因此总的时间复杂度为$O(n)$。
+- 空间复杂度：$O(n)$。集合中会存储$n$个数，因此空间复杂度为$O(n)$。
+
+
+**位运算：**
+
+| 下标 | 0 | 1 | 2 | 3 |
+|:----:|:-:|:-:|:-:|:-:|
+| 数字 | 0 | 1 | 3 | 4 |
+
+将结果的初始值设为$n$，再对数组中的每一个数以及它的下标进行一个异或运算，即：
+
+$\begin{aligned} \mathrm{missing} &= 4 \wedge (0 \wedge 0) \wedge (1 \wedge 1) \wedge (2 \wedge 3) \wedge (3 \wedge 4) \\ &= (4 \wedge 4) \wedge (0 \wedge 0) \wedge (1 \wedge 1) \wedge (3 \wedge 3) \wedge 2 \\ &= 0 \wedge 0 \wedge 0 \wedge 0 \wedge 2 \\ &= 2 \end{aligned}$
+
+```java
+class Solution {
+    public int missingNumber(int[] nums) {
+        int missing = nums.length;
+        for (int i = 0; i < nums.length; i++) {
+            missing ^= i ^ nums[i];
+        }
+        return missing;
+    }
+}
+```
+
+复杂度分析
+
+- 时间复杂度：$O(n)$。这里假设异或运算的时间复杂度是常数的，总共会进行$O(n)$次异或运算，因此总的时间复杂度为$O(n)$。
+- 空间复杂度：$O(1)$。算法中只用到了$O(1)$的额外空间，用来存储答案。
+
+
+
+​	
+ 
+
+
+
+

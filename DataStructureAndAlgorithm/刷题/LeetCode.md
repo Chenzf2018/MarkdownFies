@@ -3210,6 +3210,7 @@ public class BestTimeBuySellStock {
         int maxPrice = 0;
         
         for (int i = 0; i < prices.length; i++) {
+            // 确保了买进在卖出之前
             if (prices[i] < minPrice) {
                 minPrice = prices[i];
             } else if (prices[i] - minPrice > maxPrice) {
