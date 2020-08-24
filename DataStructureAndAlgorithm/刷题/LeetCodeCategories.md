@@ -1023,6 +1023,101 @@ public class PreorderTraversal_v2 {
 - 空间复杂度：取决于树的结构，最坏情况存储整棵树，因此空间复杂度是$O(N)$。
 
 
+
+## **155. 最小栈(简单)
+
+**题目：**
+设计一个支持`push`，`pop`，`top`操作，并能在**常数时间内检索到最小元素**的栈。
+
+`push(x)` —— 将元素`x`推入栈中。
+`pop()` —— 删除栈顶的元素。
+`top()` —— 获取栈顶元素。
+`getMin()` —— 检索栈中的最小元素。
+
+**示例：**
+```
+输入：
+["MinStack","push","push","push","getMin","pop","top","getMin"]
+[[],[-2],[0],[-3],[],[],[],[]]
+
+输出：
+[null,null,null,null,-3,null,0,-2]
+
+解释：
+MinStack minStack = new MinStack();
+minStack.push(-2);
+minStack.push(0);
+minStack.push(-3);
+minStack.getMin();   --> 返回 -3.
+minStack.pop();
+minStack.top();      --> 返回 0.
+minStack.getMin();   --> 返回 -2.
+```
+
+**思路与算法：辅助栈**
+
+要做出这道题目，首先要理解栈结构**先进后出**的性质。
+
+对于栈来说，如果一个元素`a`在入栈时，栈里有其它的元素`b, c, d`，那么无论这个栈在之后经历了什么操作，只要`a`在栈中，`b, c, d`就一定在栈中，因为在`a`被弹出之前，`b, c, d`不会被弹出。
+
+因此，在操作过程中的任意一个时刻，只要栈顶的元素是`a`，那么我们就可以确定栈里面现在的元素一定是`a, b, c, d`。
+
+那么，我们可以<font color=red>在每个元素`a`入栈时把当前栈的最小值`m`存储起来</font>。在这之后无论何时，如果栈顶元素是`a`，我们就可以直接返回存储的最小值`m`。
+
+<div align=center><img src=LeetCode\155_MinStack.gif></div>
+
+- `push()`方法： 每当`push()`新值进来时，如果**小于等于`min_stack`栈顶值**，则一起`push()`，即更新了栈顶最小值；
+- `pop()`方法： 判断将`pop()`出去的元素值**是否是`min_stack`栈顶元素值（即最小值）**，如果是则将`min_stack`栈顶元素一起`pop()`，这样可以保证`min_stack`栈顶元素始终是`stack`中的最小值。
+- getMin()方法： 返回`min_stack`栈顶即可。
+
+
+**代码：**
+```java
+class MinStack {
+
+    /** initialize your data structure here. */
+    private Stack<Integer> dataStack;
+    private Stack<Integer> minStack;
+
+    public MinStack() {
+        dataStack = new Stack<>();
+        minStack = new Stack<>();
+    }
+    
+    public void push(int x) {
+        dataStack.push(x);
+        if(minStack.isEmpty() || x <= minStack.peek())
+            minStack.push(x);
+    }
+    
+    public void pop() {
+        int x = dataStack.pop();
+        if(x == minStack.peek())
+            minStack.pop();
+    }
+    
+    public int top() {
+        return dataStack.peek();
+    }
+    
+    public int getMin() {
+        return minStack.peek();
+    }
+}
+
+/**
+ * Your MinStack object will be instantiated and called as such:
+ * MinStack obj = new MinStack();
+ * obj.push(x);
+ * obj.pop();
+ * int param_3 = obj.top();
+ * int param_4 = obj.getMin();
+ */
+```
+
+
+
+
 ## 225. 用队列实现栈(简单)
 
 **题目：**
@@ -4041,6 +4136,61 @@ class Solution {
 
 
 
+## 217. 存在重复元素(简单)
+
+给定一个整数数组，判断是否存在重复元素。
+
+如果任意一值在数组中出现至少两次，函数返回 true 。如果数组中每个元素都不相同，则返回 false 。
+
+ 
+```
+示例 1:
+
+输入: [1,2,3,1]
+输出: true
+
+示例 2:
+
+输入: [1,2,3,4]
+输出: false
+
+示例 3:
+
+输入: [1,1,1,3,3,4,3,2,4,2]
+输出: true
+```
+
+```java
+class Solution {
+    public boolean containsDuplicate(int[] nums) {
+        Set<Integer> set = new HashSet<>(nums.length);
+        for (int x: nums) {
+            if (set.contains(x)) return true;
+            set.add(x);
+        }
+        return false;
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度 : $O(n)$。
+search() 和 insert() 各自使用$n$次，每个操作耗费常数时间。
+
+- 空间复杂度 :$O(n)$。哈希表占用的空间与元素数量是线性关系。
+
+注意
+
+对于一些特定的 nn 不太大的测试样例，本方法的运行速度可能会比方法二更慢。这是因为哈希表在维护其属性时有一些开销。要注意，程序的实际运行表现和 Big-O 符号表示可能有所不同。Big-O 只是告诉我们在 充分 大的输入下，算法的相对快慢。因此，在 nn 不够大的情况下， O(n)O(n) 的算法也可以比 O(n \log n)O(nlogn)的更慢。
+
+
+
+
+
+
+
 
 ## 236. 二叉树的最近公共祖先(中等)
 
@@ -4153,6 +4303,52 @@ public class LowestCommonAncestor {
 
 
 
+
+
+
+
+## 268. 缺失数字(简单)
+
+给定一个包含 `0, 1, 2, ..., n` 中 **n 个数**的序列，找出 `0 .. n` 中没有出现在序列中的那个数。
+
+```
+示例 1:
+
+输入: [3,0,1]
+输出: 2
+
+示例 2:
+
+输入: [9,6,4,2,3,5,7,0,1]
+输出: 8
+```
+
+```java
+class Solution {
+    public int missingNumber(int[] nums) {
+        Set<Integer> numSet = new HashSet<Integer>();
+        for (int num : nums) {
+            numSet.add(num);
+        }
+
+        int expectedNumCount = nums.length + 1;
+        for (int number = 0; number < expectedNumCount; number++) {
+            if (!numSet.contains(number)) {
+                return number;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$。集合的插入操作的时间复杂度都是$O(1)$，一共插入了$n$个数，时间复杂度为$O(n)$。集合的查询操作的时间复杂度同样是$O(1)$，最多查询$n+1$次，时间复杂度为 $O(n)$。因此总的时间复杂度为$O(n)$。
+- 空间复杂度：$O(n)$。集合中会存储$n$个数，因此空间复杂度为$O(n)$。
+
+
+
 ## 349. 两个数组的交集(简单)
 
 给定两个数组，编写一个函数来计算它们的交集。
@@ -4228,52 +4424,6 @@ class Solution {
 
 - 时间复杂度：$O(m+n)$，其中$n$和$m$是数组的长度。将`nums1`转换为集合需要$O(n)$的时间，类似地，将`nums2`转换为集合需要$O(m)$的时间。而在平均情况下，集合的`in/contains`操作只需要$O(1)$的时间。
 - 空间复杂度：$O(m+n)$，最坏的情况是数组中的所有元素都不同。
-
-
-
-## 268. 缺失数字(简单)
-
-给定一个包含 `0, 1, 2, ..., n` 中 **n 个数**的序列，找出 `0 .. n` 中没有出现在序列中的那个数。
-
-```
-示例 1:
-
-输入: [3,0,1]
-输出: 2
-
-示例 2:
-
-输入: [9,6,4,2,3,5,7,0,1]
-输出: 8
-```
-
-```java
-class Solution {
-    public int missingNumber(int[] nums) {
-        Set<Integer> numSet = new HashSet<Integer>();
-        for (int num : nums) {
-            numSet.add(num);
-        }
-
-        int expectedNumCount = nums.length + 1;
-        for (int number = 0; number < expectedNumCount; number++) {
-            if (!numSet.contains(number)) {
-                return number;
-            }
-        }
-        return -1;
-    }
-}
-```
-
-**复杂度分析**
-
-- 时间复杂度：$O(n)$。集合的插入操作的时间复杂度都是$O(1)$，一共插入了$n$个数，时间复杂度为$O(n)$。集合的查询操作的时间复杂度同样是$O(1)$，最多查询$n+1$次，时间复杂度为 $O(n)$。因此总的时间复杂度为$O(n)$。
-- 空间复杂度：$O(n)$。集合中会存储$n$个数，因此空间复杂度为$O(n)$。
-
-
-
-
 
 
 
@@ -4884,7 +5034,7 @@ class Solution {
 ```
 
 
-## 121. 买卖股票的最佳时机(简单)
+## *121. 买卖股票的最佳时机(简单)
 
 给定一个数组，它的第i个元素是一支给定股票第i天的价格。
 
@@ -4910,7 +5060,7 @@ class Solution {
 解释: 在这种情况下, 没有交易完成, 所以最大利润为0。
 ```
 
-**思路与算法：滑动窗口**
+### 滑动窗口
 
 - 我们需要找出给定数组中两个数字之间的最大差值（即，最大利润）。此外，第二个数字（卖出价格）必须大于第一个数字（买入价格）。
 - 用一个变量记录一个历史最低价格`minPrice`，那么在第i天卖出股票能得到的利润就是`prices[i] - minprice`。
@@ -10287,9 +10437,78 @@ class Solution {
 
 
 
-​	
+## 371. 两整数之和(简单)
  
+不使用运算符 `+` 和 `-` ​​​​​​​，计算两整数 ​​​​​​​a 、b ​​​​​​​之和。
+
+```
+示例 1:
+
+输入: a = 1, b = 2
+输出: 3
+
+示例 2:
+
+输入: a = -2, b = 3
+输出: 1
+```
+
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/sum-of-two-integers/solution/0msfu-xian-ji-suan-ji-zui-ji-ben-de-jia-fa-cao-zuo/
 
 
 
 
+十进制的加法，比如15+7，最低位5+7得到12，**对10取模得到2，进位为1，再高位相加1+0再加上进位1就得到高位结果2，组合起来就是22**。
+
+这里面涉及到了两个数字，一个是相加得到的低位，也就是5+7得到的结果2，第二个是进位1。在二进制的计算中就是要通过位操作来得到结果的低位和进位，对于不同的情况，用表格来表示一下，两个数字分别为a和b
+
+| a | b | 低位 | 进位 |
+|:-:|:-:|:----:|:----:|
+| 0 | 0 |   0  |   0  |
+| 1 | 0 |   1  |   0  |
+| 0 | 1 |   1  |   0  |
+| 1 | 1 |   0  |   1  |
+
+从上面的表格就可以发现，`低位 = a ^ b`，`进位 = a & b`。这样的计算可能要持续多次，回想一下在十进制的计算中，如果进位一直大于0，就得往后面进行计算，在这里也是一样，只要进位不是0，我们就得一直重复计算低位和进位的操作（需要在下一次计算之前要把进位向左移动一位，这样进位才能和更高位进行运算）。这个时候的a和b就是刚才计算的低位和进位。
+
+链接：https://leetcode-cn.com/problems/sum-of-two-integers/solution/li-yong-wei-cao-zuo-shi-xian-liang-shu-qiu-he-by-p/
+
+
+首先看十进制是如何做的： 5+7=12，三步走
+
+- 第一步：**相加各位的值，不算进位**，得到2。
+- 第二步：**计算进位值**，得到10。如果这一步的进位值为0，那么第一步得到的值就是最终结果。
+- 第三步：重复上述两步，只是相加的值变成上述两步的得到的结果2和10，得到12。
+
+
+
+
+
+用三步走的方式计算二进制值相加： `5---101`，`7---111`
+
+- 第一步：**相加各位的值，不算进位**，得到010，**二进制每位相加就相当于各位做异或操作**，`101^111`。
+- 第二步：**计算进位值**，得到1010，**相当于各位进行与操作**得到101，再向左移一位得到1010，`(101&111)<<1`。
+- 第三步重复上述两步，**各位相加** `010^1010=1000`，进位值为`100=(010 & 1010)<<1`。
+- 继续重复上述两步：`1000^100 = 1100`，进位值为0，跳出循环，1100为最终结果。
+- 结束条件：进位为0，即a为最终的求和结果。
+
+
+```java
+class Solution {
+    public int getSum(int a, int b) {
+        while(b != 0){
+            // 相加各位的值，不算进位
+            // 二进制每位相加就相当于各位做异或
+            int temp = a ^ b;
+            // 计算进位值
+            b = (a & b) << 1;
+
+            a = temp;
+        }
+        return a;
+    }
+}
+```
