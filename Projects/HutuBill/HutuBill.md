@@ -86,6 +86,7 @@ Database changed
 
 配置信息表`config`有如下字段：
 - `id`主键：每个表都有一个主键，类型是`int`；
+  - 表中**每一行都应该有可以唯一标识自己的一列**（或一组列）
 - `key_`：配置信息按照键值对的形式出现 ，类型是`varchar(255)`；
 - `value`：配置信息的值，类型是`varchar(255)`。
 
@@ -213,9 +214,9 @@ SELECT 'ok' as 'result:';
 
 ### 确定外键
 
-确定好分类和记录之间的关系之后，就需要在数据库表结构中**通过外键表现出来**：
+确定好分类和记录之间的关系之后，就需要在数据库表结构中**通过外键表现出来**：外键用来**建立主表与从表的关联关系，为两个表的数据建立连接**，约束两个表中数据的一致性和完整性。
 
-外键是加在`多`表(`record`表)中的，也就是加在Record表中的，在这里就是`cid`：
+**外键是加在`多`表(`record`表)中的，也就是加在Record表中的，在这里就是`cid`**：
 
 ```SQL {.line-numbers highlight=4}
 CREATE TABLE record(
@@ -575,7 +576,7 @@ jButtonSpend.addActionListener(new ActionListener() {
 gui包结构：
 <div align=center><img src=Pictures\gui包结构.png width=50%></div>
 
-## 单例的面板类
+## **单例的面板类
 
 **监听器访问组件**
 
@@ -672,7 +673,7 @@ SpendPanel p = SpendPanel.instance;
 p.vMonthSpend.setText("￥3333");
 ```
 
-这样做就非常的方便。任何监听器，要访问任何面板上的任何组件，都会变得非常的便捷。与直接在main方法中`new JFrame`中使用传统的内部类方式添加监听器相比，代码更容易维护。
+这样做就非常的方便。**任何监听器，要访问任何面板上的任何组件，都会变得非常的便捷。与直接在main方法中`new JFrame`中使用传统的内部类方式添加监听器相比，代码更容易维护**。
 
 这一块的理解在大家接触到后面的功能模块的时候，会感觉更明显。
 
@@ -2100,13 +2101,13 @@ public class MainFrame extends JFrame{
 <div align=center><img src=Pictures\MainFrame.png width=70%></div>
 
 
-# 实体类和DAO
+# **实体类和DAO
 
 ## 实体类Entity
 
 实体类Entity有很多种其他的说法，比如Bean，JavaBean，pojo等等，其实都是相近的东西。
 
-实体类Entity是**用于映射表中的一条一条数据的**。比如分类表Category，有很多条分类记录，那么就有一个类也叫做Category，**这个类的一个一个的实例，就对应了表Category中的一条一条的记录**。
+实体类Entity是**用于映射表中的一条一条数据的**。**比如分类表Category，有很多条分类记录，那么就有一个类也叫做Category，这个类的一个一个的实例，就对应了表Category中的一条一条的记录**。
 
 **步骤一：创建实体包**
 
@@ -2403,15 +2404,17 @@ public class DateUtil {
 ```
 
 
-## ConfigDAO
+## **ConfigDAO
+
+DAO(Data Access objects 数据存取对象)是指位于业务逻辑和持久化数据之间实现对持久化数据的访问。通俗来讲，就是**将数据库操作都封装起来**。
 
 首先创建dao包，所有的DAO相关类都会放在这里：`D:\HutuBill\hutubill\src\dao`。
 
 `ConfigDAO`专门用于把`Config实例`与`Config表`进行`ORM映射`。
 
-ORM映射是什么呢？ 
+ORM映射(对象关系映射--Object Relational Mapping)是什么呢？ 
 
-简单点理解就是**`ConfigDAO`负责把`Config实例`转换成一条`Config表`中的记录，反过来，又把Config表中的记录转换为一个Config实例**。
+**简单点理解就是`ConfigDAO`负责把`Config实例`转换成一条`Config表`中的记录，反过来，又把Config表中的记录转换为一个Config实例**。
 
 这其中就用到了DBUtil来获取连接，其他的DAO也统一使用DBUtil的方式获取连接。
 
