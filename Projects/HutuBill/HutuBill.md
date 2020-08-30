@@ -2414,6 +2414,8 @@ DAO(Data Access objects 数据存取对象)是指位于业务逻辑和持久化�
 
 ORM映射(对象关系映射--Object Relational Mapping)是什么呢？ 
 
+简单说，**一个对象，对应数据库里的一条记录**
+
 **简单点理解就是`ConfigDAO`负责把`Config实例`转换成一条`Config表`中的记录，反过来，又把Config表中的记录转换为一个Config实例**。
 
 这其中就用到了DBUtil来获取连接，其他的DAO也统一使用DBUtil的方式获取连接。
