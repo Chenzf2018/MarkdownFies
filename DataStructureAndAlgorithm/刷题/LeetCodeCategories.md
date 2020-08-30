@@ -5322,11 +5322,42 @@ class Solution {
 
 ## 数组复制与排序
 
+`System.arraycopy(nums2, 0, nums1, m, n);`
+`Arrays.copyOfRange(intersection, 0, index)`
+
+
+
 ```java {.line-numbers highlight=3-4}
 class Solution {
     public void merge(int[] nums1, int m, int[] nums2, int n) {
         System.arraycopy(nums2, 0, nums1, m, n);
         Arrays.sort(nums1);
+    }
+}
+```
+
+```java
+class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
+        
+        int length1 = nums1.length, length2 = nums2.length;
+        int[] intersection = new int[Math.min(length1, length2)];
+        int index1 = 0, index2 = 0, index = 0;
+        while (index1 < length1 && index2 < length2) {
+            if (nums1[index1] < nums2[index2]) {
+                index1++;
+            } else if (nums1[index1] > nums2[index2]) {
+                index2++;
+            } else {
+                intersection[index] = nums1[index1];
+                index1++;
+                index2++;
+                index++;
+            }
+        }
+        return Arrays.copyOfRange(intersection, 0, index);
     }
 }
 ```
@@ -6083,6 +6114,77 @@ class Solution {
 - 时间复杂度：$O(n)$
 - 空间复杂度：$O(1)$
 
+
+
+## 350. 两个数组的交集 II(简单)
+
+
+给定两个数组，编写一个函数来计算它们的交集。
+
+```
+示例 1：
+
+输入：nums1 = [1,2,2,1], nums2 = [2,2]
+输出：[2,2]
+
+示例 2:
+
+输入：nums1 = [4,9,5], nums2 = [9,4,9,8,4]
+输出：[4,9]
+```
+
+说明：
+
+- 输出结果中每个元素出现的次数，应与元素在两个数组中出现次数的最小值一致。
+- 可以不考虑输出结果的顺序。
+
+进阶：
+
+- 如果给定的数组已经排好序呢？你将如何优化你的算法？
+- 如果nums1的大小比nums2小很多，哪种方法更优？
+- 如果nums2的元素存储在磁盘上，磁盘内存是有限的，并且你不能一次加载所有的元素到内存中，你该怎么办？
+
+
+**思路与算法：**
+
+- **首先对两个数组进行排序**，然后使用两个指针遍历两个数组。
+
+- 初始时，两个指针分别指向两个数组的头部。每次比较两个指针指向的两个数组中的数字
+  - 如果两个数字**不相等**，则**将指向较小数字的指针右移一位**
+  - 如果两个数字**相等**，将该数字添加到答案，并**将两个指针都右移一位**。
+- 当至少有一个指针超出数组范围时，遍历结束。
+
+```java
+class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
+        
+        int length1 = nums1.length, length2 = nums2.length;
+        int[] intersection = new int[Math.min(length1, length2)];
+        int index1 = 0, index2 = 0, index = 0;
+        while (index1 < length1 && index2 < length2) {
+            if (nums1[index1] < nums2[index2]) {
+                index1++;
+            } else if (nums1[index1] > nums2[index2]) {
+                index2++;
+            } else {
+                intersection[index] = nums1[index1];
+                index1++;
+                index2++;
+                index++;
+            }
+        }
+        return Arrays.copyOfRange(intersection, 0, index);
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(m \log m+n \log n)$，其中$m$和$n$分别是两个数组的长度。对两个数组进行排序的时间复杂度是$O(m \log m+n \log n)$，遍历两个数组的时间复杂度是$O(m+n)$，因此总时间复杂度是$O(m \log m+n \log n)$。
+
+- 空间复杂度：$O(\min(m,n))$，其中$m$和$n$分别是两个数组的长度。为返回值创建一个数组 `intersection`，其长度为较短的数组的长度。
 
 
 
@@ -11518,6 +11620,228 @@ public class BinaryTreeLevelOrder {
 # 位运算
 
 
+
+## 78. 子集(简单)
+
+给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。
+
+说明：解集不能包含重复的子集。
+
+```
+示例:
+
+输入: nums = [1,2,3]
+输出:
+[
+  [3],
+  [1],
+  [2],
+  [1,2,3],
+  [1,3],
+  [2,3],
+  [1,2],
+  []
+]
+```
+
+**思路与算法：**
+
+观察**全排列/组合/子集问题**，它们比较相似，且可以使用一些通用策略解决。
+
+首先，它们的解空间非常大：
+
+- 全排列：$N!$。
+
+- 组合：$N!$。
+
+- 子集：$2^N$，每个元素都可能存在或不存在。
+
+在它们的指数级解法中，要确保生成的结果 完整 且 无冗余，有三种常用的方法：
+
+- 递归
+
+- 回溯
+
+- 基于二进制位掩码和对应位掩码之间的映射字典生成排列/组合/子集
+
+相比前两种方法，第三种方法将每种情况都简化为二进制数，易于实现和验证。此外，第三种方法具有最优的时间复杂度，可以生成按照字典顺序的输出结果。
+
+
+**方法一：递归**
+
+逐个枚举，空集的幂集只有空集，**每增加一个元素，让之前幂集中的每个集合，追加这个元素**，就是新增的子集。
+
+<div align=center><img src=LeetCode\78_1.png></div>
+
+```java
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        // 创建[]
+        List<List<Integer>> output = new ArrayList();
+        // 添加[[]]
+        output.add(new ArrayList<Integer>());
+
+        for (int num : nums) {
+            // 创建[]
+            List<List<Integer>> newSubsets = new ArrayList();
+            for (List<Integer> curr : output) {
+                // 将num添加至curr中，再添加至newSubsets
+                newSubsets.add(new ArrayList<Integer>(curr){{add(num);}});
+            }
+            // 将答案添加进output
+            for (List<Integer> curr : newSubsets) {
+                output.add(curr);
+            }
+        }
+        
+        return output;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N \times 2^N)$，生成所有子集，并复制到输出结果中。
+
+- 空间复杂度：$\mathcal{O}(N \times 2^N)$，这是子集的数量。
+
+    - 对于给定的任意元素，它在子集中有两种情况，存在或者不存在（对应二进制中的0和1）。因此，$N$个数字共有$2^N$个子集。
+
+
+**方法二：回溯**
+
+幂集是所有长度从$0$到$n$所有子集的组合，遍历子集长度，通过回溯生成所有给定长度的子集。
+
+<div align=center><img src=LeetCode\78_2.png></div>
+
+回溯法是一种探索所有潜在可能性找到解决方案的算法。如果当前方案不是正确的解决方案，或者不是最后一个正确的解决方案，则回溯法通过修改上一步的值继续寻找解决方案。
+
+<div align=center><img src=LeetCode\78_3.png></div>
+
+定义一个回溯方法`backtrack(first, curr)`，第一个参数为索引`first`，第二个参数为当前子集`curr`。
+
+- 如果当前子集构造完成，将它添加到输出集合中。
+
+- 否则，从`first`到`n`遍历索引`i`。
+
+    - 将整数`nums[i]`添加到当前子集`curr`。
+
+    - 继续向子集中添加整数`backtrack(i + 1, curr)`。
+
+    - 从`curr`中删除`nums[i]`进行回溯。
+
+```java
+class Solution {
+    List<List<Integer>> output = new ArrayList();
+    int n, k;
+
+    public List<List<Integer>> subsets(int[] nums) {
+        n = nums.length;
+        // 产生指定长度的子集
+        for (k = 0; k < n + 1; k++) {
+            backtrack(0, new ArrayList<Integer>(), nums);
+        }
+        return output;
+    }
+
+    public void backtrack(int first, ArrayList<Integer> curr, int[] nums) {
+        // if the combination is done
+        if (curr.size() == k) {
+            output.add(new ArrayList(curr));
+        }
+
+        for (int i = first; i < n; i++) {
+            // add i into the current combination
+            curr.add(nums[i]);
+            // use next integers to complete the combination
+            backtrack(i + 1, curr, nums);
+            // backtrack
+            curr.remove(curr.size() - 1);
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N \times 2^N)$，生成所有子集，并复制到输出集合中。
+
+- 空间复杂度：$\mathcal{O}(N \times 2^N)$，存储所有子集，共$n$个元素，每个元素都有可能存在或者不存在。
+
+
+**方法三：字典排序（二进制排序） 子集**
+
+将每个子集映射到长度为$n$的**位掩码**中，其中第$i$位掩码`nums[i]`为1，表示第$i$个元素在子集中；如果第$i$位掩码`nums[i]`为0，表示第$i$个元素不在子集中。
+
+<div align=center><img src=LeetCode\78_4.png></div>
+
+例如，位掩码0..00（全 0）表示空子集，位掩码1..11（全 1）表示输入数组nums。
+
+要生成所有子集，只需要生成从0..00到1..11的所有n位掩码。
+
+乍看起来生成二进制数很简单，但**如何处理左边填充0是一个问题**。因为必须**生成固定长度的位掩码**：**例如001，而不是1**。因此可以使用一些位操作技巧：
+
+```java
+int nthBit = 1 << n;
+for (int i = 0; i < (int)Math.pow(2, n); ++i) {
+    // generate bitmask, from 0..00 to 1..11
+    String bitmask = Integer.toBinaryString(i | nthBit).substring(1);
+```
+
+或者使用简单但低效的迭代进行控制：
+
+```java
+for (int i = (int)Math.pow(2, n); i < (int)Math.pow(2, n + 1); ++i) {
+  // generate bitmask, from 0..00 to 1..11
+  String bitmask = Integer.toBinaryString(i).substring(1);
+```
+
+**算法**
+
+- 生成所有长度为n的二进制位掩码。
+
+- 将每个子集都映射到一个位掩码数：位掩码中第i位如果是1表示子集中存在nums[i]，0表示子集中不存在nums[i]。
+
+- 返回子集列表。
+
+```java
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        List<List<Integer>> output = new ArrayList();
+        int n = nums.length;
+
+        for (int i = (int)Math.pow(2, n); i < (int)Math.pow(2, n + 1); ++i) {
+            // generate bitmask, from 0..00 to 1..11
+            // 返回int变量的二进制表示的字符串
+            // 以n为3举例(int)Math.pow(2, n)=8；Integer.toBinaryString(8)=1000
+            // Integer.toBinaryString(i).substring(1) = 000
+            String bitmask = Integer.toBinaryString(i).substring(1);
+
+            // append subset corresponding to that bitmask
+            List<Integer> curr = new ArrayList();
+            for (int j = 0; j < n; ++j) {
+                if (bitmask.charAt(j) == '1') {
+                    curr.add(nums[j]);
+                }
+            }
+            output.add(curr);
+        }
+
+        return output;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N \times 2^N)$，生成所有的子集，并复制到输出列表中。
+
+- 空间复杂度：$\mathcal{O}(N \times 2^N)$，存储所有子集，共$n$个元素，每个元素都有可能存在或者不存在。
+
+
+
+
+
 ## 136. 只出现一次的数字(简单)
 
 给定一个非空整数数组，除了某个元素只出现一次以外，其余每个元素均出现两次。找出那个只出现了一次的元素。
@@ -12249,8 +12573,117 @@ class Solution {
 
 回溯法(back tracking)是一种选优搜索法，又称为试探法，按选优条件向前搜索，以达到目标。但**当探索到某一步时，发现原先选择并不优或达不到目标，就退回一步重新选择**。这种**走不通就退回再走**的技术为回溯法，而满足回溯条件的某个状态的点称为“回溯点”。
 
+## 从全排列问题开始理解回溯算法
 
-## 78. 子集(简单)
+链接：https://leetcode-cn.com/problems/permutations/solution/hui-su-suan-fa-python-dai-ma-java-dai-ma-by-liweiw/
+
+我们尝试在纸上写3个数字、4个数字、5个数字的全排列，相信不难找到这样的方法。以数组 [1, 2, 3] 的全排列为例。
+
+- 先写以1开头的全排列，它们是：[1, 2, 3], [1, 3, 2]，即 1 + `[2, 3]` 的全排列（注意：**递归结构在这里体现**）；
+- 再写以2开头的全排列，它们是：[2, 1, 3], [2, 3, 1]，即 2 + `[1, 3]`的全排列；
+- 最后写以3开头的全排列，它们是：[3, 1, 2], [3, 2, 1]，即 3 + `[1, 2]`的全排列。
+
+总结搜索的方法：按顺序枚举每一位可能出现的情况，**已经选择的数字在当前要选择的数字中不能出现**。按照这种策略搜索就能够做到不重不漏。这样的思路，可以用一个树形结构表示。
+
+<div align=center><img src=LeetCode\全排列.png></div>
+
+
+
+
+## 22. 括号生成(中等)
+
+
+
+## 46. 全排列(中等)
+
+给定一个 没有重复 数字的序列，返回其所有可能的全排列。
+
+```
+示例:
+
+输入: [1,2,3]
+输出:
+[
+  [1,2,3],
+  [1,3,2],
+  [2,1,3],
+  [2,3,1],
+  [3,1,2],
+  [3,2,1]
+]
+```
+
+**思路与算法：**
+
+这个问题可以看作**有$n$个排列成一行的空格**，我们需要**从左往右依此填入题目给定的$n$个数，每个数只能使用一次**。那么很直接的可以想到一种穷举的算法，即从左往右每一个位置都依此尝试填入一个数，看能不能填完这$n$个空格，在程序中我们可以用「回溯法」来模拟这个过程。
+
+我们定义递归函数`backtrack(first, output)`表示从左往右填到第$\textit{first}$个位置，当前排列为$\textit{output}$。 那么整个递归函数分为两个情况：
+
+- 如果$\textit{first}==n$，说明我们已经填完了$n$个位置（注意下标从$0$开始），找到了一个可行的解，我们将$\textit{output}$放入答案数组中，递归结束。
+- 如果$\textit{first}<n$，我们要考虑这第$\textit{first}$个位置我们要填哪个数。根据题目要求我们肯定不能填已经填过的数，因此很容易想到的一个处理手段是我们**定义一个标记数组$\textit{visited}[]$来标记已经填过的数**，那么在填第$\textit{first}$个数的时候我们遍历题目给定的$n$个数，如果这个数没有被标记过，我们就尝试填入，并将其标记，继续尝试填下一个位置，即调用函数`backtrack(first + 1, output)`。搜索回溯的时候要撤销这一个位置填的数以及标记，并继续尝试其他没被标记过的数。
+
+
+使用标记数组来处理填过的数是一个很直观的思路，但是可不可以**去掉这个标记数组**呢？毕竟标记数组也增加了我们算法的空间复杂度。
+
+
+可以将题目给定的$n$个数的数组$\textit{nums}[]$划分成左右两个部分，**左边的表示已经填过的数，右边表示待填的数**，我们在递归搜索的时候只要动态维护这个数组即可。
+
+具体来说，假设我们已经填到第$\textit{first}$个位置，那么$\textit{nums}[]$数组中$[0,\textit{first}-1]$是已填过的数的集合，$[\textit{first},n-1]$是待填的数的集合。我们肯定是尝试用$[\textit{first},n-1]$里的数去填第$\textit{first}$个数，假设待填的数的下标为$i$，那么填完以后我们将第$i$个数和第$\textit{first}$个数交换，即能使得在填第 $\textit{first}+1$个数的时候$\textit{nums}[]$数组的$[0,first]$部分为已填过的数，$[\textit{first}+1,n-1]$为待填的数，回溯的时候交换回来即能完成撤销操作。
+
+举个简单的例子，假设我们有$[2, 5, 8, 9, 10]$这$5$个数要填入，已经填到第$3$个位置，已经填了$[8,9]$两个数，那么这个数组目前为$[8, 9 | 2, 5, 10]$这样的状态，分隔符区分了左右两个部分。假设这个位置我们要填$10$这个数，为了维护数组，我们将$2$和$10$交换，即能使得数组继续保持分隔符左边的数已经填过，右边的待填$[8, 9, 10 | 2, 5]$。
+
+**这样生成的全排列并不是按字典序存储在答案数组中的**，如果题目要求按字典序输出，那么请还是用**标记数组**或者其他方法。
+
+<div align=center><img src=LeetCode\46.png></div>
+
+```java {.line-numbers highlight=30-31}
+class Solution {
+    public List<List<Integer>> permute(int[] nums) {
+        List<List<Integer>> res = new LinkedList();
+        ArrayList<Integer> output = new ArrayList<Integer>();
+        for (int num : nums) {
+            output.add(num);
+        }
+
+        int n = nums.length;
+        backtrack(n, output, res, 0);
+
+        return res;
+    }
+
+    public void backtrack(int n, 
+            ArrayList<Integer> output, 
+            List<List<Integer>> res, 
+            int first) {
+        
+        // 所有数都填完了
+        if (first == n) {
+            res.add(new ArrayList<Integer>(output));
+        }
+
+        for (int i = first; i < n; i++) {
+            // 动态维护数组，交换元素
+            Collections.swap(output, first, i);
+            // 继续递归填下一个数
+            backtrack(n, output, res, first + 1);
+            // 撤销操作
+            Collections.swap(output, first, i);
+        }
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$O(n * n!)$，其中$n$为序列的长度。
+
+- 空间复杂度：$O(n)$，其中$n$为序列的长度。除答案数组以外，递归函数在递归过程中需要为每一层递归函数分配栈空间，所以这里需要额外的空间且该空间取决于递归的深度，这里可知递归调用深度为$O(n)$。
+
+
+
+
+## 78. 子集(中等)
 
 给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。
 
@@ -12302,3 +12735,167 @@ class Solution {
 
 <div align=center><img src=LeetCode\78_1.png></div>
 
+```java
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        // 创建[]
+        List<List<Integer>> output = new ArrayList();
+        // 添加[[]]
+        output.add(new ArrayList<Integer>());
+
+        for (int num : nums) {
+            // 创建[]
+            List<List<Integer>> newSubsets = new ArrayList();
+            for (List<Integer> curr : output) {
+                // 将num添加至curr中，再添加至newSubsets
+                newSubsets.add(new ArrayList<Integer>(curr){{add(num);}});
+            }
+            // 将答案添加进output
+            for (List<Integer> curr : newSubsets) {
+                output.add(curr);
+            }
+        }
+        
+        return output;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N \times 2^N)$，生成所有子集，并复制到输出结果中。
+
+- 空间复杂度：$\mathcal{O}(N \times 2^N)$，这是子集的数量。
+
+    - 对于给定的任意元素，它在子集中有两种情况，存在或者不存在（对应二进制中的0和1）。因此，$N$个数字共有$2^N$个子集。
+
+
+**方法二：回溯**
+
+幂集是所有长度从$0$到$n$所有子集的组合，遍历子集长度，通过回溯生成所有给定长度的子集。
+
+<div align=center><img src=LeetCode\78_2.png></div>
+
+回溯法是一种探索所有潜在可能性找到解决方案的算法。如果当前方案不是正确的解决方案，或者不是最后一个正确的解决方案，则回溯法通过修改上一步的值继续寻找解决方案。
+
+<div align=center><img src=LeetCode\78_3.png></div>
+
+定义一个回溯方法`backtrack(first, curr)`，第一个参数为索引`first`，第二个参数为当前子集`curr`。
+
+- 如果当前子集构造完成，将它添加到输出集合中。
+
+- 否则，从`first`到`n`遍历索引`i`。
+
+    - 将整数`nums[i]`添加到当前子集`curr`。
+
+    - 继续向子集中添加整数`backtrack(i + 1, curr)`。
+
+    - 从`curr`中删除`nums[i]`进行回溯。
+
+```java {.line-numbers highlight=25-26}
+class Solution {
+    List<List<Integer>> output = new ArrayList();
+    int n, k;
+
+    public List<List<Integer>> subsets(int[] nums) {
+        n = nums.length;
+        // 产生指定长度的子集
+        for (k = 0; k < n + 1; k++) {
+            backtrack(0, new ArrayList<Integer>(), nums);
+        }
+        return output;
+    }
+
+    public void backtrack(int first, ArrayList<Integer> curr, int[] nums) {
+        // if the combination is done
+        if (curr.size() == k) {
+            output.add(new ArrayList(curr));
+        }
+
+        for (int i = first; i < n; i++) {
+            // add i into the current combination
+            curr.add(nums[i]);
+            // use next integers to complete the combination
+            backtrack(i + 1, curr, nums);
+            // backtrack
+            curr.remove(curr.size() - 1);
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N \times 2^N)$，生成所有子集，并复制到输出集合中。
+
+- 空间复杂度：$\mathcal{O}(N \times 2^N)$，存储所有子集，共$n$个元素，每个元素都有可能存在或者不存在。
+
+
+**方法三：字典排序（二进制排序） 子集**
+
+将每个子集映射到长度为$n$的**位掩码**中，其中第$i$位掩码`nums[i]`为1，表示第$i$个元素在子集中；如果第$i$位掩码`nums[i]`为0，表示第$i$个元素不在子集中。
+
+<div align=center><img src=LeetCode\78_4.png></div>
+
+例如，位掩码0..00（全 0）表示空子集，位掩码1..11（全 1）表示输入数组nums。
+
+要生成所有子集，只需要生成从0..00到1..11的所有n位掩码。
+
+乍看起来生成二进制数很简单，但**如何处理左边填充0是一个问题**。因为必须**生成固定长度的位掩码**：**例如001，而不是1**。因此可以使用一些位操作技巧：
+
+```java
+int nthBit = 1 << n;
+for (int i = 0; i < (int)Math.pow(2, n); ++i) {
+    // generate bitmask, from 0..00 to 1..11
+    String bitmask = Integer.toBinaryString(i | nthBit).substring(1);
+```
+
+或者使用简单但低效的迭代进行控制：
+
+```java
+for (int i = (int)Math.pow(2, n); i < (int)Math.pow(2, n + 1); ++i) {
+  // generate bitmask, from 0..00 to 1..11
+  String bitmask = Integer.toBinaryString(i).substring(1);
+```
+
+**算法**
+
+- 生成所有长度为n的二进制位掩码。
+
+- 将每个子集都映射到一个位掩码数：位掩码中第i位如果是1表示子集中存在nums[i]，0表示子集中不存在nums[i]。
+
+- 返回子集列表。
+
+```java
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        List<List<Integer>> output = new ArrayList();
+        int n = nums.length;
+
+        for (int i = (int)Math.pow(2, n); i < (int)Math.pow(2, n + 1); ++i) {
+            // generate bitmask, from 0..00 to 1..11
+            // 返回int变量的二进制表示的字符串
+            // 以n为3举例(int)Math.pow(2, n)=8；Integer.toBinaryString(8)=1000
+            // Integer.toBinaryString(i).substring(1) = 000
+            String bitmask = Integer.toBinaryString(i).substring(1);
+
+            // append subset corresponding to that bitmask
+            List<Integer> curr = new ArrayList();
+            for (int j = 0; j < n; ++j) {
+                if (bitmask.charAt(j) == '1') {
+                    curr.add(nums[j]);
+                }
+            }
+            output.add(curr);
+        }
+
+        return output;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$\mathcal{O}(N \times 2^N)$，生成所有的子集，并复制到输出列表中。
+
+- 空间复杂度：$\mathcal{O}(N \times 2^N)$，存储所有子集，共$n$个元素，每个元素都有可能存在或者不存在。
