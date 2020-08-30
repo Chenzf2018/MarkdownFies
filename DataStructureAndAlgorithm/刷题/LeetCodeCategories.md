@@ -8339,7 +8339,45 @@ class Solution {
 <div align=center><img src=LeetCode\遍历树.jpg></div>
 
 
+## 从根节点到叶子节点的所有路径组成的数的和
 
+问题：给定一颗二叉树，节点的值只能为0~9中的一个，每一个从根节点到叶子节点的路径代表一个数，比如，有一个从根节点到叶子节点的路径是 1->2->3，则这个路径代表数字是123。求出从根节点到所有叶子节点的路径所代表数字的和是多少。
+
+比如有如下二叉树：
+```
+    1
+   / \
+  2   3
+```
+问题的答案 = 12 + 13 = 25
+
+二叉树的结构如下：
+
+```
+//Definition for binary tree
+public class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    TreeNode(int x) { val = x; }
+}
+```
+
+**方法一：使用递归。**
+
+可以考虑深度优先遍历，程序需要保存一个整形变量sum，表示在这条路径上已经遍历得到的数字；然后遍历下一个节点node，如果node为空，返回sum即可，如果node是叶子节点，返回`sum*10 + node.val`即可，否则，对左孩子和右孩子递归调用此方法。
+
+```java
+public int sumNumbers(TreeNode root) {
+    return sum(root, 0);
+}
+ 
+public int sum(TreeNode node, int ans){
+    if (node == null) return 0;
+    if (node.right == null && node.left == null) return ans * 10 + node.val;
+    return sum(node.left, ans * 10 + node.val) + sum(node.right, ans * 10 + node.val);
+}
+```
 
 
 
