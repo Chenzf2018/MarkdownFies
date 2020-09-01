@@ -1414,7 +1414,7 @@ class ImplementStackUsingQueues   {
 ```
 
 
-## 496. 下一个更大元素I(简单)
+## 496. *下一个更大元素I(简单)
 
 https://leetcode-cn.com/problems/next-greater-element-i/solution/xia-yi-ge-geng-da-yuan-su-i-by-leetcode/
 
@@ -1422,7 +1422,7 @@ https://leetcode-cn.com/problems/next-greater-element-i/solution/xia-yi-ge-geng-
 
 给定两个没有重复元素的数组`nums1`和`nums2`，其中`nums1`是`nums2`的子集。找到`nums1`中每个元素在`nums2`中的下一个比其大的值。
 
-`nums1`中数字`x`的下一个更大元素是指`x`在`nums2`中对应位置的右边的第一个比`x`大的元素。如果不存在，对应位置输出`-1`。
+`nums1`中数字`x`的下一个更大元素是指`x`在`nums2`中对应位置的**右边**的第一个比`x`大的元素。如果不存在，对应位置输出`-1`。
 
 **示例：**
 
@@ -1453,9 +1453,9 @@ nums1和nums2的数组大小都不超过1000。
 - 我们首先把第一个元素`nums2[1]`放入栈，随后对于第二个元素`nums2[2]`
   - 如果`nums2[2] > nums2[1]`，那么我们就**找到了`nums2[1]`的下一个更大元素`nums2[2]`**，此时就可以**把`nums2[1]`出栈并把`nums2[2]`入栈**，**将`nums2[1]`:`nums2[2]`放入HashMap中**；
   - **如果`nums2[2] <= nums2[1]`，我们就仅把`nums2[2]`入栈**。
-- 对于第三个元素`nums2[3]`，此时栈中有若干个元素，那么所有比`nums2[3]`小的元素都找到了下一个更大元素（即`nums2[3]`），因此都可以出栈，在这之后，我们将`nums2[3]`入栈，以此类推。
+- 对于第三个元素`nums2[3]`，此时栈中有若干个元素，那么所有比`nums2[3]`小的元素都找到了下一个更大元素（即`nums2[3]`），因此**都可以出栈**，在这之后，我们**将`nums2[3]`入栈**，以此类推。
 
-可以发现，我们维护了一个单调栈，栈中的元素从栈顶到栈底是单调不降的。当我们遇到一个新的元素`nums2[i]`时，我们判断栈顶元素是否小于`nums2[i]`，如果是，那么栈顶元素的下一个更大元素即为`nums2[i]`，我们将栈顶元素出栈。重复这一操作，直到栈为空或者栈顶元素大于`nums2[i]`。此时我们将`nums2[i]`入栈，保持栈的单调性，并对接下来的`nums2[i + 1], nums2[i + 2] ...`执行同样的操作。
+可以发现，我们维护了一个单调栈，栈中的元素**从栈顶到栈底是单调不降**的。当我们遇到一个新的元素`nums2[i]`时，我们判断栈顶元素是否小于`nums2[i]`，如果是，那么栈顶元素的下一个更大元素即为`nums2[i]`，我们将栈顶元素出栈。重复这一操作，直到栈为空或者栈顶元素大于`nums2[i]`。此时我们将`nums2[i]`入栈，保持栈的单调性，并对接下来的`nums2[i + 1], nums2[i + 2] ...`执行同样的操作。
 
 <div align=center><img src=LeetCode\496_3.gif></div>
 
@@ -1496,6 +1496,96 @@ class NextGreaterElementI {
 - 空间复杂度：$O(N)$。我们在遍历`nums2`时，需要使用栈，以及哈希映射用来临时存储答案。
 
 
+
+
+## 503. 下一个更大元素II(中等)
+
+https://leetcode-cn.com/problems/next-greater-element-ii/solution/xia-yi-ge-geng-da-yuan-su-ii-by-leetcode/
+
+给定一个**循环数组**（最后一个元素的下一个元素是数组的第一个元素），输出每个元素的下一个更大元素。数字 x 的下一个更大的元素是按数组遍历顺序，这个数字之后的第一个比它更大的数，这意味着你**应该循环地搜索它的下一个更大的数**。如果不存在，则输出 -1。
+
+```
+示例 1:
+输入: [1,2,1]
+输出: [2,-1,2]
+
+解释: 第一个1的下一个更大的数是2；数字2找不到下一个更大的数；第二个1的下一个最大的数需要循环搜索，结果也是2。
+
+注意: 输入数组的长度不会超过10000。
+```
+
+### 单调栈
+
+我们**首先把第一个元素$A[1]$放入栈**，随后**对于第二个元素**$A[2]$，如果$A[2] > A[1]$，那么我们就找到了$A[1]$的下一个更大元素$A[2]$，此时就可以**把$A[1]$出栈并把$A[2]$入栈**；**如果$A[2] <= A[1]$，我们就把$A[2]$入栈**。对于第三个元素$A[3]$，此时栈中有若干个元素，那么所有比$A[3]$小的元素都找到了下一个更大元素（即$A[3]$），因此可以出栈，在这之后，我们将$A[3]$入栈，以此类推。
+
+可以发现，我们维护了一个单调栈，栈中的元素从栈顶到栈底是单调不降的。当我们遇到一个新的元素$A[i]$时，我们判断栈顶元素是否小于$A[i]$，如果是，那么栈顶元素的下一个更大元素即为$A[i]$，我们将栈顶元素出栈。重复这一操作，直到栈为空或者栈顶元素大于$A[i]$。此时我们将$A[i]$入栈，保持栈的单调性，并对接下来的$A[i + 1], A[i + 2] ...$执行同样的操作。
+
+由于这道题的数组是循环数组，因此我们需要**将每个元素都入栈两次**。这样可能会有元素出栈找过一次，即得到了超过一个“下一个更大元素”，我们只需要保留第一个出栈的结果即可。
+
+```java
+package solution;
+
+import java.util.Stack;
+
+/**
+ * leetcode_503_下一个更大元素
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 1.0
+ */
+
+public class NextGreaterElement {
+    public int[] nextGreaterElements(int[] nums) {
+        int[] result = new int[nums.length];
+        Stack<Integer> stack = new Stack<>();
+
+        for (int i = 2 * nums.length - 1; i >= 0; i--) {
+            while (! stack.empty() && nums[stack.peek()] <= nums[i % nums.length]) {
+                stack.pop();
+            }
+
+            result[i % nums.length] = stack.empty() ? -1 : nums[stack.peek()];
+            stack.push(i % nums.length);
+        }
+
+        return result;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$。
+
+- 空间复杂度：$O(N)$。
+
+
+**顺序遍历：**
+
+``` java
+class Solution {
+    public int[] nextGreaterElements(int[] nums) {
+        int[] res = new int[nums.length];
+        Arrays.fill(res, -1);
+        
+        // 存储的是索引index
+        Stack<Integer> stack = new Stack<>();
+        
+        // 由于是循环数组,对于末位元素,要往后循环考虑到其前一位数也就是倒数第二个数
+        for(int i = 0; i < 2 * nums.length; i++) {
+            // 对于当前元素,弹出栈中小于当前元素的元素,这些被弹出的元素的"下一个更大元素"就是当前元素
+            // 一个元素只有入栈后再被弹出,才能得到该元素的"下一个更大元素",否则无"下一个更大元素",res[i]默认为-1
+            // 例如,对于最大的元素,其一直留在栈中无法被弹出,因此其"下一个更大元素"默认为-1
+            // 栈中索引对应的元素，从下至上是单调不增的
+            while(!stack.empty() && nums[stack.peek()] < nums[i % nums.length])
+                res[stack.pop()] = nums[i % nums.length];
+            stack.push(i % nums.length);
+        }
+        
+        return res;
+    }
+}
+```
 
 
 ## 682. 棒球比赛(简单)
@@ -1894,7 +1984,7 @@ public class MergeTwoSortedList_v2 {
 
 函数应该返回新的长度 2, 并且原数组 nums 的前两个元素被修改为 1, 2。 
 
-你不需要考虑数组中超出新长度后面的元素。
+你��需要考虑数组中超出新长度后面的元素。
 
 示例 2:
 
@@ -5567,7 +5657,7 @@ class Solution {
 
 在暴力方法中，我们仅仅为了找到最大值每次都要向左和向右扫描一次。但是我们可以提前存储这个值。
 
-提前存储每个位置上所有左边柱子高度的最大值和所有右边柱子高度的最大值
+**提前存储每个位置上所有左边柱子高度的最大值和所有右边柱子高度的最大值**
 
 - 找到数组中**从下标 i 到最左端**最高的条形块高度$\text{left\_max}$。
 - 找到数组中从下标 i 到最右端最高的条形块高度$\text{right\_max}$。
@@ -5751,6 +5841,60 @@ class Solution {
 
 
 
+## 85. 最大矩形(困难)
+
+
+给定一个仅包含 0 和 1 的二维二进制矩阵，找出只包含 1 的最大矩形，并返回其面积。
+
+```
+示例:
+
+输入:
+[
+  ["1","0","1","0","0"],
+  ["1","0","1","1","1"],
+  ["1","1","1","1","1"],
+  ["1","0","0","1","0"]
+]
+输出: 6
+```
+
+**解法一 暴力破解**
+
+链接：https://leetcode-cn.com/problems/maximal-rectangle/solution/xiang-xi-tong-su-de-si-lu-fen-xi-duo-jie-fa-by-1-8/
+
+遍历每个点，求以这个点为矩阵右下角的所有矩阵面积。
+
+如下图的两个例子，橙色是当前遍历的点，然后虚线框圈出的矩阵是其中一个矩阵：
+
+<div align=center><img src=LeetCode\85_1.png></div>
+
+怎么找出这样的矩阵呢？如下图，如果我们**知道了以这个点结尾的连续 1 的个数**的话，问题就变得简单了：
+
+
+
+1. 首先求出高度是 1 的矩形面积，如图中橙色的 4，面积就是 4。
+
+<div align=center><img src=LeetCode\85_2.png></div>
+
+2. 然后向上扩展一行，高度增加一，选出当前列最小的数字，作为矩阵的宽，求出面积，对应上图的矩形框。
+
+3. 然后继续向上扩展，重复步骤 2。
+
+按照上边的方法，遍历所有的点，求出所有的矩阵就可以了。
+
+以橙色的点为右下角，高度为1：
+
+<div align=center><img src=LeetCode\85_3.png></div>
+
+高度为2：
+
+<div align=center><img src=LeetCode\85_4.png></div>
+
+高度为3：
+
+<div align=center><img src=LeetCode\85_5.png></div>
+
 
 
 ## 121. *买卖股票的最佳时机(简单)
@@ -5888,6 +6032,84 @@ class BestTimeToBuyAndSellStockII {
 
 
 
+## 169. 多数元素(简单)
+
+给定一个大小为 n 的数组，找到其中的多数元素。多数元素是指在数组中出现次数大于 ⌊ n/2 ⌋ 的元素。
+
+你可以假设数组是非空的，并且给定的数组总是存在多数元素。
+
+```
+示例 1:
+
+输入: [3,2,3]
+输出: 3
+
+示例 2:
+
+输入: [2,2,1,1,1,2,2]
+输出: 2
+```
+
+使用哈希映射（HashMap）来存储每个元素以及出现的次数。对于哈希映射中的每个键值对，**键表示一个元素，值表示该元素出现的次数**。
+
+我们用一个循环遍历数组 nums 并将数组中的每个元素加入哈希映射中。在这之后，我们遍历哈希映射中的所有键值对，返回值最大的键。我们同样也可以**在遍历数组 nums 时候使用打擂台的方法，维护最大的值**，这样省去了最后对哈希映射的遍历。
+
+
+```java {.line-numbers highlight=6}
+class Solution {
+    public int majorityElement(int[] nums) {
+        Map<Integer, Integer> counts = countNums(nums);
+        Map.Entry<Integer, Integer> majorityEntry = null;
+        
+        for (Map.Entry<Integer, Integer> entry : counts.entrySet()) {
+            if (majorityEntry == null || entry.getValue() > majorityEntry.getValue()) {
+                majorityEntry = entry;
+            }
+        }
+
+        return majorityEntry.getKey();
+    }
+
+    private Map<Integer, Integer> countNums(int[] nums) {
+        Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
+        for (int num : nums) {
+            if (!counts.containsKey(num)) {
+                counts.put(num, 1);
+            }
+            else {
+                counts.put(num, counts.get(num) + 1);
+            }
+        }
+        return counts;
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是数组 nums 的长度。
+- 空间复杂度：$O(n)$。
+
+
+如果将数组 nums 中的所有元素**按照单调递增或单调递减的顺序排序**，那么下标为$\lfloor \dfrac{n}{2} \rfloor$的元素（下标从 0 开始）一定是众数。
+
+```java
+class Solution {
+    public int majorityElement(int[] nums) {
+        Arrays.sort(nums);
+        return nums[nums.length/2];
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n\log n)$。将数组排序的时间复杂度为$O(n\log n)$。
+
+- 空间复杂度：$O(\log n)$。如果**使用语言自带的排序算法，需要使用$O(\log n)$的栈空间**。如果自己编写堆排序，则只需要使用$O(1)$的额外空间。
+
+
 
 
 ## 189. 旋转数组—移位(简单)
@@ -5998,6 +6220,7 @@ public class Solution {
   [8,5,2],
   [9,6,3]
 ]
+
 示例 2:
 
 给定 matrix =
@@ -6116,6 +6339,43 @@ class Solution {
 
 
 
+## 289. 生命游戏(中等)
+
+生命游戏，简称为生命，是英国数学家约翰·何顿·康威在 1970 年发明的细胞自动机。
+
+给定一个包含$m × n$个格子的面板，每一个格子都可以看成是一个细胞。每个细胞都具有一个初始状态：1 即为活细胞（live），或 0 即为死细胞（dead）。每个细胞与其八个相邻位置（水平，垂直，对角线）的细胞都遵循以下四条生存定律：
+
+- 如果**活细胞**周围八个位置的**活细胞数少于两个**，则该位置活细胞**死亡**；
+- 如果**活细胞**周围八个位置**有两个或三个活细胞**，则该位置活细胞仍然**存活**；
+- 如果**活细胞**周围八个位置有**超过三个活细胞**，则该位置活细胞**死亡**；
+- 如果**死细胞**周围正好**有三个活细胞**，则该位置**死细胞复活**；
+
+根据当前状态，写一个函数来计算面板上所有细胞的下一个（一次更新后的）状态。下一个状态是通过将上述规则同时应用于当前状态下的每个细胞所形成的，其中细胞的出生和死亡是同时发生的。
+
+ 
+```
+示例：
+
+输入： 
+[
+  [0,1,0],
+  [0,0,1],
+  [1,1,1],
+  [0,0,0]
+]
+
+输出：
+[
+  [0,0,0],
+  [1,0,1],
+  [0,1,1],
+  [0,1,0]
+]
+```
+
+
+
+
 ## 350. 两个数组的交集 II(简单)
 
 
@@ -6188,6 +6448,265 @@ class Solution {
 
 
 
+## 486. 预测赢家(中等)
+
+给定一个表示分数的非负整数数组。 玩家 1 从数组任意一端拿取一个分数，随后玩家 2 继续从剩余数组任意一端拿取分数，然后玩家 1 拿，…… 。每次一个玩家只能拿取一个分数，分数被拿取之后不再可取。直到没有剩余分数可取时游戏结束。最终获得分数总和最多的玩家获胜。
+
+给定一个表示分数的数组，预测玩家1是否会成为赢家。你可以假设每个玩家的玩法都会使他的分数最大化。
+
+ 
+```
+示例 1：
+
+输入：[1, 5, 2]
+输出：False
+解释：一开始，玩家1可以从1和2中进行选择。
+如果他选择 2（或者 1 ），那么玩家 2 可以从 1（或者 2 ）和 5 中进行选择。如果玩家 2 选择了 5 ，那么玩家 1 则只剩下 1（或者 2 ）可选。
+所以，玩家 1 的最终分数为 1 + 2 = 3，而玩家 2 为 5 。
+因此，玩家 1 永远不会成为赢家，返回 False 。
+
+示例 2：
+
+输入：[1, 5, 233, 7]
+输出：True
+解释：玩家 1 一开始选择 1 。然后玩家 2 必须从 5 和 7 中进行选择。无论玩家 2 选择了哪个，玩家 1 都可以选择 233 。
+     最终，玩家 1（234 分）比玩家 2（12 分）获得更多的分数，所以返回 True，表示玩家 1 可以成为赢家。
+```
+
+**注意示例2，玩家1如果一开始就选择7，则玩家2可以选择233，必输！**
+
+提示：
+```
+1 <= 给定的数组长度 <= 20.
+数组里所有分数都为非负数且不会大于 10000000 。
+如果最终两个玩家的分数相等，那么玩家 1 仍为赢家。
+```
+
+**方法一：递归**
+
+为了判断哪个玩家可以获胜，需要**计算一个总分，为先手得分与后手得分之差**。当数组中的所有数字都被拿取时，如果总分大于或等于0，则先手获胜，反之则后手获胜。
+
+由于每次只能从数组的任意一端拿取数字，因此可以保证数组中剩下的部分一定是连续的。假设数组当前剩下的部分为下标$\textit{start}$到下标$\textit{end}$，其中$0 \le \textit{start} \le \textit{end} < \textit{nums}.\text{length}$。如果$\textit{start}=\textit{end}$，则只剩一个数字，当前玩家只能拿取这个数字。如果$\textit{start}<\textit{end}$，则当前玩家可以选择$\textit{nums}[\textit{start}]$或$\textit{nums}[\textit{end}]$，然后轮到另一个玩家在数组剩下的部分选取数字。这是一个递归的过程。
+
+计算总分时，需要记录当前玩家是先手还是后手，判断当前玩家的得分应该记为正还是负。当数组中剩下的数字多于1个时，当前玩家会选择最优的方案，使得自己的分数最大化，因此对两种方案分别计算当前玩家可以得到的分数，其中的最大值为当前玩家最多可以得到的分数。
+
+
+<div align=center><img src=LeetCode\486_1.png></div>
+
+相当于暴力解法，算出每一种可能性：一开始玩家1有两个选择，到玩家2时也有两种选择。。。
+
+```java
+class Solution {
+    public boolean PredictTheWinner(int[] nums) {
+        return total(nums, 0, nums.length - 1, 1) >= 0;
+    }
+
+    // turn取值1或-1，表示不同玩家
+    public int total(int[] nums, int start, int end, int turn) {
+        if (start == end) {
+            return nums[start] * turn;
+        }
+        // 如果从头取数
+        int scoreStart = nums[start] * turn + total(nums, start + 1, end, -turn);
+        // 如果从尾取数
+        int scoreEnd = nums[end] * turn + total(nums, start, end - 1, -turn);
+        return Math.max(scoreStart * turn, scoreEnd * turn) * turn;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(2^n)$，其中$n$是数组的长度。
+
+- 空间复杂度：$O(n)$，其中$n$是数组的长度。空间复杂度取决于递归使用的栈空间。
+
+
+**方法二：动态规划**
+
+方法一使用递归，存在大量重复计算，因此时间复杂度很高。由于存在重复子问题，因此可以使用动态规划降低时间复杂度。
+
+定义二维数组$\textit{dp}$，其行数和列数都等于数组的长度，$\textit{dp}[i][j]$**表示当数组剩下的部分为下标$i$到下标$j$时，当前玩家与另一个玩家的分数之差的最大值**，注意当前玩家不一定是先手。
+
+- 只有当$i \le j$时，数组剩下的部分才有意义，因此当$i>j$时，$\textit{dp}[i][j]=0$。
+
+- 当$i=j$时，**只剩一个数字，当前玩家只能拿取这个数字**，因此对于所有$0 \le i < \textit{nums}.\text{length}$，都有$\textit{dp}[i][i]=\textit{nums}[i]$。
+
+<div align=center><img src=LeetCode\486_2.jpg></div>
+
+- 当$i<j$时，当前玩家可以选择$\textit{nums}[i]$或$\textit{nums}[j]$，然后轮到另一个玩家在数组剩下的部分选取数字。在两种方案中，**当前玩家会选择最优的方案，使得自己的分数最大化**。因此可以得到如下状态转移方程：$\textit{dp}[i][j]=\max(\textit{nums}[i] - \textit{dp}[i + 1][j], \textit{nums}[j] - \textit{dp}[i][j - 1])$（$\textit{dp}[i][j]$的前一个状态为$\textit{dp}[i + 1][j]$或$\textit{dp}[i][j - 1])$）
+
+<div align=center><img src=LeetCode\486.gif></div>
+
+
+最后判断$\textit{dp}[0][\textit{nums}.\text{length}-1]$的值，如果大于或等于$0$，则先手得分大于或等于后手得分，因此先手成为赢家，否则后手成为赢家。
+
+```java
+class Solution {
+    public boolean PredictTheWinner(int[] nums) {
+        int length = nums.length;
+        int[][] dp = new int[length][length];
+        for (int i = 0; i < length; i++) {
+            dp[i][i] = nums[i];
+        }
+
+        // i>j时，dp[i][j]=0
+        for (int i = length - 2; i >= 0; i--) {
+            for (int j = i + 1; j < length; j++) {
+                dp[i][j] = Math.max(nums[i] - dp[i + 1][j], nums[j] - dp[i][j - 1]);
+            }
+        }
+        return dp[0][length - 1] >= 0;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n^2)$，其中$n$是数组的长度。需要计算每个子数组对应的$\textit{dp}$的值，共有$\frac{n(n+1)}{2}$个子数组。
+
+- 空间复杂度：$O(n^2)$，其中$n$是数组的长度。空间复杂度取决于额外创建的数组$\textit{dp}$，如果不优化空间，则空间复杂度是$O(n^2)$。
+
+
+
+
+## 945. 使数组唯一的最小增量(中等)
+
+给定整数数组 A，每次 move 操作将会选择任意 A[i]，并将其递增 1。
+
+返回使 A 中的每个值都是唯一的最少操作次数。
+
+```
+示例 1:
+
+输入：[1,2,2]
+输出：1
+解释：经过一次 move 操作，数组将变为 [1, 2, 3]。
+
+示例 2:
+
+输入：[3,2,1,2,1,7]
+输出：6
+解释：经过 6 次 move 操作，数组将变为 [3, 4, 1, 2, 5, 7]。
+可以看出 5 次或 5 次以下的 move 操作是不能让数组的每个值唯一的。
+```
+
+提示：
+```
+0 <= A.length <= 40000
+0 <= A[i] < 40000
+```
+
+**方法一：计数**
+
+由于`A[i]`的范围为 `[0, 40000)`，我们可以**用数组统计出每个数出现的次数**，然后**对于每个重复出现的数，我们暴力地将它递增，直到它增加到一个没有重复出现的数为止**。但这样的方法的时间复杂度较大，可以达到$O(N^2)$，例如数组 A 中所有元素都是 1 的情况。
+
+因此，我们不能对重复出现的数暴力的进行递增，而是用以下的做法：**当我们找到一个没有出现过的数的时候，将之前某个重复出现的数增加成这个没有出现过的数**。注意，**这里 「之前某个重复出现的数」 是可以任意选择的，它并不会影响最终的答案**，因为**将 P 增加到 X 并且将 Q 增加到 Y，与将 P 增加到 Y 并且将 Q 增加到 X 都需要进行 (X + Y) - (P + Q) 次操作**。
+
+例如当数组 A 为 `[1, 1, 1, 1, 3, 5]` 时，我们发现**有 3 个重复的 1**，且**没有出现过 2，4 和 6**，因此一共需要进行 **(2 + 4 + 6)** - **(1 + 1 + 1)** = 9 次操作。
+
+首先**统计出每个数出现的次数**，然后**从小到大遍历每个数 x**：
+
+- 如果 x 出现了两次以上，就将额外出现的数记录下来（例如保存到一个列表中）；
+
+- 如果 x 没有出现过，那么**在记录下来的数中选取一个 v，将它增加到 x**，需要进行的操作次数为 x - v。
+
+我们还可以对该算法进行优化，使得我们**不需要将额外出现的数记录下来**。还是以 `[1, 1, 1, 1, 3, 5]` 为例：
+- **<font color=red>当我们发现有 3 个重复的 1 时，我们先将操作次数减去 1 + 1 + 1</font>**。
+- 接下来，**<font color=red>当我们发现 2，4 和 6 都没有出现过时，我们依次将操作次数增加 2，4 和 6</font>**。
+
+注意事项
+
+虽然 A[i] 的范围为 [0, 40000)，但我们有可能会将数据递增到 40000 的两倍 80000。这是因为在最坏情况下，数组 A 中有 40000 个 40000，这样要使得数组值唯一，需要将其递增为 [40000, 40001, ..., 79999]，因此用来统计的数组需要开到 80000。
+
+
+```java
+class Solution {
+    public int minIncrementForUnique(int[] A) {
+        int[] count = new int[80000];
+        for (int x: A) {
+            count[x]++;
+        }
+
+        int ans = 0, taken = 0;
+        // 从小到大遍历每一个数
+        for (int x = 0; x < 80000; ++x) {
+            // 如果x出现了两次以上，就将额外出现的数记录下来
+            if (count[x] >= 2) {
+                // 当我们发现有 3 个重复的 1 时，我们先将操作次数减去 1 + 1 + 1
+                taken += count[x] - 1;
+                ans -= x * (count[x] - 1);
+            }
+            else if (taken > 0 && count[x] == 0) {
+                taken--;
+                ans += x;
+            }
+        }
+
+        return ans;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(L)$，其中$L$的数量级是数组 A 的长度加上其数据范围内的最大值，因为在最坏情况下，数组 A 中的所有数都是数据范围内的最大值。
+
+- 空间复杂度：$O(L)$，需要长度$L$ 的数组统计每个数出现的次数。
+
+
+
+**方法二：排序**
+
+将数组排完序后，我们对数组进行线性扫描，会有两种情况：
+
+- 如果 `A[i - 1] == A[i]`，我们**将操作次数减去 `A[i]`**，并**将重复的数的个数增加 1**；
+
+- 如果 `A[i - 1] < A[i]`，则区间$\big[A[i - 1] + 1, A[i] - 1\big]$里的数都是没有出现过的，所以我们**可以将之前重复的数变为这个区间范围内的数**。设**当前重复的数的个数**为`taken`，则我们**最多可以改变 `give = min(taken, A[i] - A[i - 1] - 1)` 个数**，即区间$\big[A[i - 1] + 1, A[i] - 1\big]$的长度与 `taken` 二者的较小值。它们的操作数对答案的贡献为：
+
+$A[i-1] * \mathrm{give} + \sum_{k=1}^{\mathrm{give}}\ k = A[i-1]* \mathrm{give}+\frac{(\mathrm{give}+1)*\mathrm{give}}{2}$
+
+在扫描完数组后，如果仍然有重复的数，即 `taken` 不为 0，我们可以将这些数变为区间$\big[A[n - 1] + 1, \infty \big)$中的数，其中 `A[n - 1]` 是数组 A 中的最后一个数。
+
+
+```java
+class Solution {
+    public int minIncrementForUnique(int[] A) {
+        Arrays.sort(A);
+        int ans = 0, taken = 0;
+
+        for (int i = 1; i < A.length; ++i) {
+            if (A[i-1] == A[i]) {
+                taken++;
+                ans -= A[i];
+            } else {
+                int give = Math.min(taken, A[i] - A[i-1] - 1);
+                ans += give * (give + 1) / 2 + give * A[i-1];
+                taken -= give;
+            }
+        }
+
+        if (A.length > 0)
+            ans += taken * (taken + 1) / 2 + taken * A[A.length - 1];
+
+        return ans;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N\log N)$，其中$N$是数组$A$的长度，即排序的时间复杂度。
+
+- 空间复杂度：$O(\log N)$，排序需要额外$O(\log N)$的栈空间。
+
+
+
+
+
+
+
+
 ## 1313. 解压缩编码列表(简单)
 
 给你一个以行程长度编码压缩的整数列表 nums 。
@@ -6247,7 +6766,7 @@ public class Solution {
 ```
 
 
-## 1330. 翻转子数组得到最大的数组值(困难)
+## 1330. ？翻转子数组得到最大的数组值(困难)
 
 
 给你一个整数数组 nums 。「数组值」定义为所有满足 `0 <= i < nums.length-1` 的 `|nums[i]-nums[i+1]|` 的和。
@@ -8051,6 +8570,126 @@ class Solution {
 
 
 
+## 486. 预测赢家(中等)
+
+给定一个表示分数的非负整数数组。 玩家 1 从数组任意一端拿取一个分数，随后玩家 2 继续从剩余数组任意一端拿取分数，然后玩家 1 拿，…… 。每次一个玩家只能拿取一个分数，分数被拿取之后不再可取。直到没有剩余分数可取时游戏结束。最终获得分数总和最多的玩家获胜。
+
+给定一个表示分数的数组，预测玩家1是否会成为赢家。你可以假设每个玩家的玩法都会使他的分数最大化。
+
+ 
+```
+示例 1：
+
+输入：[1, 5, 2]
+输出：False
+解释：一开始，玩家1可以从1和2中进行选择。
+如果他选择 2（或者 1 ），那么玩家 2 可以从 1（或者 2 ）和 5 中进行选择。如果玩家 2 选择了 5 ，那么玩家 1 则只剩下 1（或者 2 ）可选。
+所以，玩家 1 的最终分数为 1 + 2 = 3，而玩家 2 为 5 。
+因此，玩家 1 永远不会成为赢家，返回 False 。
+
+示例 2：
+
+输入：[1, 5, 233, 7]
+输出：True
+解释：玩家 1 一开始选择 1 。然后玩家 2 必须从 5 和 7 中进行选择。无论玩家 2 选择了哪个，玩家 1 都可以选择 233 。
+     最终，玩家 1（234 分）比玩家 2（12 分）获得更多的分数，所以返回 True，表示玩家 1 可以成为赢家。
+```
+
+**注意示例2，玩家1如果一开始就选择7，则玩家2可以选择233，必输！**
+
+提示：
+```
+1 <= 给定的数组长度 <= 20.
+数组里所有分数都为非负数且不会大于 10000000 。
+如果最终两个玩家的分数相等，那么玩家 1 仍为赢家。
+```
+
+**方法一：递归**
+
+为了判断哪个玩家可以获胜，需要**计算一个总分，为先手得分与后手得分之差**。当数组中的所有数字都被拿取时，如果总分大于或等于0，则先手获胜，反之则后手获胜。
+
+由于每次只能从数组的任意一端拿取数字，因此可以保证数组中剩下的部分一定是连续的。假设数组当前剩下的部分为下标$\textit{start}$到下标$\textit{end}$，其中$0 \le \textit{start} \le \textit{end} < \textit{nums}.\text{length}$。如果$\textit{start}=\textit{end}$，则只剩一个数字，当前玩家只能拿取这个数字。如果$\textit{start}<\textit{end}$，则当前玩家可以选择$\textit{nums}[\textit{start}]$或$\textit{nums}[\textit{end}]$，然后轮到另一个玩家在数组剩下的部分选取数字。这是一个递归的过程。
+
+计算总分时，需要记录当前玩家是先手还是后手，判断当前玩家的得分应该记为正还是负。当数组中剩下的数字多于1个时，当前玩家会选择最优的方案，使得自己的分数最大化，因此对两种方案分别计算当前玩家可以得到的分数，其中的最大值为当前玩家最多可以得到的分数。
+
+
+<div align=center><img src=LeetCode\486_1.png></div>
+
+相当于暴力解法，算出每一种可能性：一开始玩家1有两个选择，到玩家2时也有两种选择。。。
+
+```java
+class Solution {
+    public boolean PredictTheWinner(int[] nums) {
+        return total(nums, 0, nums.length - 1, 1) >= 0;
+    }
+
+    // turn取值1或-1，表示不同玩家
+    public int total(int[] nums, int start, int end, int turn) {
+        if (start == end) {
+            return nums[start] * turn;
+        }
+        // 如果从头取数
+        int scoreStart = nums[start] * turn + total(nums, start + 1, end, -turn);
+        // 如果从尾取数
+        int scoreEnd = nums[end] * turn + total(nums, start, end - 1, -turn);
+        return Math.max(scoreStart * turn, scoreEnd * turn) * turn;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(2^n)$，其中$n$是数组的长度。
+
+- 空间复杂度：$O(n)$，其中$n$是数组的长度。空间复杂度取决于递归使用的栈空间。
+
+
+**方法二：动态规划**
+
+方法一使用递归，存在大量重复计算，因此时间复杂度很高。由于存在重复子问题，因此可以使用动态规划降低时间复杂度。
+
+定义二维数组$\textit{dp}$，其行数和列数都等于数组的长度，$\textit{dp}[i][j]$**表示当数组剩下的部分为下标$i$到下标$j$时，当前玩家与另一个玩家的分数之差的最大值**，注意当前玩家不一定是先手。
+
+- 只有当$i \le j$时，数组剩下的部分才有意义，因此当$i>j$时，$\textit{dp}[i][j]=0$。
+
+- 当$i=j$时，**只剩一个数字，当前玩家只能拿取这个数字**，因此对于所有$0 \le i < \textit{nums}.\text{length}$，都有$\textit{dp}[i][i]=\textit{nums}[i]$。
+
+<div align=center><img src=LeetCode\486_2.jpg></div>
+
+- 当$i<j$时，当前玩家可以选择$\textit{nums}[i]$或$\textit{nums}[j]$，然后轮到另一个玩家在数组剩下的部分选取数字。在两种方案中，**当前玩家会选择最优的方案，使得自己的分数最大化**。因此可以得到如下状态转移方程：$\textit{dp}[i][j]=\max(\textit{nums}[i] - \textit{dp}[i + 1][j], \textit{nums}[j] - \textit{dp}[i][j - 1])$（$\textit{dp}[i][j]$的前一个状态为$\textit{dp}[i + 1][j]$或$\textit{dp}[i][j - 1])$）
+
+<div align=center><img src=LeetCode\486.gif></div>
+
+
+最后判断$\textit{dp}[0][\textit{nums}.\text{length}-1]$的值，如果大于或等于$0$，则先手得分大于或等于后手得分，因此先手成为赢家，否则后手成为赢家。
+
+```java
+class Solution {
+    public boolean PredictTheWinner(int[] nums) {
+        int length = nums.length;
+        int[][] dp = new int[length][length];
+        for (int i = 0; i < length; i++) {
+            dp[i][i] = nums[i];
+        }
+
+        // i>j时，dp[i][j]=0
+        for (int i = length - 2; i >= 0; i--) {
+            for (int j = i + 1; j < length; j++) {
+                dp[i][j] = Math.max(nums[i] - dp[i + 1][j], nums[j] - dp[i][j - 1]);
+            }
+        }
+        return dp[0][length - 1] >= 0;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n^2)$，其中$n$是数组的长度。需要计算每个子数组对应的$\textit{dp}$的值，共有$\frac{n(n+1)}{2}$个子数组。
+
+- 空间复杂度：$O(n^2)$，其中$n$是数组的长度。空间复杂度取决于额外创建的数组$\textit{dp}$，如果不优化空间，则空间复杂度是$O(n^2)$。
+
+
 
 
 ## 1035. 不相交的线(简单)
@@ -8073,10 +8712,12 @@ class Solution {
 解释：
 我们可以画出两条不交叉的线，如上图所示。
 我们无法画出第三条不相交的直线，因为从 A[1]=4 到 B[2]=4 的直线将与从 A[2]=2 到 B[1]=2 的直线相交。
+
 示例 2：
 
 输入：A = [2,5,1,2,5], B = [10,5,2,1,5,2]
 输出：3
+
 示例 3：
 
 输入：A = [1,3,7,1,7,5], B = [1,9,2,5,1]
@@ -8137,7 +8778,7 @@ class Solution {
 
 例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。两个字符串的「公共子序列」是这两个字符串所共同拥有的子序列。
 
-若这两个字符串没有公共子序列，则返回 0。
+���这两个字符串没有公共子序列，则返回 0。
 
  
 ```
@@ -8210,7 +8851,9 @@ class Solution {
 
 - 第四次遍历 `i = 2, j = 1`，就是需要比较ab与a的最长子串，**把之前的关系传递过来**，所以`dp[2][1] = 1`依次类推...
 
-我们会发现遍历两个串字符，**当不同时，需要考虑两层遍历前面的值（关系传递），也就是<font color=red>左边和上边的其中较大的值</font>，当相同时，需要考虑各自不包含当前字符串的子序列长度，再加上1**。
+我们会发现遍历两个串字符
+- **当不同时，需要考虑两层遍历前面的值（关系传递），也就是<font color=red>左边和上边的其中较大的值</font>**
+- **当相同时，需要考虑各自不包含当前字符串的子序列长度，再加上1**。
 
 因此可以得出：
 
@@ -8373,8 +9016,13 @@ public int sumNumbers(TreeNode root) {
 }
  
 public int sum(TreeNode node, int ans){
-    if (node == null) return 0;
-    if (node.right == null && node.left == null) return ans * 10 + node.val;
+    if (node == null) {
+        return 0;
+    }
+    if (node.right == null && node.left == null) {
+        return ans * 10 + node.val;
+    }
+
     return sum(node.left, ans * 10 + node.val) + sum(node.right, ans * 10 + node.val);
 }
 ```
@@ -9114,7 +9762,314 @@ class SymmetricTree {
 ```
 
 
+## 105. 从前序与中序遍历序列构造二叉树(中等)
 
+根据一棵树的前序遍历与中序遍历构造二叉树。
+
+注意:你可以假设树中没有重复的元素。
+
+
+```
+前序遍历 preorder = [3,9,20,15,7]
+中序遍历 inorder = [9,3,15,20,7]
+返回如下的二叉树：
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+```
+
+### 递归
+
+对于任意一颗树而言，前序遍历的形式总是：
+`[ 根节点, [左子树的前序遍历结果], [右子树的前序遍历结果] ]`
+即**根节点总是前序遍历中的第一个节点**。
+
+而中序遍历的形式总是：
+`[ [左子树的中序遍历结果], 根节点, [右子树的中序遍历结果] ]`
+
+只要我们**在中序遍历中定位到根节点**，那么我们就**可以分别知道左子树和右子树中的节点数目**。
+
+```
+preorder = [3,9,20,15,7]
+inorder = [9,3,15,20,7]
+
+首先根据 preorder 找到根节点是 3；
+    
+然后根据根节点将 inorder 分成左子树和右子树：
+
+左子树
+inorder [9]
+
+右子树
+inorder [15,20,7]
+
+把相应的前序遍历的数组也加进来：
+
+左子树
+inorder [9] -> preorder[9] 
+
+右子树
+preorder[20 15 7] -> inorder [15,20,7]
+
+现在我们只需要构造左子树和右子树即可，成功把大问题化成了小问题。
+
+然后重复上边的步骤继续划分preorder[20 15 7] 和 inorder [15,20,7]，直到 preorder 和 inorder 都为空，返回 null 即可。
+```
+
+**在中序遍历中对根节点进行定位时**，一种简单的方法是直接扫描整个中序遍历的结果并找出根节点，但这样做的时间复杂度较高。
+
+我们可以考虑使用哈希映射（HashMap）来帮助我们快速地定位根节点。对于哈希映射中的每个键值对，**键表示一个元素（节点的值），值表示其在中序遍历中的出现位置**。
+
+在构造二叉树的过程之前，我们可以**对中序遍历的列表进行一遍扫描，就可以构造出这个哈希映射**。在此后构造二叉树的过程中，我们就只需要$O(1)$的时间对根节点进行定位了。
+
+<div align=center><img src=LeetCode\105.jpg></div>
+
+```java
+package solution;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * leetcode_105_从前序与后序遍历序列构造二叉树
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 1.0 递归
+ */
+
+public class ConstructBinaryTree {
+    // 便于在中序遍历中对根节点进行定位
+    private Map<Integer, Integer> indexMap;
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        int numberOfNode = preorder.length;
+        // 构造哈希映射，帮助我们快速定位根节点
+        indexMap = new HashMap<>();
+        for (int i = 0; i < numberOfNode; i++) {
+            indexMap.put(inorder[i], i);
+        }
+
+        return constructBinaryTree(preorder, inorder,
+                0, numberOfNode - 1,
+                0, numberOfNode - 1);
+    }
+
+    public TreeNode constructBinaryTree(int[] preorder, int[] inorder,
+                                        int preorderLeft, int preorderRight,
+                                        int inorderLeft, int inorderRight) {
+        if (preorderLeft > preorderRight) {
+            return null;
+        }
+
+        // 前序遍历中的第一个节点就是根节点
+        int preorderRootIndex = preorderLeft;
+        // 在中序遍历中定位根节点
+        int inorderRootIndex = indexMap.get(preorder[preorderRootIndex]);
+
+        // 先把根节点建立出来
+        TreeNode root = new TreeNode(preorder[preorderRootIndex]);
+
+        // 得到左子树中的节点数目
+        int sizeOfLeftSubtree = inorderRootIndex - inorderLeft;
+
+        // 递归地构造左子树，并连接到根节点
+        // 先序遍历中「从 左边界+1 开始的 size_left_subtree」个元素
+        // 对应了中序遍历中「从 左边界 开始到 根节点定位-1」的元素
+        root.left = constructBinaryTree(preorder, inorder,
+                preorderLeft + 1, preorderLeft + sizeOfLeftSubtree,
+                inorderLeft, inorderRootIndex - 1);
+
+        // 递归地构造右子树，并连接到根节点
+        // 先序遍历中「从 左边界+1+左子树节点数目 开始到 右边界」的元素
+        // 对应了中序遍历中「从 根节点定位+1 到 右边界」的元素
+        root.right = constructBinaryTree(preorder, inorder,
+                preorderLeft + sizeOfLeftSubtree + 1, preorderRight,
+                inorderRootIndex + 1, inorderRight);
+
+        return root;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是树中的节点个数。
+
+- 空间复杂度：$O(n)$，除去返回的答案需要的$O(n)$空间之外，我们还需要使用$O(n)$的空间**存储哈希映射**，以及$O(h)$（其中$h$是树的高度）的空间表示**递归时栈空间**。这里$h < n$，所以总空间复杂度为$O(n)$。
+
+
+
+
+## 106. 从中序与后序遍历序列构造二叉树(中等)
+
+根据一棵树的中序遍历与后序遍历构造二叉树。
+
+注意:
+你可以假设树中没有重复的元素。
+
+例如，给出
+
+```
+中序遍历 inorder = [9,3,15,20,7]
+后序遍历 postorder = [9,15,7,20,3]
+```
+
+返回如下的二叉树：
+
+```
+    3
+   / \
+  9  20
+    /  \
+   15   7
+```
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    // 便于在中序遍历中对根节点进行定位
+    private Map<Integer, Integer> indexMap;
+
+    public TreeNode buildTree(int[] inorder, int[] postorder) {
+        int numberOfNode = postorder.length;
+        // 构造哈希映射，帮助我们快速定位根节点
+        indexMap = new HashMap<>();
+        for (int i = 0; i < numberOfNode; i++) {
+            indexMap.put(inorder[i], i);
+        }
+
+        return constructBinaryTree(postorder, inorder, 0, numberOfNode - 1, 0, numberOfNode - 1);
+    }
+
+    public TreeNode constructBinaryTree(int[] postorder, int[] inorder,
+                                        int postorderLeft, int postorderRight,
+                                        int inorderLeft, int inorderRight) {
+        if (postorderLeft > postorderRight) {
+            return null;
+        }
+
+        // 后序遍历中的最后一个节点就是根节点
+        int postorderRootIndex = postorderRight;
+        // 在中序遍历中定位根节点
+        int inorderRootIndex = indexMap.get(postorder[postorderRootIndex]);
+
+        // 先把根节点建立出来
+        TreeNode root = new TreeNode(postorder[postorderRootIndex]);
+
+        // 得到左子树中的节点数目
+        int sizeOfLeftSubtree = inorderRootIndex - inorderLeft;
+
+        // 递归地构造左子树，并连接到根节点
+        // 后序遍历中「从 postorderLeft 开始的 size_left_subtree」个元素
+        // 对应了中序遍历中「从 左边界 开始到 根节点定位-1」的元素
+        root.left = constructBinaryTree(postorder, inorder,
+                postorderLeft, postorderLeft + sizeOfLeftSubtree - 1,
+                inorderLeft, inorderRootIndex - 1);
+
+        // 递归地构造右子树，并连接到根节点
+        // 后序遍历中「从 左边界+左子树节点数目 开始到 右边界-1」的元素
+        // 对应了中序遍历中「从 根节点定位+1 到 右边界」的元素
+        root.right = constructBinaryTree(postorder, inorder,
+                postorderLeft + sizeOfLeftSubtree, postorderRight - 1,
+                inorderRootIndex + 1, inorderRight);
+
+        return root;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是树中的节点个数。
+
+- 空间复杂度：$O(n)$，除去返回的答案需要的$O(n)$空间之外，我们还需要使用$O(n)$的空间**存储哈希映射**，以及$O(h)$（其中$h$是树的高度）的空间表示**递归时栈空间**。这里$h < n$，所以总空间复杂度为$O(n)$。
+
+
+
+
+## 889. 从前序和后序遍历序列构造二叉树(中等)
+
+返回与给定的前序和后序遍历匹配的任何二叉树。
+
+pre和post遍历中的值是不同的正整数。
+
+ 
+```
+示例：
+
+输入：pre = [1,2,4,5,3,6,7], post = [4,5,2,6,7,3,1]
+输出：[1,2,3,4,5,6,7]
+```
+
+提示：
+```
+1 <= pre.length == post.length <= 30
+pre[] 和 post[] 都是 1, 2, ..., pre.length 的排列
+每个输入保证至少有一个答案。如果有多个答案，可以返回其中一个。
+```
+
+
+**思路与算法：**
+
+如果最终的二叉树可以被序列化的表述为 `[1, 2, 3, 4, 5, 6, 7]`，那么其前序遍历为 `[1] + [2, 4, 5] + [3, 6, 7]`，而后序遍历为 `[4, 5, 2] + [6, 7, 3] + [1]`。
+
+如果我们**知道左分支有多少个结点**，我们就可以**对这些数组进行分组**，并用递归生成树的每个分支。
+
+我们令左分支有$L$个节点。**我们知道<font color=red>左分支的头节点为`pre[1]`，但它也出现在左分支的后序表示的最后</font>**。所以 `pre[1] = post[L-1]`（因为结点的值具有唯一性），因此 `L = post.indexOf(pre[1]) + 1`。
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode constructFromPrePost(int[] preorder, int[] postorder) {
+        int N = preorder.length;
+        if (N == 0) {
+            return null;
+        }
+
+        TreeNode root = new TreeNode(preorder[0]);
+        if (N == 1) {
+            return root;
+        }
+
+        // 左子树的长度
+        int L = 0;
+        for (int i = 0; i < N; ++i)
+            if (postorder[i] == preorder[1])
+                L = i + 1;
+
+        root.left = constructFromPrePost(Arrays.copyOfRange(preorder, 1, L + 1),
+                                         Arrays.copyOfRange(postorder, 0, L));
+        root.right = constructFromPrePost(Arrays.copyOfRange(preorder, L + 1, N),
+                                          Arrays.copyOfRange(postorder, L, N - 1));
+        return root;
+    }
+}
+``` 
+
+**复杂度分析**
+
+- 时间复杂度：$O(N^2)$，其中$N$是结点的数量。
+- 空间复杂度：$O(N^2)$。
 
 
 
@@ -9182,7 +10137,7 @@ class SymmetricTree {
 仍然不是唯一的：
 <div align=center><img src=LeetCode\bfs_dfs2.png></div>
 
-**高度平衡意味着每次必须选择中间数字作为根节点**。这对于**奇数个数**的数组是有用的，但对**偶数个数**的数组没有预定义的选择方案。
+**<font color=red>高度平衡意味着每次必须选择中间数字作为根节点</font>**。这对于**奇数个数**的数组是有用的，但对**偶数个数**的数组没有预定义的选择方案。
 
 <div align=center><img src=LeetCode\bfs_dfs3.png></div>
 
@@ -9237,6 +10192,140 @@ class Solution {
 - 时间复杂度：$O(n)$，其中$n$是数组的长度。每个数字只访问一次。
 
 - 空间复杂度：$O(\log n)$，其$n$是数组的长度。空间复杂度不考虑返回值，因此空间复杂度主要取决于递归栈的深度，递归栈的深度是$O(\log n)$。
+
+
+
+## 199. 二叉树的右视图(中等)
+
+
+给定一棵二叉树，想象自己站在它的右侧，按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
+
+```
+输入: [1,2,3,null,5,null,4]
+输出: [1, 3, 4]
+解释:
+
+   1            <---
+ /   \
+2     3         <---
+ \     \
+  5     4       <---
+```
+
+**思路与算法：**
+
+<div align=center><img src=LeetCode\199.png width=80%></div>
+
+### 方法一：广度优先搜索
+
+利用BFS进行层次遍历，**记录下每层的最后一个元素**。
+
+```java {.line-numbers highlight=41-44}
+package solution;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+/**
+ * leetcode_199_二叉树的右视图
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 2.0 广度优先
+ */
+
+public class RightSideView_v2 {
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> result = new ArrayList<>();
+
+        if (root == null) {
+            return result;
+        }
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+
+        while (! queue.isEmpty()) {
+            // 当前层节点个数
+            int size = queue.size();
+
+            for (int i = 0; i < size; i++) {
+                TreeNode node = queue.poll();
+
+                // 将node的子树推入队列
+                if (node.left != null) {
+                    queue.offer(node.left);
+                }
+                if (node.right != null) {
+                    queue.offer(node.right);
+                }
+
+                // 将当前层的最后一个节点放入结果列表
+                if (i == size - 1) {
+                    result.add(node.val);
+                }
+            }
+        }
+
+        return result;
+    }
+
+}
+```
+
+- 时间复杂度：$O(N)$，每个节点都入队出队了1次。
+- 空间复杂度：$O(N)$，使用了额外的队列空间。
+
+### 方法二：深度优先搜索
+
+对树进行深度优先搜索，在搜索过程中，我们**总是先访问右子树**。那么**对于每一层来说，我们在这层见到的第一个结点一定是最右边的结点**。
+
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_199_二叉树的右视图
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 1.0 深度优先
+ */
+
+public class RightSideView {
+    List<Integer> result = new ArrayList<>();
+
+    public List<Integer> rightSideView(TreeNode root) {
+        // 从根节点开始访问，根节点深度是0
+        deepFirstSearch(root, 0);
+        return result;
+    }
+
+    private void deepFirstSearch(TreeNode node, int depth) {
+        if (node == null) {
+            return;
+        }
+
+        // 先访问当前节点，再递归地访问右子树和左子树
+        // 如果当前节点所在深度还没有出现在res里，说明在该深度下当前节点是第一个被访问的节点
+        // 因此将当前节点加入res中
+        // 只要在result中这层添加过数了，就一定是最右侧的数
+        if (depth == result.size()) {
+            result.add(node.val);
+        }
+
+        depth++;
+        deepFirstSearch(node.right, depth);
+        deepFirstSearch(node.left, depth);
+    }
+}
+```
+
+- 时间复杂度：$O(N)$，**每个节点都访问了1次**。
+- 空间复杂度：$O(N)$，因为这不是一棵平衡二叉树，二叉树的深度最少是$logN$，最坏的情况下会退化成一条链表，深度就是$N$，因此**递归时使用的栈空间是$O(N)$的**。
 
 
 
@@ -11655,6 +12744,141 @@ public class BinaryTreeLevelOrder {
 ```
 
 
+## 199. 二叉树的右视图(中等)
+
+
+给定一棵二叉树，想象自己站在它的右侧，按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
+
+```
+输入: [1,2,3,null,5,null,4]
+输出: [1, 3, 4]
+解释:
+
+   1            <---
+ /   \
+2     3         <---
+ \     \
+  5     4       <---
+```
+
+**思路与算法：**
+
+<div align=center><img src=LeetCode\199.png width=80%></div>
+
+### 方法一：广度优先搜索
+
+利用BFS进行层次遍历，**记录下每层的最后一个元素**。
+
+```java {.line-numbers highlight=41-44}
+package solution;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+/**
+ * leetcode_199_二叉树的右视图
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 2.0 广度优先
+ */
+
+public class RightSideView_v2 {
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> result = new ArrayList<>();
+
+        if (root == null) {
+            return result;
+        }
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+
+        while (! queue.isEmpty()) {
+            // 当前层节点个数
+            int size = queue.size();
+
+            for (int i = 0; i < size; i++) {
+                TreeNode node = queue.poll();
+
+                // 将node的子树推入队列
+                if (node.left != null) {
+                    queue.offer(node.left);
+                }
+                if (node.right != null) {
+                    queue.offer(node.right);
+                }
+
+                // 将当前层的最后一个节点放入结果列表
+                if (i == size - 1) {
+                    result.add(node.val);
+                }
+            }
+        }
+
+        return result;
+    }
+
+}
+```
+
+- 时间复杂度：$O(N)$，每个节点都入队出队了1次。
+- 空间复杂度：$O(N)$，使用了额外的队列空间。
+
+### 方法二：深度优先搜索
+
+对树进行深度优先搜索，在搜索过程中，我们**总是先访问右子树**。那么**对于每一层来说，我们在这层见到的第一个结点一定是最右边的结点**。
+
+
+```java
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_199_二叉树的右视图
+ * @author Chenzf
+ * @date 2020/7/29
+ * @version 1.0 深度优先
+ */
+
+public class RightSideView {
+    List<Integer> result = new ArrayList<>();
+
+    public List<Integer> rightSideView(TreeNode root) {
+        // 从根节点开始访问，根节点深度是0
+        deepFirstSearch(root, 0);
+        return result;
+    }
+
+    private void deepFirstSearch(TreeNode node, int depth) {
+        if (node == null) {
+            return;
+        }
+
+        // 先访问当前节点，再递归地访问右子树和左子树
+        // 如果当前节点所在深度还没有出现在res里，说明在该深度下当前节点是第一个被访问的节点
+        // 因此将当前节点加入res中
+        // 只要在result中这层添加过数了，就一定是最右侧的数
+        if (depth == result.size()) {
+            result.add(node.val);
+        }
+
+        depth++;
+        deepFirstSearch(node.right, depth);
+        deepFirstSearch(node.left, depth);
+    }
+}
+```
+
+- 时间复杂度：$O(N)$，**每个节点都访问了1次**。
+- 空间复杂度：$O(N)$，因为这不是一棵平衡二叉树，二叉树的深度最少是$logN$，最坏的情况下会退化成一条链表，深度就是$N$，因此**递归时使用的栈空间是$O(N)$的**。
+
+
+
+
 # 位运算
 
 
@@ -12506,7 +13730,7 @@ int countPrimes(int n) {
 <div align=center><img src=LeetCode\204_1.gif></div>
 
 
-回想刚才判断一个数是否是素数的 isPrime 函数，**由于因子的对称性，其中的 for 循环只需要遍历 `[2,sqrt(n)]` 就够了**。这里也是类似的，我们外层的 for 循环也只需要遍历到 `sqrt(n)`：
+回想刚才判断一个数是否是素数的 isPrime 函数，**由于因子的对称性，其中的 for 循环只需要遍历 `[2,sqrt(n)]` 就够��**。这里也是类似的，我们外层的 for 循环也只需要遍历到 `sqrt(n)`：
 
 ```java
 for (int i = 2; i * i < n; i++) 
@@ -12628,7 +13852,77 @@ class Solution {
 
 
 
-## 22. 括号生成(中等)
+## 22. *?括号生成(中等)
+
+数字n代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且有效的括号组合。
+
+ 
+```
+示例：
+
+输入：n = 3
+输出：[
+       "((()))",
+       "(()())",
+       "(())()",
+       "()(())",
+       "()()()"
+     ]
+```
+
+**思路与算法：**
+
+可以生成所有$2^{2n}$个 '(' 和 ')' 字符构成的序列，然后我们检查每一个是否有效即可。
+
+为了**生成所有序列**，我们可以**使用递归**。**长度为n的序列就是在长度为n-1的序列前加一个 '(' 或 ')'**。
+
+为了**检查序列是否有效**，我们遍历这个序列，并**使用一个变量`balance`表示左括号的数量减去右括号的数量**。如果在遍历过程中`balance`的值小于零，或者结束时`balance`的值不为零，那么该序列就是无效的，否则它是有效的。
+
+```java
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        List<String> combinations = new ArrayList();
+        generateAll(new char[2 * n], 0, combinations);
+        return combinations;
+    }
+
+    public void generateAll(char[] current, int pos, List<String> result) {
+        if (pos == current.length) {
+            if (valid(current))
+                result.add(new String(current));
+        } else {
+            current[pos] = '(';
+            generateAll(current, pos + 1, result);
+            current[pos] = ')';
+            generateAll(current, pos + 1, result);
+        }
+    }
+
+    public boolean valid(char[] current) {
+        int balance = 0;
+        for (char c: current) {
+            if (c == '(') {
+                balance++;
+            } else {
+                balance--;
+            }
+
+            if (balance < 0) {
+                return false;
+            }
+        }
+        return (balance == 0);
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(2^{2n}n)$，对于$2^{2n}$个序列中的每一个，我们用于建立和验证该序列的复杂度为$O(n)$。
+
+- 空间复杂度：$O(n)$，除了答案数组之外，我们所需要的空间取决于递归栈的深度，每一层递归函数需要$O(1)$的空间，最多递归$2n$层，因此空间复杂度为$O(n)$。
+
+
 
 
 
@@ -12937,3 +14231,93 @@ class Solution {
 - 时间复杂度：$\mathcal{O}(N \times 2^N)$，生成所有的子集，并复制到输出列表中。
 
 - 空间复杂度：$\mathcal{O}(N \times 2^N)$，存储所有子集，共$n$个元素，每个元素都有可能存在或者不存在。
+
+
+
+
+
+
+
+
+# 排序
+
+## 179. 最大数(中等)
+
+给定一组非负整数，重新排列它们的顺序使之组成一个最大的整数。
+
+```
+示例 1:
+
+输入: [10,2]
+输出: 210
+示例 2:
+
+输入: [3,30,34,5,9]
+输出: 9534330
+```
+
+说明: 输出结果可能非常大，所以你需要**返回一个字符串**而不是整数。
+
+
+**思路与算法：**
+
+为了构建最大数字，我们希望**越高位的数字越大越好**。
+
+- 首先，我们**将每个整数变成字符串**。然后**进行排序**。
+
+    - 如果仅按降序排序，有相同的开头数字的时候会出现问题。比方说，样例 2 按降序排序得到的数字是$95343303$，然而交换$3$和$30$的位置可以得到正确答案$9534330$。因此，每一对数在排序的比较过程中，我们比较两种连接顺序哪一种更好。
+    
+    - 我们可以证明这样的做法是正确的：假设（不失一般性），某一对整数$a$和$b$，我们的比较结果是$a$应该在$b$前面，这意味着$a\frown b > b\frown a$，其中$\frown$表示连接。如果排序结果是错的，说明存在一个$c$，$b$在$c$前面且$c$在$a$的前面。这产生了矛盾，因为$a\frown b > b\frown a$和$b\frown c > c\frown b$意味着$a\frown c > c\frown a$。换言之，我们的自定义比较方法保证了传递性，所以这样子排序是对的。
+
+- 一旦数组排好了序，最“重要”的数字会在最前面。有一个需要注意的情况是如果数组只包含 0 ，我们直接返回结果 00 即可。否则，我们用排好序的数组形成一个字符串并返回。
+
+
+```java
+class Solution {
+    public String largestNumber(int[] nums) {
+        // Get input integers as strings.
+        String[] asStrs = new String[nums.length];
+        for (int i = 0; i < nums.length; i++) {
+            asStrs[i] = String.valueOf(nums[i]);
+        }
+
+        // Sort strings according to custom comparator.
+        Arrays.sort(asStrs, new LargerNumberComparator());
+
+        // If, after being sorted, the largest number is `0`, the entire number is zero.
+        if (asStrs[0].equals("0")) {
+            return "0";
+        }
+
+        // Build largest number from sorted array.
+        String largestNumberStr = new String();
+        for (String numAsStr : asStrs) {
+            largestNumberStr += numAsStr;
+        }
+
+        return largestNumberStr;
+    }
+
+    private class LargerNumberComparator implements Comparator<String> {
+        @Override
+        public int compare(String a, String b) {
+            String order1 = a + b;
+            String order2 = b + a;
+           return order2.compareTo(order1);
+        }
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(nlgn)$
+
+    尽管我们在比较函数中做了一些额外的工作，但是这只是一个常数因子。所以**总的时间复杂度是由排序决定的**，在Python和Java中都是$O(nlgn)$。
+
+- 空间复杂度：$O(n)$
+
+    这里，我们使用了$O(n)$的额外空间去保存 nums 的副本。尽管我们就地进行了一些额外的工作，但最后返回的数组需要$O(n)$的空间。因此，需要的额外空间与 nums 大小成线性关系。
+
+
+
