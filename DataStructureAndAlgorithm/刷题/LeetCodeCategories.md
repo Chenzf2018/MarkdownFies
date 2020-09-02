@@ -1588,6 +1588,118 @@ class Solution {
 ```
 
 
+
+## 636. ***函数的独占时间(中等)
+
+给出一个非抢占单线程CPU的 n 个函数运行日志，找到函数的**独占时间**。
+
+每个函数都有一个唯一的 Id，从 0 到 n-1，函数可能会递归调用或者被其他函数调用。
+
+日志是具有以下格式的字符串：`function_id：start_or_end：timestamp`。例如：`"0:start:0"` 表示函数 0 从 0 时刻开始运行。`"0:end:0"` 表示函数 0 在 0 时刻结束。
+
+函数的独占时间定义是在该方法中花费的时间，调用其他函数花费的时间不算该函数的独占时间。你需要根据函数的 Id 有序地返回每个函数的独占时间。
+
+示例:
+```
+输入:
+n = 2
+logs = 
+["0:start:0",
+ "1:start:2",
+ "1:end:5",
+ "0:end:6"]
+输出:[3, 4]
+说明：
+函数 0 在时刻 0 开始，在执行了  2个时间单位结束于时刻 1。
+现在函数 0 调用函数 1，函数 1 在时刻 2 开始，执行 4 个时间单位后结束于时刻 5。
+函数 0 再次在时刻 6 开始执行，并在时刻 6 结束运行，从而执行了 1 个时间单位。
+所以函数 0 总共的执行了 2 +1 =3 个时间单位，函数 1 总共执行了 4 个时间单位。
+```
+
+说明：
+```
+1. 输入的日志会根据时间戳排序，而不是根据日志Id排序。
+2. 你的输出会根据函数Id排序，也就意味着你的输出数组中序号为 0 的元素相当于函数 0 的执行时间。
+3. 两个函数不会在同时开始或结束。
+4. 函数允许被递归调用，直到运行结束。
+5. 1 <= n <= 100
+```
+
+**思路与算法：**
+
+可以**使用栈来模拟函数的调用**，即在<font color=red>遇到一条包含 start 的日志时，我们将对应的函数 id 入栈；在遇到一条包含 end 的日志时，我们将对应的函数 id 出栈</font>。在每一个时刻，**栈中的所有函数均为被调用的函数，而栈顶的函数为正在执行的函数**。
+
+在每条日志的时间戳后，栈顶的函数会独占执行，直到下一条日志的时间戳，因此我们**可以根据相邻两条日志的时间戳差值，来计算函数的独占时间**。
+
+我们依次遍历所有的日志
+
+- 对于第 i 条日志
+  - 如果它包含 start，那么**栈顶函数从其时间戳 time[i] 开始运行**，即`prev = time[i]`；
+  - 如果它包含 end，那么栈顶函数从其时间戳 time[i] 的下一个时间开始运行，即`prev = time[i] + 1`。
+
+- 对于第 i + 1 条日志
+  - 如果它包含 start，那么**在时间戳 time[i + 1] 时，有新的函数被调用，因此原来的栈顶函数的独占时间为`time[i + 1] - prev`**；
+  - 如果它包含 end，那么在时间戳 time[i + 1] 时，**原来的栈顶函数执行结束，独占时间为`time[i + 1] - prev + 1`**。
+
+- 在这之后，我们更新 prev 并遍历第 i + 2 条日志。在遍历结束后，我们就可以得到所有函数的独占时间。
+
+举例：
+
+- `0:start:0 | 1:start:2`：
+    第i条日志包含start，那么**栈顶函数从其时间戳 time[i] 开始运行**，即`prev = time[i]`；对于第 i + 1 条日志，它包含 start，那么**在时间戳 time[i + 1] 时，有新的函数被调用，因此原来的栈顶函数的独占时间为`time[i + 1] - prev`**；
+
+- `1:start:2 | 1:end:5`：
+    第i条日志包含start，那么**栈顶函数从其时间戳 time[i] 开始运行**，即`prev = time[i]`；对于第 i + 1 条日志，它包含 end，那么在时间戳 time[i + 1] 时，**原来的栈顶函数执行结束，独占时间为`time[i + 1] - prev + 1`**。
+
+- `1:end:5 | 2:start:6`：
+    对于第 i 条日志，它包含 end，那么栈顶函数从其时间戳 time[i] 的下一个时间开始运行，即`prev = time[i] + 1`。对于第 i + 1 条日志，它包含 start，那么**在时间戳 time[i + 1] 时，有新的函数被调用，因此原来的栈顶函数的独占时间为`time[i + 1] - prev`**；
+
+- `2:end:9 | 0:end:12`：
+    对于第 i 条日志，它包含 end，那么栈顶函数从其时间戳 time[i] 的下一个时间开始运行，即`prev = time[i] + 1`。对于第 i + 1 条日志，它包含 end，那么在时间戳 time[i + 1] 时，**原来的栈顶函数执行结束，独占时间为`time[i + 1] - prev + 1`**。
+
+<div align=center><img src=LeetCode\636.jpg></div>
+
+
+```java
+public class Solution {
+    public int[] exclusiveTime(int n, List <String> logs) {
+        Stack <Integer> stack = new Stack<>();
+        int[] res = new int[n];
+        String[] s = logs.get(0).split(":");
+        stack.push(Integer.parseInt(s[0]));
+        int i = 1, prev = Integer.parseInt(s[2]);
+
+        while (i < logs.size()) {
+            s = logs.get(i).split(":");
+            if (s[1].equals("start")) {
+                if (!stack.isEmpty())
+                    res[stack.peek()] += Integer.parseInt(s[2]) - prev;
+                stack.push(Integer.parseInt(s[0]));
+                prev = Integer.parseInt(s[2]);
+            } else {
+                res[stack.peek()] += Integer.parseInt(s[2]) - prev + 1;
+                stack.pop();
+                prev = Integer.parseInt(s[2]) + 1;
+            }
+            i++;
+        }
+        
+        return res;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(N)$。我们需要遍历所有的日志，因为有$N$个函数，因此日志的数量为$2N$。
+
+- 空间复杂度：$O(N)$，为栈占用的空间。
+
+
+
+
+
+
 ## 682. 棒球比赛(简单)
 
 **题目：**
@@ -2104,6 +2216,116 @@ class Solution {
   假设数组总共有$n$个元素，$i$和$j$至少遍历$2n$步。
 
 - 空间复杂度：$O(1)$。
+
+
+
+
+## 86. 分隔链表(中等)
+
+
+给定一个链表和一个特定值 x，对链表进行分隔，**使得所有小于 x 的节点都在大于或等于 x 的节点之前**。
+
+你应当保留两个分区中每个节点的初始相对位置。
+
+```
+示例:
+输入: head = 1->4->3->2->5->2, x = 3
+输出: 1->2->2->4->3->5
+```
+
+### 双指针
+
+本题要求我们改变链表结构，使得值小于x的元素，位于值大于等于x元素的前面。这实质上意味着在改变后的链表中有某个点，在该点之前的元素全部小于x ，该点之后的元素全部大于等于x。
+
+我们将这个点记为JOINT：
+
+<div align=center><img src=LeetCode\86.png></div>
+
+如果我们在JOINT将改后链表拆分，我们会得到两个更小的链表，其中一个包括全部值小于x的元素，另一个包括全部值大于x的元素。在解法中，我们的主要目的是创建这两个链表，并将它们连接。
+
+可以**用两个指针before和after来追踪上述的两个链表。两个指针可以用于分别创建两个链表，然后将这两个链表连接即可获得所需的链表**。
+
+1. 初始化两个指针before和after。我们将两个指针初始化为哑ListNode。这有助于减少条件判断。
+
+<div align=center><img src=LeetCode\86_1.png width=50%></div>
+
+2. 利用head指针遍历原链表。
+
+3. 若head指针指向的元素值小于x，该节点应当是before链表的一部分。因此我们将其移到before中：
+
+<div align=center><img src=LeetCode\86_2.png></div>
+
+4. 否则，该节点应当是after链表的一部分。因此我们将其移到after中。
+
+<div align=center><img src=LeetCode\86_3.png></div>
+
+5. 遍历完原有链表的全部元素之后，我们得到了两个链表before和after。原有链表的元素或者before中或者在after中，这取决于它们的值。
+
+<div align=center><img src=LeetCode\86_4.png></div>
+
+由于我们从左到右遍历了原有链表，故**两个链表中元素的相对顺序不会发生变化**。另外值得注意的是，在图中我们完好地保留了原有链表。事实上，**在算法实现中，我们将节点从原有链表中移除，并将它们添加到别的链表中。我们没有使用任何额外的空间，只是将原有的链表元素进行移动**。
+
+6. 现在，可以将before和after连接，组成所求的链表。
+
+<div align=center><img src=LeetCode\86_5.png></div>
+
+为了算法实现更容易，我们使用了哑结点初始化。**不能让哑结点成为返回链表中的一部分，因此在组合两个链表时需要向前移动一个节点**。
+
+
+```java
+package solution;
+
+/**
+ * leetcode_86_分隔链表
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 1.0
+ */
+
+public class PartitionList {
+    public ListNode partition(ListNode head, int partitionValue) {
+
+        // beforeHead and afterHead are used to save the heads of the two lists.
+        ListNode beforeHead = new ListNode(0);
+        ListNode afterHead = new ListNode(0);
+
+        // before and after are the two pointers used to create the two list
+        ListNode before = beforeHead;
+        ListNode after = afterHead;
+
+        while (head != null) {
+            // If the original list node is lesser than the given x, assign it to the before list.
+            if (head.val < partitionValue) {
+                before.next = head;
+                before = before.next;
+            } else {
+                // If the original list node is greater or equal to the given x, assign it to the after list.
+                after.next = head;
+                after = after.next;
+            }
+
+            // move ahead in the original list
+            head = head.next;
+        }
+
+        // Last node of "after" list would also be ending node of the reformed list
+        after.next = null;
+
+        // Once all the nodes are correctly assigned to the two lists,
+        // combine them to form a single list which would be returned.
+        before.next = afterHead.next;
+        
+        return beforeHead.next;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度:$O(N)$，其中$N$是原链表的长度，我们对该链表进行了遍历。
+- 空间复杂度:$O(1)$，我们没有申请任何新空间。值得注意的是，我们只移动了原有的结点，因此没有使用任何额外空间。
+
+
 
 
 ## 88. 合并两个有序数组(简单)
@@ -3647,6 +3869,114 @@ class Solution {
 - 时间复杂度：$O(n)$，因为列表中的每个结点都检查一次以确定它是否重复，所以总运行时间为$O(n)$，其中$n$是列表中的结点数。
 
 - 空间复杂度：$O(1)$，没有使用额外的空间。
+
+
+
+
+## 86. 分隔链表(中等)
+
+
+给定一个链表和一个特定值 x，对链表进行分隔，**使得所有小于 x 的节点都在大于或等于 x 的节点之前**。
+
+你应当保留两个分区中每个节点的初始相对位置。
+
+```
+示例:
+输入: head = 1->4->3->2->5->2, x = 3
+输出: 1->2->2->4->3->5
+```
+
+### 双指针
+
+本题要求我们改变链表结构，使得值小于x的元素，位于值大于等于x元素的前面。这实质上意味着在改变后的链表中有某个点，在该点之前的元素全部小于x ，该点之后的元素全部大于等于x。
+
+我们将这个点记为JOINT：
+
+<div align=center><img src=LeetCode\86.png></div>
+
+如果我们在JOINT将改后链表拆分，我们会得到两个更小的链表，其中一个包括全部值小于x的元素，另一个包括全部值大于x的元素。在解法中，我们的主要目的是创建这两个链表，并将它们连接。
+
+可以**用两个指针before和after来追踪上述的两个链表。两个指针可以用于分别创建两个链表，然后将这两个链表连接即可获得所需的链表**。
+
+1. 初始化两个指针before和after。我们将两个指针初始化为哑ListNode。这有助于减少条件判断。
+
+<div align=center><img src=LeetCode\86_1.png width=50%></div>
+
+2. 利用head指针遍历原链表。
+
+3. 若head指针指向的元素值小于x，该节点应当是before链表的一部分。因此我们将其移到before中：
+
+<div align=center><img src=LeetCode\86_2.png></div>
+
+4. 否则，该节点应当是after链表的一部分。因此我们将其移到after中。
+
+<div align=center><img src=LeetCode\86_3.png></div>
+
+5. 遍历完原有链表的全部元素之后，我们得到了两个链表before和after。原有链表的元素或者before中或者在after中，这取决于它们的值。
+
+<div align=center><img src=LeetCode\86_4.png></div>
+
+由于我们从左到右遍历了原有链表，故**两个链表中元素的相对顺序不会发生变化**。另外值得注意的是，在图中我们完好地保留了原有链表。事实上，**在算法实现中，我们将节点从原有链表中移除，并将它们添加到别的链表中。我们没有使用任何额外的空间，只是将原有的链表元素进行移动**。
+
+6. 现在，可以将before和after连接，组成所求的链表。
+
+<div align=center><img src=LeetCode\86_5.png></div>
+
+为了算法实现更容易，我们使用了哑结点初始化。**不能让哑结点成为返回链表中的一部分，因此在组合两个链表时需要向前移动一个节点**。
+
+
+```java
+package solution;
+
+/**
+ * leetcode_86_分隔链表
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 1.0
+ */
+
+public class PartitionList {
+    public ListNode partition(ListNode head, int partitionValue) {
+
+        // beforeHead and afterHead are used to save the heads of the two lists.
+        ListNode beforeHead = new ListNode(0);
+        ListNode afterHead = new ListNode(0);
+
+        // before and after are the two pointers used to create the two list
+        ListNode before = beforeHead;
+        ListNode after = afterHead;
+
+        while (head != null) {
+            // If the original list node is lesser than the given x, assign it to the before list.
+            if (head.val < partitionValue) {
+                before.next = head;
+                before = before.next;
+            } else {
+                // If the original list node is greater or equal to the given x, assign it to the after list.
+                after.next = head;
+                after = after.next;
+            }
+
+            // move ahead in the original list
+            head = head.next;
+        }
+
+        // Last node of "after" list would also be ending node of the reformed list
+        after.next = null;
+
+        // Once all the nodes are correctly assigned to the two lists,
+        // combine them to form a single list which would be returned.
+        before.next = afterHead.next;
+        
+        return beforeHead.next;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度:$O(N)$，其中$N$是原链表的长度，我们对该链表进行了遍历。
+- 空间复杂度:$O(1)$，我们没有申请任何新空间。值得注意的是，我们只移动了原有的结点，因此没有使用任何额外空间。
 
 
 
@@ -6032,7 +6362,7 @@ class BestTimeToBuyAndSellStockII {
 
 
 
-## 169. 多数元素(简单)
+## 169. 数组中出现次数超过一半的数字(简单)
 
 给定一个大小为 n 的数组，找到其中的多数元素。多数元素是指在数组中出现次数大于 ⌊ n/2 ⌋ 的元素。
 
@@ -6702,9 +7032,50 @@ class Solution {
 
 
 
+## 1299. *将每个元素替换为右侧最大元素(简单)
 
+给你一个数组 arr ，请你将每个元素用它右边最大的元素替换，如果是最后一个元素，用 -1 替换。
 
+完成所有替换操作后，请你返回这个数组。
 
+ 
+```
+示例：
+
+输入：arr = [17,18,5,4,6,1]
+输出：[18,6,6,6,1,-1]
+```
+
+提示：
+```
+1 <= arr.length <= 10^4
+1 <= arr[i] <= 10^5
+```
+
+**思路与算法：**
+
+从后往前遍历，1>-1; 6右边最大的mx为1; 4右边最大的max(6 1)=6...
+
+```java
+class Solution {
+    public int[] replaceElements(int[] arr) {
+        if (arr.length == 0) {
+            return arr;
+        }
+        int length = arr.length;
+        int max = arr[length - 1];
+        arr[--length] = -1;
+
+        while (length > 0) {
+            int cur = arr[length - 1];
+            arr[--length] = max;
+            max = (max > cur) ? max : cur;
+        }
+        
+        return arr;
+    }
+}
+```
 
 
 ## 1313. 解压缩编码列表(简单)
@@ -7207,6 +7578,96 @@ public boolean isAnagram(String s, String t) {
 ```
 
 
+## ??剑指 Offer 20. 表示数值的字符串(中等)
+
+请实现一个函数用来判断字符串是否表示数值（包括整数和小数）。例如，字符串`"+100"、"5e2"、"-123"、"3.1416"、"-1E-16"、"0123"`都表示数值，但`"12e"、"1a3.14"、"1.2.3"、"+-5"`及`"12e+5.4"`都不是。
+
+
+**思路与算法：**
+
+链接：https://leetcode-cn.com/problems/biao-shi-shu-zhi-de-zi-fu-chuan-lcof/solution/mian-shi-ti-20-biao-shi-shu-zhi-de-zi-fu-chuan-y-2/
+
+本题使用有限状态自动机。
+
+字符类型：一个合法的数值字符串应当具有的格式，它包含以下部分：
+
+空格「 」、数字「$0—9$」、正负号「$+−$」、小数点「$.$」、幂符号「$eE$」。
+
+上面描述的五个部分中，每个部分都不是必需的，但也受一些额外规则的制约，如：
+
+- 如果符号位存在，其后面必须跟着数字或小数点。
+- 小数点的前后两侧，至少有一侧是数字。
+
+
+
+状态定义：用「当前处理到字符串的哪个部分」当作状态的表述，按照字符串从左到右的顺序，定义以下9种状态。
+
+0. 开始的空格
+1. 幂符号前的正负号
+2. 小数点前的数字
+3. 小数点、小数点后的数字
+4. 当小数点前为空格时，小数点、小数点后的数字
+5. 幂符号
+6. 幂符号后的正负号
+7. 幂符号后的数字
+8. 结尾的空格
+
+结束状态：
+
+合法的结束状态有 2, 3, 7, 8。
+
+<div align=center><img src=LeetCode\Offer20.png></div>
+
+1. 初始化：
+
+    - 状态转移表states：设`states[i]`，其中`i`为所处状态，`states[i]`使用哈希表存储可转移至的状态。**键值对`(key, value)`含义：若输入`key`，则可从状态`i`转移至状态`value`**。
+    - 当前状态`p`： 起始状态初始化为`p = 0`。
+
+2. 状态转移循环：遍历字符串`s`的每个字符`c`。
+
+    - 记录字符类型`t`：分为四种情况。
+        - 当 c 为正负号时，执行 t = 's';
+        - 当 c 为数字时，执行 t = 'd' ;
+        - 当 c 为 e , E 时，执行 t = 'e' ;
+        - 当 c 为 . , 空格 时，执行 t = c （即用字符本身表示字符类型）;
+        - 否则，执行 t = '?' ，代表为不属于判断范围的非法字符，后续直接返回false。
+
+    - 终止条件： 若字符类型 t 不在哈希表 states[p] 中，说明无法转移至下一状态，因此直接返回 False 。
+
+    - 状态转移：状态 p 转移至 states[p][t] 。
+
+3. 返回值： 跳出循环后，若状态$p \in {2, 3, 7, 8}$，说明结尾合法，返回 True ，否则返回 False 。
+
+```java
+class Solution {
+    public boolean isNumber(String s) {
+        Map[] states = {
+            new HashMap<>() {{ put(' ', 0); put('s', 1); put('d', 2); put('.', 4); }}, // 0.
+            new HashMap<>() {{ put('d', 2); put('.', 4); }},                           // 1.
+            new HashMap<>() {{ put('d', 2); put('.', 3); put('e', 5); put(' ', 8); }}, // 2.
+            new HashMap<>() {{ put('d', 3); put('e', 5); put(' ', 8); }},              // 3.
+            new HashMap<>() {{ put('d', 3); }},                                        // 4.
+            new HashMap<>() {{ put('s', 6); put('d', 7); }},                           // 5.
+            new HashMap<>() {{ put('d', 7); }},                                        // 6.
+            new HashMap<>() {{ put('d', 7); put(' ', 8); }},                           // 7.
+            new HashMap<>() {{ put(' ', 8); }}                                         // 8.
+        };
+        int p = 0;
+        char t;
+        for(char c : s.toCharArray()) {
+            if(c >= '0' && c <= '9') t = 'd';
+            else if(c == '+' || c == '-') t = 's';
+            else if(c == 'e' || c == 'E') t = 'e';
+            else if(c == '.' || c == ' ') t = c;
+            else t = '?';
+            if(!states[p].containsKey(t)) return false;
+            p = (int)states[p].get(t);
+        }
+        return p == 2 || p == 3 || p == 7 || p == 8;
+    }
+}
+```
+
 
 
 ## 13. 罗马数字转整数(简单)
@@ -7465,6 +7926,105 @@ class Solution {
     }
 }
 ```
+
+
+
+## 67. 二进制求和(简单)
+
+**题目描述：**
+
+给你两个二进制字符串，返回它们的和（用二进制表示）。输入为非空字符串且只包含数字1和0。
+
+**示例：**
+
+```
+示例 1:
+
+输入: a = "11", b = "1"
+输出: "100"
+
+示例 2:
+
+输入: a = "1010", b = "1011"
+输出: "10101"
+ 
+
+提示：
+
+1. 每个字符串仅由字符'0'或'1'组成。
+2. 1 <= a.length, b.length <= 10^4
+3. 字符串如果不是 "0" ，就都不含前导零。
+```
+
+**思路与算法：**
+
+**将两个字符串从右向左，连同进位，对应相加**。**会得到一个反向的字符，需要最后进行反转**！
+
+<div align=center><img src=LeetCode\67.jpg></div>
+
+**代码实现：**
+
+```java {.line-numbers highlight=15-28}
+/**
+ * leetcode_67_二进制求和
+ * @author Chenzf
+ * @date 2020/7/11
+ * @version 1.0
+ */
+
+public class AddBinary {
+    public static String addBinary(String a, String b) {
+        StringBuilder ans = new StringBuilder();
+        // 进位标志
+        int carry = 0;
+        // int sum = 0;
+
+        for (int i = a.length() - 1, j = b.length() - 1; i >= 0 || j >= 0; i--, j--) {
+            // ans当前位的和
+            int sum = carry;
+            sum += (i >= 0 ? a.charAt(i) - '0' : 0);
+            sum += (j >=0 ? b.charAt(j) - '0' : 0);
+            ans.append(sum % 2);
+            // carry /= 2;
+            carry = sum / 2;
+        }
+
+        // 会多产生一个进位
+        ans.append(carry == 1 ? carry : "");
+
+        return ans.reverse().toString();
+    }
+}
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/11
+ */
+
+public class TestAddBinary {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入两个字符串：");
+            String a = reader.readLine();
+            String b = reader.readLine();
+
+            System.out.println(AddBinary.addBinary(a, b));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
 
 
 ## 125. 验证回文串(简单)
@@ -8450,6 +9010,90 @@ class Solution {
 
 
 
+## 139. 单词拆分(中等)
+
+给定一个非空字符串 s 和一个包含非空单词列表的字典 wordDict，判定 s 是否可以被空格拆分为一个或多个在字典中出现的单词。
+
+说明：**拆分时可以重复使用字典中的单词**。你可以假设字典中没有重复的单词。
+
+```
+示例 1：
+
+输入: s = "leetcode", wordDict = ["leet", "code"]
+输出: true
+解释: 返回 true 因为 "leetcode" 可以被拆分成 "leet code"。
+
+示例 2：
+
+输入: s = "applepenapple", wordDict = ["apple", "pen"]
+输出: true
+解释: 返回 true 因为 "applepenapple" 可以被拆分成 "apple pen apple"。
+     注意你可以重复使用字典中的单词。
+
+示例 3：
+
+输入: s = "catsandog", wordDict = ["cats", "dog", "sand", "and", "cat"]
+输出: false
+```
+
+
+**思路与算法：**
+
+<div align=center><img src=LeetCode\139_1.png></div>
+
+定义$\textit{dp}[i]$表示**字符串$s$前$i$个字符组成的字符串$s[0..i-1]$是否能被空格拆分成若干个字典中出现的单词**。
+
+从前往后计算考虑转移方程，每次转移的时候我们需要枚举包含**位置$i−1$的最后一个单词**，**看它是否出现在字典中**以及**除去这部分的字符串是否合法**即可。
+
+公式化来说，我们需要**枚举$s[0..i-1]$中的分割点$j$，看$[0..j-1]$组成的字符串$s_1$（默认$j = 0$时$s_1$为空串）和$s[j..i-1]$组成的字符串$s_2$是否都合法**。如果两个字符串均合法，那么按照定义$s_1$和$s_2$拼接成的字符串也同样合法。
+
+由于计算到$\textit{dp}[i]$时我们已经计算出了$\textit{dp}[0..i-1]$的值，因此字符串$s_1$是否合法可以直接由$dp[j]$得知，剩下的我们只需要看$s_2$是否合法即可，因此我们可以得出如下**转移方程**：
+
+$\textit{dp}[i]=\textit{dp}[j]\ \&\&\ \textit{check}(s[j..i-1])$
+
+
+其中$\textit{check}(s[j..i-1])$ 表示子串$s[j..i-1]$是否出现在字典中。
+
+<div align=center><img src=LeetCode\139.png></div>
+
+对于检查一个字符串是否出现在给定的字符串列表里一般可以考虑哈希表来快速判断，同时也可以做一些简单的剪枝，枚举分割点的时候倒着枚举，如果分割点$j$到$i$的长度已经大于字典列表里最长的单词的长度，那么就结束枚举，但是需要注意的是下面的代码给出的是不带剪枝的写法。
+
+对于**边界条件**，我们定义$\textit{dp}[0]=true$表示空串且合法。
+
+
+```java
+public class Solution {
+    public boolean wordBreak(String s, List<String> wordDict) {
+        Set<String> wordDictSet = new HashSet(wordDict);
+        // 包含了空串
+        boolean[] dp = new boolean[s.length() + 1];
+        // 边界条件
+        dp[0] = true;
+        for (int i = 1; i <= s.length(); i++) {
+            for (int j = 0; j < i; j++) {
+                if (dp[j] && wordDictSet.contains(s.substring(j, i))) {
+                    dp[i] = true;
+                    break;
+                }
+            }
+        }
+        return dp[s.length()];
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n^2)$，其中$n$为字符串$s$的长度。我们一共有$O(n)$个状态需要计算，每次计算需要枚举$O(n)$个分割点，哈希表判断一个字符串是否出现在给定的字符串列表需要$O(1)$的时间，因此总时间复杂度为$O(n^2)$。
+
+- 空间复杂度：$O(n)$，其中$n$为字符串$s$的长度。我们需要$O(n)$的空间存放$\textit{dp}$值以及哈希表亦需要$O(n)$的空间复杂度，因此总空间复杂度为$O(n)$。
+
+
+
+
+
+
+
 ## 198. 打家劫舍(简单)
 
 你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是**相邻的房屋装有相互连通的防盗系统**，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
@@ -8770,7 +9414,7 @@ class Solution {
 }
 ```
 
-## 1143. 最长公共子序列(中等)
+## 1143. **最长公共子序列(中等)
 
 给定两个字符串`text1`和`text2`，返回这两个字符串的最长公共子序列的长度。
 
@@ -10830,6 +11474,77 @@ class Solution {
 ```
 
 
+
+## 515. 在每个树行中找最大值(中等)
+
+您需要在二叉树的每一行中找到最大的值。
+
+```
+示例：
+
+输入: 
+
+          1
+         / \
+        3   2
+       / \   \  
+      5   3   9 
+
+输出: [1, 3, 9]
+```
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    
+    public List<Integer> largestValues(TreeNode root) {
+        //LinkedList实现队列
+        Queue<TreeNode> queue = new LinkedList<>();
+        List<Integer> values = new ArrayList<>();
+        if (root != null)
+            queue.add(root);
+        
+        while (!queue.isEmpty()) {
+            int max = Integer.MIN_VALUE;
+            // 每一层的数量
+            int levelSize = queue.size();
+            for (int i = 0; i < levelSize; i++) {
+                // 出队
+                TreeNode node = queue.poll();
+                // 记录每层的最大值
+                max = Math.max(max, node.val);
+
+                if (node.left != null)
+                    queue.add(node.left);
+                if (node.right != null)
+                    queue.add(node.right);
+            }
+
+            values.add(max);
+        }
+        
+        return values;
+    }
+}
+```
+
+
+
+
 ## 559. N叉树的最大深度(简单)
 
 给定一个 N 叉树，找到其最大深度。
@@ -10891,6 +11606,130 @@ class Solution {
 - 时间复杂度：**每个节点遍历一次**，所以时间复杂度是$O(N)$，其中$N$为节点数。
 
 - 空间复杂度：最坏情况下，树完全非平衡，例如每个节点有且仅有一个孩子节点，递归调用会发生$N$次（等于树的深度），所以存储调用栈需要$O(N)$。但是在最好情况下（树完全平衡），树的高度为$\log(N)$。所以在此情况下空间复杂度为$O(\log(N))$。
+
+
+
+
+## 572. 另一个树的子树(简单)
+
+给定两个非空二叉树 s 和 t，检验 s 中是否包含和 t 具有相同结构和节点值的子树。s 的一个子树包括 s 的一个节点和这个节点的所有子孙。s 也可以看做它自身的一棵子树。
+
+
+示例 1:
+给定的树 s:
+
+```
+     3
+    / \
+   4   5
+  / \
+ 1   2
+```
+
+给定的树 t：
+
+```
+   4 
+  / \
+ 1   2
+```
+
+返回 true，因为 t 与 s 的一个子树拥有相同的结构和节点值。
+
+示例 2:
+给定的树 s：
+
+```
+     3
+    / \
+   4   5
+  / \
+ 1   2
+    /
+   0
+```
+
+给定的树 t：
+
+```
+   4
+  / \
+ 1   2
+```
+
+返回 false。
+
+
+**思路与算法：**
+
+DFS 枚举$s$中的每一个节点，判断这个点的子树是否和$t$相等。
+
+如何判断一个节点的子树是否和$t$相等呢？
+
+我们又需要做一次 DFS 来检查，即让两个指针一开始先指向该节点和$t$的根，然后「同步移动」两根指针来「同步遍历」这两棵树，判断对应位置是否相等。
+
+<div align=center><img src=LeetCode\572.jpg></div>
+
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+
+class Solution {
+    public boolean isSubtree(TreeNode s, TreeNode t) {
+        // t 为 null 一定都是 true
+        if (t == null) {
+            return true;
+        }
+
+        // 这里 t 一定不为 null, 只要 s 为 null，肯定是 false
+        if (s == null) {
+            return false;
+        }
+
+        return isSubtree(s.left, t) || isSubtree(s.right, t) || isSameTree(s,t);
+    }
+
+    /**
+     * 判断两棵树是否相同
+     */
+    public boolean isSameTree(TreeNode s, TreeNode t){
+        if (s == null && t == null) {
+            return true;
+        }
+        // 见示例2
+        if (s == null || t == null) {
+            return false;
+        }
+        if (s.val != t.val) {
+            return false;
+        }
+        
+        return isSameTree(s.left, t.left) && isSameTree(s.right, t.right);
+    }
+}
+```
+
+
+**复杂度分析**
+
+- 时间复杂度：对于每一个$s$上的点，都需要做一次 DFS 来和$t$匹配，**匹配一次的时间代价是$O(|t|$，那么总的时间代价就是$O(|s| \times |t|)$**。故渐进时间复杂度为$O(|s| \times |t|)$。
+
+- 空间复杂度：假设$s$深度为$d_s$，$t$的深度为$d_t$，任意时刻栈空间的最大使用代价是$O(\max \{ d_s, d_t \})$ 。故渐进空间复杂度为$O(\max \{ d_s, d_t \})$。
+
 
 
 
@@ -12878,8 +13717,84 @@ public class RightSideView {
 
 
 
+## 515. 在每个树行中找最大值(中等)
+
+您需要在二叉树的每一行中找到最大的值。
+
+```
+示例：
+
+输入: 
+
+          1
+         / \
+        3   2
+       / \   \  
+      5   3   9 
+
+输出: [1, 3, 9]
+```
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    
+    public List<Integer> largestValues(TreeNode root) {
+        //LinkedList实现队列
+        Queue<TreeNode> queue = new LinkedList<>();
+        List<Integer> values = new ArrayList<>();
+        if (root != null)
+            queue.add(root);
+        
+        while (!queue.isEmpty()) {
+            int max = Integer.MIN_VALUE;
+            // 每一层的数量
+            int levelSize = queue.size();
+            for (int i = 0; i < levelSize; i++) {
+                // 出队
+                TreeNode node = queue.poll();
+                // 记录每层的最大值
+                max = Math.max(max, node.val);
+
+                if (node.left != null)
+                    queue.add(node.left);
+                if (node.right != null)
+                    queue.add(node.right);
+            }
+
+            values.add(max);
+        }
+        
+        return values;
+    }
+}
+```
+
+
 
 # 位运算
+
+## 异或运算
+
+异或运算有以下三个性质。
+
+- **任何数和0做异或运算，结果仍然是原来的数**，即$a \oplus 0=a$。
+- 任何数和其自身做异或运算，结果是0，即 $a \oplus a=0$。
+- 异或运算满足交换律和结合律，即$a \oplus b \oplus a=b \oplus a \oplus a=b \oplus (a \oplus a)=b \oplus0=b$。
 
 
 
@@ -13104,7 +14019,7 @@ class Solution {
 
 
 
-## 136. 只出现一次的数字(简单)
+## 136. *只出现一次的数字(简单)
 
 给定一个非空整数数组，除了某个元素只出现一次以外，其余每个元素均出现两次。找出那个只出现了一次的元素。
 
@@ -13177,7 +14092,7 @@ class Solution {
 
 
 
-## 190. 颠倒二进制位(简单)
+## 190. *颠倒二进制位(简单)
 
 颠倒给定的 32 位无符号整数的二进制位。
 
@@ -13530,6 +14445,93 @@ class ReverseInteger {
 
 
 
+## 9. 回文数(简单)
+
+判断一个**整数**是否是回文数。回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数。
+
+```
+示例 1:
+
+输入: 121
+输出: true
+
+示例 2:
+
+输入: -121
+输出: false
+解释: 从左向右读, 为 -121 。 从右向左读, 为 121- 。因此它不是一个回文数。
+
+示例 3:
+
+输入: 10
+输出: false
+解释: 从右向左读, 为 01 。因此它不是一个回文数。
+```
+
+进阶:
+
+你能**不将整数转为字符串来解决**这个问题吗？
+
+
+**思路与算法：**
+
+- 第一个想法是**将数字转换为字符串**，并检查字符串是否为回文。但是，这需要**额外的非常量空间**来创建问题描述中所不允许的字符串。
+
+- 第二个想法是**将数字本身反转，然后将反转后的数字与原始数字进行比较**，如果它们是相同的，那么这个数字就是回文。但是，如果反转后的数字大于$\text{int.MAX}$，我们将遇到**整数溢出**问题。
+
+- 按照第二个想法，为了**避免数字反转可能导致的溢出问题**，为什么不考虑**只反转$\text{int}$数字的一半**？毕竟，如果该数字是回文，其后半部分反转后应该与原始数字的前半部分相同。
+
+    - 例如，输入1221，我们可以将数字 “1221” 的后半部分从 “21” 反转为 “12”，并将其与前半部分 “12” 进行比较，因为二者相同，我们得知数字 1221 是回文
+
+
+首先，我们应该处理一些**临界情况**。
+  - **所有负数都不可能是回文**。例如：-123 不是回文，因为 - 不等于 3。所以我们可以对所有负数返回 false。
+  - **除了0以外，所有个位是0的数字不可能是回文，因为最高位不等于0**。所以我们可以对所有大于0且个位是0的数字返回false。
+
+现在，让我们来考虑如何反转后半部分的数字。
+
+对于数字 1221，如果执行`1221 % 10`，我们将**得到最后一位数字** 1，要**得到倒数第二位数字**，我们可以**先通过除以 10 把最后一位数字从 1221 中移除**，1221 / 10 = 122，再求出**上一步结果除以 10** 的余数，122 % 10 = 2，就可以得到倒数第二位数字。如果我们**把最后一位数字乘以 10，再加上倒数第二位数字**，1 * 10 + 2 = 12，就得到了我们想要的反转后的数字。如果继续这个过程，我们将得到更多位数的反转数字。
+
+现在的问题是，我们**如何知道反转数字的位数已经达到原始数字位数的一半**？
+
+由于整个过程我们不断将原始数字除以 10，然后给反转后的数字乘上 10，所以，**当原始数字小于或等于反转后的数字时，就意味着我们已经处理了一半位数的数字了**。
+
+<div align=center><img src=LeetCode\9_1.png></div>
+
+```java
+class Solution {
+    public boolean isPalindrome(int x) {
+        // 特殊情况：
+        // 1.当 x < 0 时，x 不是回文数。
+        // 2.除了0以外，所有个位是0的数字不可能是回文
+        if (x < 0 || (x % 10 == 0 && x != 0)) {
+            return false;
+        }
+
+        int revertedNumber = 0;
+        while (x > revertedNumber) {
+            revertedNumber = revertedNumber * 10 + x % 10;
+            x /= 10;
+        }
+
+        // 当数字长度为奇数时，我们可以通过 revertedNumber/10 去除处于中位的数字(12321中的3)。
+        // 例如，当输入为 12321 时，在 while 循环的末尾我们可以得到 x = 12，revertedNumber = 123，
+        // 由于处于中位的数字不影响回文（它总是与自己相等），所以我们可以简单地将其去除。
+        return x == revertedNumber || x == revertedNumber / 10;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(\log n)$，对于每次迭代，我们会将输入除以$10$，因此时间复杂度为$O(\log n)$。
+- 空间复杂度：$O(1)$。我们只需要常数空间存放若干变量。
+
+
+
+
+
+
 ## 172. 阶乘后的零(简单)
 
 给定一个整数 n，返回 n! 结果尾数中零的数量。
@@ -13770,6 +14772,93 @@ class Solution {
 
 
 
+## 405. 数字转换为十六进制数(简单)
+
+给定一个整数，编写一个算法将这个数转换为十六进制数。对于负整数，我们通常使用 补码运算 方法。
+
+注意:
+- 十六进制中所有字母(a-f)都必须是小写。
+- 十六进制字符串中不能包含多余的前导零。如果要转化的数为0，那么以单个字符'0'来表示；对于其他情况，十六进制字符串中的第一个字符将不会是0字符。 
+- 给定的数确保在32位有符号整数范围内。
+- 不能使用任何由库提供的将数字直接转换或格式化为十六进制的方法。
+
+```
+示例 1：
+输入:
+26
+输出:
+"1a"
+
+示例 2：
+输入:
+-1
+输出:
+"ffffffff"
+```
+
+### 移位
+
+每4位二进制数可以转换为1位16进制数，转换关系如下：
+
+<div align=center><img src=LeetCode\405.png></div>
+
+`0111 1011B=7BH //B代表二进制结尾，H代表十六进制结尾`
+
+只要循环地将数**num的末尾4位**和1111做**与运算**就可以得到相应的二进制数：
+
+```java {.line-numbers highlight=11}
+class Solution {
+    public String toHex(int num) {
+        if(num == 0){
+            return "0";
+        }
+        char[] chrs = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+        String res="";
+        while(num != 0) {
+            // 十六进制的1111刚好对应十进制的15
+            int temp = num & 15;
+            res = chrs[temp] + res;
+            // 注意这里是逻辑移位，有三个大于号
+            num >>>= 4;
+        }
+        return res;
+    }  
+}
+```
+
+```java
+package solution;
+
+/**
+ * leetcode_405_数字转换成十六进制数
+ * @author Chenzf 
+ * @date 2020/7/30
+ * @version 1.0
+ */
+
+public class ConvertNumberToHexadecimal {
+    public String toHex(int num) {
+        if (num == 0) {
+            return "0";
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        char[] chars = "0123456789abcdef".toCharArray();
+
+        while (num != 0) {
+            // 十六进制的1111刚好对应十进制的15
+            int temp = num & 15;
+            stringBuilder.append(chars[temp]);
+            num >>>= 4;
+        }
+
+        return stringBuilder.reverse().toString();
+    }
+}
+```
+
+
+
 
 # 二分查找
 
@@ -13852,7 +14941,7 @@ class Solution {
 
 
 
-## 22. *?括号生成(中等)
+## 22. **括号生成(中等)
 
 数字n代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且有效的括号组合。
 
@@ -14241,6 +15330,39 @@ class Solution {
 
 # 排序
 
+## compareTo
+
+compareTo()方法用于两种方式的比较：
+
+- 字符串与对象进行比较`int compareTo(Object o)`。
+- 按字典顺序比较两个字符串`int compareTo(String anotherString)`。
+
+返回值是整型，它是**先比较对应字符的大小(ASCII码顺序)**，如果第一个字符和参数的第一个字符不等，结束比较，**返回他们之间的差值**，如果第一个字符和参数的第一个字符相等，则以第二个字符和参数的第二个字符做比较，以此类推，直至比较的字符或被比较的字符有一方结束。
+
+- 如果参数字符串等于此字符串，则返回值 0；
+- 如果此字符串小于字符串参数，则返回一个小于 0 的值；
+- 如果此字符串大于字符串参数，则返回一个大于 0 的值。
+
+```java
+public class Test {
+ 
+    public static void main(String args[]) {
+        String str1 = "Strings";
+        String str2 = "Strings";
+        String str3 = "Strings123";
+ 
+        int result = str1.compareTo( str2 );
+        System.out.println(result);  // 0
+      
+        result = str2.compareTo( str3 );
+        System.out.println(result);  // -3
+     
+        result = str3.compareTo( str1 );
+        System.out.println(result);  // 3
+    }
+}
+```
+
 ## 179. 最大数(中等)
 
 给定一组非负整数，重新排列它们的顺序使之组成一个最大的整数。
@@ -14269,7 +15391,7 @@ class Solution {
     
     - 我们可以证明这样的做法是正确的：假设（不失一般性），某一对整数$a$和$b$，我们的比较结果是$a$应该在$b$前面，这意味着$a\frown b > b\frown a$，其中$\frown$表示连接。如果排序结果是错的，说明存在一个$c$，$b$在$c$前面且$c$在$a$的前面。这产生了矛盾，因为$a\frown b > b\frown a$和$b\frown c > c\frown b$意味着$a\frown c > c\frown a$。换言之，我们的自定义比较方法保证了传递性，所以这样子排序是对的。
 
-- 一旦数组排好了序，最“重要”的数字会在最前面。有一个需要注意的情况是如果数组只包含 0 ，我们直接返回结果 00 即可。否则，我们用排好序的数组形成一个字符串并返回。
+- **一旦数组排好了序，最“重要”的数字会在最前面**。有一个需要注意的情况是如果数组只包含 0 ，我们直接返回结果 0 即可。否则，我们用排好序的数组形成一个字符串并返回。
 
 
 ```java
@@ -14298,6 +15420,7 @@ class Solution {
         return largestNumberStr;
     }
 
+    // Comparator用于比较没有实现Comparable
     private class LargerNumberComparator implements Comparator<String> {
         @Override
         public int compare(String a, String b) {
