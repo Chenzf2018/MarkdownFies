@@ -34,7 +34,7 @@ Java集合框架支持以下两种类型的容器：
   - 如果要**保持插入顺序**的，我们可以选择`LinkedHashMap`；如果**不需要**则选择`HashMap`；如果要**排序**则选择`TreeMap`。
 - 为了存储**一个元素**合集，简称为**合集(collection)**；
   - `Set`用于存储一组**无序、不重复**的元素。
-  - `List`用于存储一个**有序、可重复**元素合集，List大小可以**动态扩展**。
+  - `List`用于存储一个**有序、可重复**元素合集，`List`大小可以**动态扩展**。
     - `Stack`用于存储采用**后进先出**方式处理的对象。
   - `Queue`用于存储采用**先进先出**方式处理的对象。
     - `Priority Queue`用于存储按照**优先级顺序**处理的对象。
@@ -2470,6 +2470,8 @@ https://blog.csdn.net/qq_36520235/article/details/82417949
 3. JDK1.7的时候使用的是**数组+单链表**的**数据结构**。但是在JDK1.8及之后时，使用的是**数组+链表+红黑树**的数据结构（当链表的深度达到8的时候，也就是默认阈值，就会**自动扩容把链表转成红黑树的数据结构**来把时间复杂度从$O(n)$变成$O(logN)$提高了效率）
 
 
+<div align=center><img src=DataStructure\HashMap小结.jpg></div>
+
 #### 三个维度区别
 
 **数据结构的区别：**
@@ -2497,9 +2499,46 @@ static final int MIN_TREEIFY_CAPACITY = 64;
 **插入数据的区别：**
 <div align=center><img src=DataStructure\HashMap.webp></div>
 
+```java
+// JDK1.8扰动函数
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+
+// JDK1.7
+final int hash(Object k) {
+    int h = hashSeed;
+    if (0 != h && k instanceof String) {
+        return sun.misc.Hashing.stringHash32((String) k);
+    }
+
+    h ^= k.hashCode();
+    h ^= (h >>> 20) ^ (h >>> 12);
+    return h ^ (h >>> 7) ^ (h >>> 4);
+}
+
+//JDK1.7的源码，jdk1.8没有这个方法，但是实现原理一样的
+static int indexFor(int h, int length) {  
+    return h & (length-1);  // 取模运算
+}
+```
+
+JDK1.8中，右位移16位，正好是32bit的一半，**自己的高半区和低半区做异或**，就是为了**混合原始哈希码的高位和低位，以此来加大低位的随机性**。而且混合后的低位掺杂了高位的部分特征，这样高位的信息也被变相保留下来。
+
 **扩容机制的区别：**
 <div align=center><img src=DataStructure\HashMap9.webp></div>
 
+**当插入后，发现发生hash冲突则扩容，没有发生hash冲突则不扩容**。在JDK1.8之前，扩容是先达到阈值时，当下一个数据需要插入，则直接扩容，但是当插入的数据没有发生hash冲突则也会进行扩容操作，会产生无效扩容，所有1.8之后使用先插入后扩容可以减少一次无用的扩容，减少内存的使用
+
+**JDK1.7在扩容后，需按照原来方法重新计算**，即`hashCode()->> 扰动处理 ->>(h & length-1)`！
+
+<div align=center><img src=DataStructure\HashMap11.png></div>
+
+<div align=center><img src=DataStructure\HashMap13.png></div>
+
+
+JDK1.8在扩充HashMap的时候，不需要像JDK1.7的实现那样**重新计算hash**，只需要看看**原来的hash值新增的那个bit是1还是0**就好了，**是0的话索引没变，是1的话索引变成“原索引+扩容前旧容量”**。
 
 ### HashMap小结
 
