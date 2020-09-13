@@ -1,6 +1,53 @@
 参考资料：
 https://blog.csdn.net/tongdanping/article/details/79878302
 
+
+# 增删改查
+
+## 创建表
+
+如果test数据库不存在，就创建test数据库：`CREATE DATABASE IF NOT EXISTS test;`
+切换到test数据库：`USE test;`
+删除students表（如果存在）：`DROP TABLE IF EXISTS student;`
+创建students表：
+```SQL
+-- 创建表
+CREATE TABLE students (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    class_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    gender VARCHAR(1) NOT NULL,
+    score INT NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
+插入students记录：`INSERT INTO students (id, class_id, name, gender, score) VALUES (1, 1, '小明', 'M', 90);`
+
+
+## 查询
+
+查询students表的所有数据：`SELECT * FROM students;`
+查询分数在**80分或以上**的**男生**：`SELECT * FROM students WHERE score >= 80 AND gender = 'M';`
+按照成绩从高到底排序：`SELECT id, name, gender, score FROM students ORDER BY score DESC;`
+查询一班的学生成绩，并按照倒序排序：`SELECT id, name, gender, score FROM students WHERE class_id = 1 ORDER BY score DESC;`
+统计有多少男同学：`SELECT COUNT(*) boys FROM students WHERE gender = 'M';`
+
+## 修改
+
+### INSERT
+向students表插入一条新记录：`INSERT INTO students (class_id, name, gender, score) VALUES (2, 'chen', 'M', 80);`
+
+### UPDATE
+更新id=1的记录：`UPDATE students SET name='大牛', score=66 WHERE id=1;`
+更新score<80的记录：`UPDATE students SET score=score+10 WHERE score<80;`
+将id=1的A账户余额减去100：`UPDATE accounts SET balance = balance - 100 WHERE id = 1;`
+
+### DELETE
+
+`DELETE FROM students WHERE id>=5 AND id<=7;`
+
+
+
 # MySQL中索引是用什么实现的
 
 ## B树
