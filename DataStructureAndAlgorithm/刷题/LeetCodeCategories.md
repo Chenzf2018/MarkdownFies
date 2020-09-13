@@ -9,6 +9,82 @@
 - 贪心算法和动态规划相比，**它既不看前面（也就是说它不需要从前面的状态转移过来），也不看后面（无后效性，后面的选择不会对前面的选择有影响）**，因此贪心算法**时间复杂度**一般是**线性**的，**空间复杂度**是**常数**级别的。
 
 
+
+## 55. 跳跃游戏(中等)
+
+给定一个非负整数数组，你最初位于数组的第一个位置。数组中的每个元素代表你在该位置**可以跳跃的最大长度**。判断你是否能够到达最后一个位置。
+
+```
+示例 1:
+
+输入: [2,3,1,1,4]
+输出: true
+解释: 我们可以先跳 1 步，从位置 0 到达 位置 1, 然后再从位置 1 跳 3 步到达最后一个位置。
+
+示例 2:
+
+输入: [3,2,1,0,4]
+输出: false
+解释: 无论怎样，你总会到达索引为 3 的位置。但该位置的最大跳跃长度是 0 ， 所以你永远不可能到达最后一个位置。
+```
+
+**思路与算法：**
+
+对于数组中的任意一个位置$y$，我们如何判断它是否可以到达？
+
+根据题目的描述，只要存在一个位置$x$，它本身可以到达，并且它跳跃的最大长度为$x + \textit{nums}[x]$，这个值大于等于$y$，即$x + \textit{nums}[x] \geq y$，那么位置$y$也可以到达。
+
+换句话说，**<font color=red>对于每一个可以到达的位置$x$，它使得$x+1, x+2, \cdots, x+\textit{nums}[x]$这些连续的位置都可以到达</font>**。
+
+这样一来，我们**依次遍历数组中的每一个位置，并实时维护最远可以到达的位置**。对于当前遍历到的位置$x$，如果它**在最远可以到达的位置的范围内**，那么我们就可以从起点通过若干次跳跃到达该位置，因此我们可以用$x + \textit{nums}[x]$更新**最远可以到达的位置**。
+
+在遍历的过程中，如果最远可以到达的位置大于等于数组中的最后一个位置，那就说明最后一个位置可达，我们就可以直接返回`True`作为答案。反之，如果在遍历结束后，最后一个位置仍然不可达，我们就返回`False`作为答案。
+
+以`[2, 3, 1, 1, 4]`为例：
+
+- 我们一开始在位置0，可以跳跃的最大长度为2，因此最远可以到达的位置被更新为2；
+
+- 我们遍历到位置1，由于$1 \leq 2$，因此位置1可达。我们用1加上它可以跳跃的最大长度3，将最远可以到达的位置更新为4。由于4大于等于最后一个位置4，因此我们直接返回True。
+
+以`[3, 2, 1, 0, 4]`为例：
+
+- 我们一开始在位置0，可以跳跃的最大长度为3，因此最远可以到达的位置被更新为3；
+
+- 我们遍历到位置1，由于$1 \leq 3$（这里的1是指移动的距离），因此位置1可达，**加上它可以跳跃的最大长度2得到3（位置1的index为1，最远可到达位置1+2），没有超过最远可以到达的位置**；
+
+- 位置2、位置3同理，最远可以到达的位置不会被更新；
+
+- 我们遍历到位置4，由于$4 > 3$，因此位置4不可达，我们也就不考虑它可以跳跃的最大长度了。
+
+在遍历完成之后，位置4仍然不可达，因此我们返回False。
+
+```java
+public class Solution {
+    public boolean canJump(int[] nums) {
+        int n = nums.length;
+        int rightMost = 0;
+        for (int i = 0; i < n; ++i) {
+            if (i <= rightMost) {
+                rightMost = Math.max(rightMost, i + nums[i]);
+                if (rightMost >= n - 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$为数组的大小。只需要访问 nums 数组一遍，共$n$个位置。
+
+- 空间复杂度：$O(1)$，不需要额外的空间开销。
+
+
+
+
 ## 122. **买卖股票的最佳时机II(简单)
 
 **题目：**
@@ -95,7 +171,7 @@ s = "axc", t = "ahbgdc"
 ```
 
 **思路与算法：**
-把`s`的字符依次和`t`的字符匹配，**匹配到，`s`就后移，无论是否匹配，`t`的下标都后移**，匹配完`s`，说明`s`是`t`的子序列，否则不是。
+把`s`的字符依次和`t`的字符匹配，**<font color=red>匹配到，`s`就后移，无论是否匹配，`t`的下标都后移</font>**，匹配完`s`，说明`s`是`t`的子序列，否则不是。
 
 **代码：**
 ```java
@@ -157,8 +233,8 @@ class Solution {
 
 **思路与算法：**
 
-- **给一个孩子的饼干应当尽量小并且又能满足该孩子**，这样大饼干才能拿来给满足度比较大的孩子。
-- 因为满足度最小的孩子最容易得到满足，所以**先满足满足度最小的孩子**。
+- **<font color=red>给一个孩子的饼干应当尽量小并且又能满足该孩子</font>**，这样大饼干才能拿来给满足度比较大的孩子。
+- 因为满足度最小的孩子最容易得到满足，所以**先<font color=red>满足满足度最小的孩子</font>**。
 
 
 在以上的解法中，我们只**在每次分配时饼干时选择一种看起来是当前最优的分配方法**，但无法保证这种局部最优的分配方法最后能得到全局最优解。我们假设能得到全局最优解，并使用反证法进行证明，即假设存在一种比我们使用的贪心策略更优的最优策略。如果不存在这种最优策略，表示贪心策略就是最优策略，得到的解也就是全局最优解。
@@ -195,9 +271,7 @@ class AssignCookies {
 
 ## 860. 柠檬水找零(简单)
 
-在柠檬水摊上，每一杯柠檬水的售价为 5 美元。
-
-顾客排队购买你的产品，（**按账单 bills 支付的顺序**）一次购买一杯。
+在柠檬水摊上，每一杯柠檬水的售价为 5 美元。顾客排队购买你的产品，（**按账单 bills 支付的顺序**）一次购买一杯。
 
 每位顾客只买一杯柠檬水，然后向你付 5 美元、10 美元或 20 美元。你必须给每个顾客正确找零，也就是说净交易是每位顾客向你支付 5 美元。
 
@@ -243,7 +317,7 @@ class AssignCookies {
 - `bills[i]`不是 5 就是 10 或是 20 
 
 
-**思路与算法：**
+**思路与算法：<font color=red>记录手上现存的5元与10元的数量</font>**
 
 最初，我们既没有 5 美元钞票也没有 10 美元钞票。
 
@@ -2015,6 +2089,93 @@ class Solution {
 
 
 
+## 15. 三数之和(中等)
+
+给你一个包含n个整数的数组nums，判断nums中是否存在三个元素$a，b，c$，使得$a + b + c = 0$？请你找出所有满足条件且不重复的三元组。
+
+**示例**：
+```
+给定数组 nums = [-1, 0, 1, 2, -1, -4]，
+
+满足要求的三元组集合为：
+[
+  [-1, 0, 1],
+  [-1, -1, 2]
+]
+```
+
+**思路与算法：**
+
+https://leetcode-cn.com/problems/3sum/solution/hua-jie-suan-fa-15-san-shu-zhi-he-by-guanpengchn/
+
+- 首先对数组进行排序，排序后固定一个数$nums[i]$，再使用左右指针指向$nums[i]$后面的两端，数字分别为$nums[L]$和$nums[R]$，计算三个数的和`sum`判断是否满足为`0`，满足则添加进结果集；如果$nums[i]$大于$0$，则三数之和必然无法等于$0$，结束循环；
+- 如果$nums[i] == nums[i-1]$，则说明该数字重复，会导致结果重复，所以应该跳过；
+    - 当$sum == 0$时，$nums[L] == nums[L+1]$则会导致结果重复，应该跳过，$L++$；$nums[R] == nums[R-1]$则会导致结果重复，应该跳过，$R--$。
+    - 当$sum < 0$时，$L++$；
+    - 当$sum > 0$时，$R--$
+
+<div align=center><img src=LeetCode\15.jpg></div>
+
+<div align=center><img src=LeetCode\15_1.jpg></div>
+
+**代码：**
+```java {.line-numbers highlight=26}
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class ThreeSum {
+    private static List<List<Integer>> threeSum(int[] nums){
+        List<List<Integer>> ans = new ArrayList<>();
+        int len = nums.length;
+
+        if (nums == null || len < 3)
+            return ans;
+
+        Arrays.sort(nums);  // 排序
+
+        for (int i = 0; i < len; i++){
+            if (nums[i] > 0)
+                break;
+
+            if (i > 0 && nums[i] == nums[i - 1])
+                continue;  // 提前进入下一个循环，去重
+
+            int left = i + 1, right = len - 1;
+            while (left < right){
+                int sum = nums[i] + nums[left] + nums[right];
+                if (sum == 0){
+                    ans.add(Arrays.asList(nums[i], nums[left], nums[right]));
+                    while (left < right && nums[left] == nums[left + 1])
+                        left++;  // 去重
+                    while (left < right && nums[right] == nums[right - 1])
+                        right--;  // 去重
+
+                    left++;
+                    right--;
+                }
+                else if (sum < 0)
+                    left++;
+                else
+                    right--;
+            }
+        }
+
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(threeSum(new int[] {-1, 0, 1, 2, -1, -4}));
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度$O(N^2)$
+- 空间复杂度$O(1)$：指针使用常数大小的额外空间
+
+
 ## 21. 合并两个有序链表(简单)
 
 **题目：**
@@ -3342,6 +3503,82 @@ class Solution {
 }
 ```
 
+## 680. 验证回文字符串 Ⅱ(简单)
+
+给定一个非空字符串 s，**最多删除一个字符**。判断是否能成为回文字符串。
+
+```
+示例 1:
+
+输入: "aba"
+输出: True
+
+示例 2:
+
+输入: "abca"
+输出: True
+解释: 你可以删除c字符。
+```
+
+注意:
+
+字符串只包含从 a-z 的小写字母。字符串的最大长度是50000。
+
+
+**思路与算法：**
+
+初始化两个指针 low 和 high 分别指向字符串的第一个字符和最后一个字符。
+- 每次判断两个指针指向的字符是否相同，如果相同，则更新指针，令 `low = low + 1` 和 `high = high - 1`，然后**判断更新后的指针范围内的子串是否是回文字符串**。
+- 如果两个指针指向的字符不同，则两个字符中必须有一个被删除，此时我们就分成两种情况：
+  - **删除左指针对应的字符**，留下子串 `s[low + 1], s[low + 1], ..., s[high]`
+  - 或者**删除右指针对应的字符**，留下子串 `s[low], s[low + 1], ..., s[high - 1]`。
+  - 当这两个子串中至少有一个是回文串时，就说明原始字符串删除一个字符之后就以成为回文串。
+
+
+<div align=center><img src=LeetCode\680.png></div>
+
+```java
+class Solution {
+    public boolean validPalindrome(String s) {
+        int low = 0, high = s.length() - 1;
+        while (low < high) {
+            char c1 = s.charAt(low), c2 = s.charAt(high);
+            if (c1 == c2) {
+                low++;
+                high--;
+            } else {
+                // 验证子串是否为回文串
+                boolean flag1 = true, flag2 = true;
+
+                for (int i = low, j = high - 1; i < j; i++, j--) {
+                    char c3 = s.charAt(i), c4 = s.charAt(j);
+                    if (c3 != c4) {
+                        flag1 = false;
+                        break;
+                    }
+                }
+                for (int i = low + 1, j = high; i < j; i++, j--) {
+                    char c3 = s.charAt(i), c4 = s.charAt(j);
+                    if (c3 != c4) {
+                        flag2 = false;
+                        break;
+                    }
+                }
+                return flag1 || flag2;
+            }
+        }
+        return true;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是字符串的长度。判断整个字符串是否是回文字符串的时间复杂度是$O(n)$，遇到不同字符时，判断两个子串是否是回文字符串的时间复杂度也都是$O(n)$。
+
+- 空间复杂度：$O(1)$。只需要维护有限的常量空间。
+
+
 
 
 ## 876. 链表的中间结点(简单)
@@ -3526,6 +3763,157 @@ class Solution {
 
 
 # 滑动窗口
+
+## 3. 无重复字符的最长子串(中等)
+
+**题目**：
+
+给定一个字符串，请你找出其中不含有重复字符的最长子串的长度。
+
+**提示**：
+
+```
+输入: "abcabcbb"
+输出: 3 
+解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+
+输入: "bbbbb"
+输出: 1
+解释: 因为无重复字符的最长子串是 "b"，所以其长度为 1。
+
+输入: "pwwkew"
+输出: 3
+解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
+
+请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
+```
+
+### 滑动窗口
+
+**思路和算法**
+
+不妨以示例一中的字符串$\texttt{abcabcbb}$为例，找出**从每一个字符开始的，不包含重复字符的最长子串**，那么其中最长的那个字符串即为答案。对于示例一中的字符串，我们列举出这些结果，其中括号中表示选中的字符以及最长的字符串：
+
+- 以$\texttt{(a)bcabcbb}$开始的最长字符串为$\texttt{(abc)abcbb}$；
+- 以$\texttt{a(b)cabcbb}$开始的最长字符串为$\texttt{a(bca)bcbb}$；
+- 以$\texttt{ab(c)abcbb}$开始的最长字符串为$\texttt{ab(cab)cbb}$；
+- 以$\texttt{abc(a)bcbb}$开始的最长字符串为$\texttt{abc(abc)bb}$；
+- 以$\texttt{abca(b)cbb}$开始的最长字符串为$\texttt{abca(bc)bb}$；
+- 以$\texttt{abcab(c)bb}$开始的最长字符串为$\texttt{abcab(cb)b}$；
+- 以$\texttt{abcabc(b)b}$开始的最长字符串为$\texttt{abcabc(b)b}$；
+- 以$\texttt{abcabcb(b)}$开始的最长字符串为$\texttt{abcabcb(b)}$。
+
+
+
+如果我们依次递增地枚举**子串的起始位置**，那么子串的结束位置也是递增的！
+
+这里的原因在于，假设我们选择字符串中的第$k$个字符作为起始位置，并且得到了**不包含重复字符的最长子串的结束位置为$r_k$**。那么**当我们选择第$k+1$个字符作为起始位置时（移除第$k$个字符`hashSet.remove(s.charAt(i - 1));`），首先从$k+1$到$r_k$的字符显然是不重复的，并且由于少了原本的第$k$个字符，我们可以尝试继续增大$r_k$，直到右侧出现了重复字符为止**。
+
+这样以来，我们就可以使用**滑动窗口**来解决这个问题了：
+
+- 我们使用**两个指针**表示字符串中的某个子串（的**左右边界**）。其中**左指针**代表着上文中**枚举子串的起始位置**，而**右指针**即为上文中的$r_k$；
+
+- 在每一步的操作中
+    - 左指针向右移动一格，表示**开始枚举下一个字符作为起始位置**
+    - 不断地向右移动右指针，但需要**保证这两个指针对应的子串中没有重复的字符**。
+    - 在移动结束后，这个子串就对应着**以左指针开始的，不包含重复字符的最长子串**。我们记录下这个子串的长度；
+
+- 在枚举结束后，我们找到的最长的子串的长度即为答案。
+
+**判断重复字符**：
+
+还需要使用一种数据结构来判断**是否有重复的字符**，常用的数据结构为**哈希集合**(`HashSet`)。在左指针向右移动的时候，我们从哈希集合中移除一个字符，在右指针向右移动的时候，我们往哈希集合中添加一个字符。
+
+**思路：**
+
+1. 遍历字符；
+2. 以当前字符为起点，向其右侧遍历字符，如果在`HashSet`中不存在遍历到的字符，则存入`HashSet`中(避免重复)，直到遇到`HashSet`中存在的字符，记录截至位置`rk`；
+3. 向右侧移动起点，重复步骤二。
+
+**代码：**
+
+注意：字符串的长度函数为`length()`：`(String s) s.length();`，`(String[] s) s.length;`
+
+```java {.line-numbers highlight=24}
+import java.util.Set;
+import java.util.HashSet;
+
+/**
+ * leetcode_3_无重复字符的最长子串
+ * @author Chenzf
+ * @date 2020/7/10
+ * @version 1.0
+ */
+
+public class LongestSubstringWithoutRepeatingCharacters {
+    public static int longestSubstringWithoutRepeatCharacters(String s) {
+        // 创建HashSet存入字符
+        Set<Character> hashSet = new HashSet<>();
+
+        int length = s.length();
+        // 最长子串的截止位置
+        int rk = 0;
+        int result = 0;
+
+        for (int i = 0; i < length; i++) {
+            if (i != 0) {
+                // 左指针右移一位，并移除当前字符的前一个字符
+                // 移动窗口，并删除前一个字符
+                hashSet.remove(s.charAt(i - 1));
+            }
+
+            while (rk < length && ! hashSet.contains(s.charAt(rk))) {
+                hashSet.add(s.charAt(rk));
+                rk++;
+            }
+
+            result = Math.max(result, ((rk - 1) - i) + 1);
+        }
+
+        return result;
+    }
+
+}
+```
+
+```java
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+/**
+ * @author Chenzf
+ * @date 2020/7/10
+ */
+
+public class TestLongestSubstringWithoutRepeatingCharacter {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("请输入待检测字符串：");
+            String string = reader.readLine();
+
+            int result =
+                    LongestSubstringWithoutRepeatingCharacters.longestSubstringWithoutRepeatCharacters(string);
+
+            System.out.println(result);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**复杂度分析：**
+
+- 时间复杂度：$O(N)$，其中$N$是字符串的长度。左指针和右指针分别会遍历整个字符串一次。
+
+- 空间复杂度：$O(|\Sigma|)$，其中$\Sigma$表示字符集（即字符串中可以出现的字符），$|\Sigma|$表示字符集的大小。在本题中没有明确说明字符集，因此可以默认为所有`ASCII`码在`[0, 128)`内的字符，即$|\Sigma| = 128$。我们需要**用到哈希集合来存储出现过的字符**，而字符最多有$|\Sigma|$个，因此空间复杂度为$O(|\Sigma|)$。
+
+
+**使用map**
+<div align=center><img src=LeetCode\3滑动窗口.png></div>
 
 
 ## 28. 实现 strStr()(简单)
@@ -4725,7 +5113,10 @@ class Solution {
 
 ## 常用方法
 
+是否包含某个key：
 `map.containsKey(string.charAt(i))`
+
+添加元素：
 `map.put(string.charAt(i), map.get(string.charAt(i)) + 1)`
 `count.put(c, count.getOrDefault(c, 0) + 1);`
 
@@ -15444,3 +15835,366 @@ class Solution {
 
 
 
+# 回文
+
+## 125. 验证回文串(简单)
+
+给定一个字符串，验证它是否是回文串，只考虑字母和数字字符，可以忽略字母的大小写。
+
+说明：本题中，我们将空字符串定义为有效的回文串。
+
+```
+示例 1:
+
+输入: "A man, a plan, a canal: Panama"
+输出: true
+
+示例 2:
+
+输入: "race a car"
+输出: false
+```
+
+**思路与算法：**
+
+直接在原字符串s上使用双指针。在移动任意一个指针时，需要不断地向另一指针的方向移动，直到遇到一个字母或数字字符，或者两指针重合为止。也就是说，我们每次将指针移到下一个字母字符或数字字符，再判断这两个指针指向的字符是否相同。
+
+```java
+class Solution {
+    public boolean isPalindrome(String s) {
+        int n = s.length();
+        int left = 0, right = n - 1;
+        while (left < right) {
+            while (left < right && !Character.isLetterOrDigit(s.charAt(left))) {
+                left++;
+            }
+            while (left < right && !Character.isLetterOrDigit(s.charAt(right))) {
+                right--;
+            }
+            
+            if (left < right) {
+                if (Character.toLowerCase(s.charAt(left)) != Character.toLowerCase(s.charAt(right))) {
+                    return false;
+                }
+                left++;
+                right--;
+            }
+        }
+        return true;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(|s|)$，其中$|s|$是字符串s的长度。
+
+- 空间复杂度：$O(1)$。
+
+
+## 234. 回文链表(简单)
+
+请判断一个链表是否为回文链表。
+
+```
+示例 1:
+输入: 1->2
+输出: false
+
+示例 2:
+输入: 1->2->2->1
+输出: true
+```
+
+### 将值复制到数组中后用双指针法
+
+有两种常用的列表实现，一种是**数组列表**和**链表**。如果我们想在列表中存储值，那么它们是如何保存的呢？
+
+数组列表底层是使用数组存储值，我们可以通过索引在$O(1)$的时间访问列表任何位置的值，这是由于内存寻址的方式。
+
+链表存储的是称为节点的对象，每个节点保存一个值和指向下一个节点的指针。访问某个特定索引的节点需要$O(n)$的时间，因为要通过指针获取到下一个位置的节点。
+
+确定数组列表是否为回文很简单，我们可以**使用双指针法来比较两端的元素，并向中间移动**。一个指针从起点向中间移动，另一个指针从终点向中间移动。这需要$O(n)$的时间，因为访问每个元素的时间是$O(1)$，而有$n$个元素要访问。
+
+然而，直接在链表上操作并不简单，因为不论是正向访问还是反向访问都不是$O(1)$。而**将链表的值复制到数组列表中是$O(n)$**，因此最简单的方法就是将链表的值复制到数组列表中，再使用双指针法判断。
+
+```java {.line-numbers highlight=27-29}
+package solution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * leetcode_234_回文链表
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 1.0 将值复制到数组中后用双指针法
+ */
+
+public class PalindromeLinkedList {
+    public boolean isPalindrome(ListNode head) {
+        List<Integer> arrayList = new ArrayList<>();
+
+        // Convert LinkedList into ArrayList.
+        ListNode currentNode = head;
+        while (currentNode != null) {
+            arrayList.add(currentNode.val);
+            currentNode = currentNode.next;
+        }
+
+        // Use two-pointer technique to check for palindrome.
+        int left = 0, right = arrayList.size() - 1;
+        while (left < right) {
+            // Note that we must use ! .equals instead of !=
+            // because we are comparing Integer, not int.
+            if (! arrayList.get(left).equals(arrayList.get(right))) {
+                return false;
+            }
+
+            left++;
+            right--;
+        }
+
+        return true;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$指的是链表的元素个数。
+  - 第一步： 遍历链表并将值复制到数组中，$O(n)$。
+  - 第二步：双指针判断是否为回文，执行了$O(n/2)$次的判断，即$O(n)$。
+  - 总的时间复杂度：$O(2n) = O(n)$。
+- 空间复杂度：$O(n)$，其中$n$指的是链表的元素个数，我们使用了一个数组列表存放链表的元素值。
+
+
+### 将链表的后半部分反转
+
+可以将链表的后半部分反转（修改链表结构），然后将前半部分和后半部分进行比较。比较完成后我们应该将链表恢复原样。虽然不需要恢复也能通过测试用例，因为使用该函数的人不希望链表结构被更改。
+
+可以分为以下几个步骤：
+
+- 找到前半部分链表的尾节点。
+- 反转后半部分链表。
+- 判断是否为回文。
+- 恢复链表。
+- 返回结果。
+
+
+步骤一，我们可以**计算链表节点的数量**，然后遍历链表找到前半部分的尾节点。或者可以**使用快慢指针**在一次遍历中找到：**慢指针一次走一步，快指针一次走两步**，快慢指针同时出发。当快指针移动到链表的末尾时，慢指针到链表的中间。通过慢指针将链表分为两部分。若链表有奇数个节点，则中间的节点应该看作是前半部分。
+
+步骤二，可以使用在反向链表问题中找到解决方法来反转链表的后半部分。
+
+步骤三，比较两个部分的值，当后半部分到达末尾则比较完成，可以忽略计数情况中的中间节点。
+
+步骤四与步骤二使用的函数相同，再反转一次恢复链表本身。
+
+```java
+package solution;
+
+/**
+ * leetcode_234_回文链表
+ * @author Chenzf
+ * @date 2020/7/30
+ * @version 2.0 将链表的后半部分反转
+ */
+
+public class PalindromeLinkedList_v2 {
+    public boolean isPalindrome(ListNode head) {
+        if (head == null) {
+            return true;
+        }
+
+        // Find the end of first half
+        ListNode firstHalfEnd = findEndOfFirstHalf(head);
+        // Reverse second half
+        ListNode secondHalfStart = reverseList(firstHalfEnd.next);
+
+        // Check whether or not there is a palindrome.
+        ListNode point1 = head;
+        ListNode point2 = secondHalfStart;
+        boolean result = true;
+
+        while (result && point2 != null) {
+            if (point1.val != point2.val) {
+                result = false;
+            }
+
+            point1 = point1.next;
+            point2 = point2.next;
+        }
+
+        // Restore the list and return the result.
+        firstHalfEnd.next = reverseList(secondHalfStart);
+        
+        return result;
+    }
+
+    /**
+     * 使用快慢指针在一次遍历中找到：慢指针一次走一步，快指针一次走两步，快慢指针同时出发。
+     * 当快指针移动到链表的末尾时，慢指针到链表的中间。通过慢指针将链表分为两部分。
+     */
+    private ListNode findEndOfFirstHalf(ListNode head) {
+        ListNode fastPoint = head;
+        ListNode slowPoint = head;
+        while (fastPoint.next != null && fastPoint.next.next != null) {
+            fastPoint = fastPoint.next.next;
+            slowPoint = slowPoint.next;
+        }
+
+        return slowPoint;
+    }
+
+    /**
+     * 反转链表
+     */
+    private ListNode reverseList(ListNode head) {
+        ListNode prev = null;
+        ListNode curr = head;
+        ListNode temp = null;
+        while (curr != null) {
+            temp = curr.next;
+            curr.next = prev;
+            prev = curr;
+            curr = temp;
+        }
+
+        return prev;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$指的是链表的大小。
+- 空间复杂度：$O(1)$，我们是一个接着一个的改变指针，在堆栈上的堆栈帧不超过$O(1)$。
+
+该方法的缺点是，在并发环境下，函数运行时需要锁定其他线程或进程对链表的访问，因为在函数执执行过程中链表暂时断开。
+
+
+
+## 680. 验证回文字符串 Ⅱ(简单)
+
+给定一个非空字符串 s，**最多删除一个字符**。判断是否能成为回文字符串。
+
+```
+示例 1:
+
+输入: "aba"
+输出: True
+
+示例 2:
+
+输入: "abca"
+输出: True
+解释: 你可以删除c字符。
+```
+
+注意:
+
+字符串只包含从 a-z 的小写字母。字符串的最大长度是50000。
+
+
+**思路与算法：**
+
+初始化两个指针 low 和 high 分别指向字符串的第一个字符和最后一个字符。
+- 每次判断两个指针指向的字符是否相同，如果相同，则更新指针，令 `low = low + 1` 和 `high = high - 1`，然后**判断更新后的指针范围内的子串是否是回文字符串**。
+- 如果两个指针指向的字符不同，则两个字符中必须有一个被删除，此时我们就分成两种情况：
+  - **删除左指针对应的字符**，留下子串 `s[low + 1], s[low + 1], ..., s[high]`
+  - 或者**删除右指针对应的字符**，留下子串 `s[low], s[low + 1], ..., s[high - 1]`。
+  - 当这两个子串中至少有一个是回文串时，就说明原始字符串删除一个字符之后就以成为回文串。
+
+
+<div align=center><img src=LeetCode\680.png></div>
+
+```java
+class Solution {
+    public boolean validPalindrome(String s) {
+        int low = 0, high = s.length() - 1;
+        while (low < high) {
+            char c1 = s.charAt(low), c2 = s.charAt(high);
+            if (c1 == c2) {
+                low++;
+                high--;
+            } else {
+                // 验证子串是否为回文串
+                boolean flag1 = true, flag2 = true;
+
+                for (int i = low, j = high - 1; i < j; i++, j--) {
+                    char c3 = s.charAt(i), c4 = s.charAt(j);
+                    if (c3 != c4) {
+                        flag1 = false;
+                        break;
+                    }
+                }
+                for (int i = low + 1, j = high; i < j; i++, j--) {
+                    char c3 = s.charAt(i), c4 = s.charAt(j);
+                    if (c3 != c4) {
+                        flag2 = false;
+                        break;
+                    }
+                }
+                return flag1 || flag2;
+            }
+        }
+        return true;
+    }
+}
+```
+
+**复杂度分析**
+
+- 时间复杂度：$O(n)$，其中$n$是字符串的长度。判断整个字符串是否是回文字符串的时间复杂度是$O(n)$，遇到不同字符时，判断两个子串是否是回文字符串的时间复杂度也都是$O(n)$。
+
+- 空间复杂度：$O(1)$。只需要维护有限的常量空间。
+
+
+# 子序列
+
+## 392. *判断子序列(简单)
+
+**题目：**
+
+给定字符串`s`和`t`，判断`s`是否为`t`的**子序列**。
+
+你可以认为`s`和`t`中仅包含英文小写字母。字符串`t`可能会很长（长度 ~= 500,000），而`s`是个短字符串（长度 <=100）。
+
+字符串的一个子序列是原始字符串删除一些（也可以不删除）字符而<font color=red>不改变剩余字符相对位置</font>形成的新字符串。（例如，"ace"是"abcde"的一个子序列，而"aec"不是）。
+
+**示例：**
+
+```
+s = "abc", t = "ahbgdc"
+返回 true.
+
+s = "axc", t = "ahbgdc"
+返回 false.
+```
+
+**思路与算法：**
+把`s`的字符依次和`t`的字符匹配，**匹配到，`s`就后移，无论是否匹配，`t`的下标都后移**，匹配完`s`，说明`s`是`t`的子序列，否则不是。
+
+**代码：**
+```java
+class Solution {
+    public boolean isSubsequence(String s, String t) {
+        int n = s.length(), m = t.length();
+        int i = 0, j = 0;
+        while (i < n && j < m) {
+            if (s.charAt(i) == t.charAt(j)) {
+                i++;
+            }
+            j++;
+        }
+        return i == n;
+    }
+}
+
+```
+
+**后续挑战:**
+
+如果有大量输入的`S`，称作`S1, S2, ... , Sk`其中`k >= 10亿`，你需要依次检查它们是否为 `T`的子序列。在这种情况下，你会怎样改变代码？
+
+参考：https://leetcode-cn.com/problems/is-subsequence/solution/javati-jie-he-hou-xu-tiao-zhan-by-lil-q/

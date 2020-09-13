@@ -1904,22 +1904,7 @@ public synchronized V put(K key, V value) {
 
 
 
-## final关键字
 
-
-可能使用到final的三种情况：数据、方法和类。
-
-- final数据
-    - 在Java中，这类**恒定不变的常量**必须是**基本数据类型**，并且以关键字final表示。在对这个常量进行定义的时候，必须对其进行赋值。**一个既是static又是final的域只占据一段不能改变的存储空间**。
-    - 对于**基本类型**，final使数值恒定不变；而用于**对象引用**，final使引用恒定不变。一旦引用被初始化指向一个对象，就无法再把它改为指向另一个对象。然而，对象其自身却是可以被修改的，Java并未提供使任何对象恒定不变的途径。
-    - 既是static又是final的域(即编译期常量)将用大写表示，并使用下划线分隔各个单词。
-
-- final方法
-    - 使用final方法的原因有两个。第一个原因是**把方法锁定**，**以防任何继承类修改它的含义**。这是出于设计的考虑：想要确保在继承中使方法行为保持不变，并且不会被覆盖。过去建议使用final方法的第二个原因是**效率**。在最近的Java版本中，虚拟机(特别是hotspot技术)可以探测到这些情况，并优化去掉这些效率反而降低的额外的内嵌调用，因此不再需要使用final方法来进行优化了。
-    - final和private关键字：**类中所有的private方法都隐式地指定为是final的**。由于无法取用private方法，所以也就无法覆盖它。可以对private方法添加final修饰词，但这并不能给该方法增加任何额外的意义。
-
-- final类
-    - 当将某个类的整体定义为final时(通过将关键字final置于它的定义之前)就表明了你不打算继承该类，而且也不允许别人这样做。由于**final类禁止继承**，所以final类中所有的方法都隐式指定为是final的，因为无法覆盖它们。
 
 
 
@@ -2232,7 +2217,137 @@ public class SortStringIgnoreCase
 ```
 
 
+## final关键字
+
+
+可能使用到final的三种情况：数据、方法和类。
+
+- final数据
+    - 在Java中，这类**恒定不变的常量**必须是**基本数据类型**，并且以关键字final表示。在对这个常量进行定义的时候，必须对其进行赋值。**一个既是static又是final的域只占据一段不能改变的存储空间**。
+    - 对于**基本类型**，final使数值恒定不变；而用于**对象引用**，final使引用恒定不变。**一旦引用被初始化指向一个对象，就无法再把它改为指向另一个对象**。然而，**对象其自身却是可以被修改的**，Java并未提供使任何对象恒定不变的途径。
+    - 既是static又是final的域(即编译期常量)将用大写表示，并使用下划线分隔各个单词。
+
+- final方法
+    - 使用final方法的原因有两个。第一个原因是**把方法锁定**，**以防任何继承类修改它的含义**。这是出于设计的考虑：想要确保在继承中使方法行为保持不变，并且不会被覆盖。过去建议使用final方法的第二个原因是**效率**。在最近的Java版本中，虚拟机(特别是hotspot技术)可以探测到这些情况，并优化去掉这些效率反而降低的额外的内嵌调用，因此不再需要使用final方法来进行优化了。
+    - final和private关键字：**类中所有的private方法都隐式地指定为是final的**。由于无法取用private方法，所以也就无法覆盖它。可以对private方法添加final修饰词，但这并不能给该方法增加任何额外的意义。
+
+- final类
+    - 当将某个类的整体定义为final时(通过将关键字final置于它的定义之前)就表明了你不打算继承该类，而且也不允许别人这样做。由于**final类禁止继承**，所以final类中所有的方法都隐式指定为是final的，因为无法覆盖它们。
+
+
+
+
 ## static关键字
+
+主要有四种用法：
+
+- 用来修饰成员变量，将其变为类的成员，从而**实现所有对象对于该成员的共享**；
+- 用来修饰成员方法，将其变为**类方法**，可以直接使用“**类名.方法名**”的方式调用，常用于**工具类**；
+- 静态块用法，**将多个类成员放在一起初始化**，使得程序更加规整，其中理解对象的初始化过程非常关键；
+- 静态导包用法，将类的方法直接导入到当前类中，从而直接使用“方法名”即可调用类方法，更加方便。
+
+### 修饰成员变量
+
+```java
+public class Person {
+    String name;
+    int age;
+    
+    public String toString() {
+        return "Name:" + name + ", Age:" + age;
+    }
+    
+    public static void main(String[] args) {
+        Person p1 = new Person();
+        p1.name = "zhangsan";
+        p1.age = 10;
+        Person p2 = new Person();
+        p2.name = "lisi";
+        p2.age = 12;
+        System.out.println(p1);
+        System.out.println(p2);
+    }
+    /**Output
+     * Name:zhangsan, Age:10
+     * Name:lisi, Age:12
+     *///~
+}
+```
+
+<div align=center><img src=Pictures\static关键字.jpg></div>
+
+**两个Person对象的方法实际上只是指向了同一个方法定义**。这个方法定义是位于内存中的一块不变区域（由jvm划分），我们暂称它为**静态存储区**。这一块存储区不仅存放了方法的定义，实际上从更大的角度而言，它存放的是各种类的定义，当我们通过new来生成对象时，会根据这里定义的类的定义去创建对象。**多个对象仅会对应同一个方法**，这里有一个让我们充分信服的理由，那就是不管多少的对象，他们的方法总是相同的，尽管最后的输出会有所不同，但是方法总是会按照我们预想的结果去操作，即不同的对象去调用同一个方法，结果会不尽相同。
+
+```java
+public class Person {
+    String name;
+    static int age;
+    
+    /* 其余代码不变... */
+
+    /**Output
+     * Name:zhangsan, Age:12
+     * Name:lisi, Age:12
+     *///~
+}
+```
+
+<div align=center><img src=Pictures\static关键字1.jpg></div>
+
+给age属性加了static关键字之后，Person对象就不再拥有age属性了，age属性会统一交给Person类去管理，即多个Person对象只会对应一个age属性，一个对象如果对age属性做了改变，其他的对象都会受到影响。我们看到此时的age和toString()方法一样，都是交由类去管理。
+
+虽然我们看到static可以让对象共享属性，但是实际中我们很少这么用，也不推荐这么使用。因为这样会让该属性变得难以控制，因为它在任何地方都有可能被改变。如果我们想共享属性，一般我们会采用其他的办法：
+
+```java {.line-numbers highlight=8}
+public class Person {
+    private static int count = 0;
+    int id;
+    String name;
+    int age;
+    
+    public Person() {
+        id = ++count;
+    }
+    
+    public String toString() {
+        return "Id:" + id + ", Name:" + name + ", Age:" + age;
+    }
+    
+    public static void main(String[] args) {
+        Person p1 = new Person();
+        p1.name = "zhangsan";
+        p1.age = 10;
+        Person p2 = new Person();
+        p2.name = "lisi";
+        p2.age = 12;
+        System.out.println(p1);
+        System.out.println(p2);
+    }
+    /**Output
+     * Id:1, Name:zhangsan, Age:10
+     * Id:2, Name:lisi, Age:12
+     *///~
+}
+```
+
+上面的代码起到了给Person的对象创建一个唯一id以及记录总数的作用，其中count由static修饰，是Person类的成员属性，每次创建一个Person对象，就会使该属性自加1然后赋给对象的id属性，这样，count属性记录了创建Person对象的总数，由于count使用了private修饰，所以从类外面无法随意改变。
+
+### 修饰成员方法
+
+相比于修饰成员属性，修饰成员方法对于数据的存储上面并没有多大的变化，因为我们从上面可以看出，方法本来就是存放在类的定义当中的。static修饰成员方法最大的作用，就是可以使用"**类名.方法名**"的方式操作方法，避免了先要new出对象的繁琐和资源消耗，我们可能会经常在帮助类中看到它的使用：
+
+```java
+public class PrintHelper {
+
+    public static void print(Object o){
+        System.out.println(o);
+    }
+    
+    public static void main(String[] args) {
+        PrintHelper.print("Hello world");
+    }
+}
+```
 
 <font color=red>在static方法的内部不能调用非静态方法(反之可以)。</font>
 
@@ -2274,6 +2389,56 @@ public class StaticTest
 引用static变最有两种方法：可以**通过一个对象**去定位它，如`st1.i`。也可以通过其**类名直接引用**(`StaticTest.i`)，这对于非静态成员则不行。**使用类名是引用`static`变量的首选方式**，这不仅是因为它强调了变最的static结构，而且在某些情况下它还为编译器进行优化提供了更好的机会。
 
 
+
+### 静态块
+
+```java {.line-numbers highlight=12-15}
+class Book{
+    public Book(String msg) {
+        System.out.println(msg);
+    }
+}
+
+public class Person {
+
+    Book book1 = new Book("book1成员变量初始化");
+    static Book book2;
+    
+    static {
+        book2 = new Book("static成员book2成员变量初始化");
+        book4 = new Book("static成员book4成员变量初始化");
+    }
+    
+    public Person(String msg) {
+        System.out.println(msg);
+    }
+    
+    Book book3 = new Book("book3成员变量初始化");
+    static Book book4;
+    
+    public static void funStatic() {
+        System.out.println("static修饰的funStatic方法");
+    }
+    
+    public static void main(String[] args) {
+        Person.funStatic();
+        System.out.println("****************");
+        Person p1 = new Person("p1初始化");
+    }
+    /**Output
+     * static成员book2成员变量初始化
+     * static成员book4成员变量初始化
+     * static修饰的funStatic方法
+     * ***************
+     * book1成员变量初始化
+     * book3成员变量初始化
+     * p1初始化
+     *///~
+}
+```
+
+- 当我们没有创建对象，而是通过类去调用类方法时，尽管该方法没有使用到任何的类成员，类成员还是在方法调用之前就初始化了，这说明，**当我们第一次去使用一个类时，就会触发该类的成员初始化**。第二个是
+- 当我们使用了类方法，完成类的成员的初始化后，再new该类的对象时，static修饰的类成员没有再次初始化，这说明，static修饰的类成员，在程序运行过程中，**只需要初始化一次即可，不会进行多次的初始化**。
 
 ## Java程序初始化顺序
 
