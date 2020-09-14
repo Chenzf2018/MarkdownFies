@@ -1149,7 +1149,7 @@ n is 2
 
 - 重载
 
-    - 方法重载是让类**以统一的方式处理不同类型数据**的一种手段。多个同名函数同时存在，具有不同的参数个数/类型。
+    - 方法重载是让<font color=red>以统一的方式处理不同类型数据</font>的一种手段。多个同名函数同时存在，具有不同的参数个数/类型。
 
     - Java的方法重载，就是在类中可以创建多个方法，它们**具有相同的名字，但具有不同的参数**。调用方法时通过传递给它们的**不同参数个数和参数类型**来决定具体使用哪个方法。
 
@@ -1236,12 +1236,12 @@ System.out.println(1-0.937);  // 0.06299999999999994
 
 如果基本的整数和浮点数精度不能够满足需求，那么可以使用`java.math`包中的两个很有用的类：`Biglnteger`和`BigDecimal`这两个类可以处理包含任意长度数字序列的数值。`Biglnteger`类实现了任意精度的整数运算，`BigDecimal`实现了任意精度的浮点数运算。
 
-使用静态的`valueOf`方法可以**将普通的数值转换为大数值**：`Biglnteger a = Biglnteger.valueOf(100); `
+使用静态的`valueOf`方法可以**将普通的数值转换为大数值**：`BigInteger a = BigInteger.valueOf(100); `
 
 遗憾的是，不能使用人们熟悉的算术运算符（如：`+`和`*`) 处理大数值。而需要使用大数值类中的`add`和`multiply`方法：
 ```
-Biglnteger c = a.add(b); // c = a + b 
-Biglnteger d = c.multipiy(b.add(Biglnteger.valueOf(2))); // d = c * (b + 2)
+BigInteger c = a.add(b); // c = a + b 
+BigInteger d = c.multipiy(b.add(BigInteger.valueOf(2))); // d = c * (b + 2)
 ```
 
 
@@ -1323,6 +1323,13 @@ value >> 8：
 
 
 ## Java四种引用方式
+
+| 引用类型 | GC时JVM内存充足 | GC时JVM内存不足 |
+|:--------:|:---------------:|:---------------:|
+|  强引用  |     不被回收    |     不被回收    |
+|  弱引用  |      被回收     |      被回收     |
+|  软引用  |     不被回收    |      被回收     |
+|  虚引用  |         |           |
 
 https://juejin.im/post/5a5129f5f265da3e317dfc08
 
@@ -2238,6 +2245,29 @@ public class SortStringIgnoreCase
 
 
 ## static关键字
+
+```java
+public class Solution {
+    static String solution = "chenzf";
+
+    public static void main(String[] args) {
+        System.out.println(Solution.solution);
+        
+        // 不建议使用该方式访问静态变量
+        Solution result = new Solution();
+        System.out.println(result.solution);
+        
+        solution = "chenzufeng";
+        System.out.println(Solution.solution);
+    }
+}
+
+/*
+chenzf
+chenzf
+chenzufeng
+ */
+```
 
 主要有四种用法：
 
