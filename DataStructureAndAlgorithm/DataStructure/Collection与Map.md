@@ -864,6 +864,22 @@ Set集合常用子类：
 
 ## 散列类HashSet
 
+### HashSet与HashMap区别
+
+**HashSet 底层就是基于 HashMap 实现的**。（HashSet 的源码非常非常少，除了 clone()、writeObject()、readObject() 是 HashSet 本身实现之外，其他方法都是**直接调用 HashMap 中的方法**。
+
+| HashMap                            | HashSet                                                                                                                 |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| 实现 Map 接口                      | 实现 Set 接口                                                                                                           |
+| 存储键值对                         | 仅存储对象                                                                                                              |
+| 调用 put() 向 map 中添加元素       | 调用 add() 方法向 Set 中添加元素                                                                                        |
+| HashMap 使用键 (key) 计算 hashcode | HashSet 使用成员对象来计算 hashcode 值，对于两个对象来说，hashcode 可能相同，所以 equals() 方法从是用来判断对象的相等性 |
+
+### HashSet 如何检查重复
+
+- 当对象 add() 入 HashSet 时，会先计算对象的 hashcode 值，来判断对象加入的位置，同时也会与其他加入的对象的 hashcode 值作比较；
+- 如果没有相符的 hashcode，HashSet 会假设对象没有重复出现；- 如果发现有相同 hashcode 值的对象，这时会**调用 equals() 方法来检查 hashcode 相等的对象是否真的相等**。如果两者相同，HashSet 就不会让加入操作成功。
+
 `HashSet`类可以用来存储互不相同的任何元素。考虑到效率的因素，<font color=red>添加到散列集中的对象必须以一种正确分散散列码的方式来实现`hashCode`方法</font>。回顾在`Object`类中定义的`hashCode`, <font color=red>如果两个对象相等，那么这两个对象的散列码必须一样。两个不相等的对象可能会有相同的散列码</font>，因此应该实现`hashCode`方法以避免出现太多这样的清况。Java API中的大多数类都实现了`hashCode`方法。例如，`Integer`类中的`hashCode`方法返回它的`int`值， `Character`类中的`hashCode`方法返回这个`字符的统一码`。
 
 ```java
