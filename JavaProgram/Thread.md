@@ -1447,6 +1447,17 @@ Causes the currently executing thread to sleep.
 * `sleep`可以模拟网络延时、倒计时等；
 * 每一个对象都有一个锁，`sleep`不会释放锁。
 
+### sleep()与wait的区别
+
+- sleep是线程中的方法，但是wait是Object中的方法。
+
+- **sleep方法不会释放lock**，但是wait会释放，而且会加入到等待队列中。
+
+- sleep方法不依赖于同步器synchronized，但是wait需要依赖synchronized关键字。
+
+- **sleep不需要被唤醒（休眠之后退出阻塞）**，但是wait需要（不指定时间需要被别人中断）。
+
+
 ### 模拟网络延时
 ```java
 package Thread;
