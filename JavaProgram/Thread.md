@@ -8316,10 +8316,19 @@ Exception in thread "main" java.util.concurrent.RejectedExecutionException...
 
 ### 四种拒绝策略
 
+当`workQueue`达到上限，同时也达到`maximumPoolSize`就要通过这个来处理：
+
 * `new ThreadPoolExecutor.AbortPolicy()` // 银行满了，还有人进来，不处理这个人的，抛出异常
+  * **默认**拒绝策略
+  * **丢弃任务**并抛出RejectedExecutionException异常
+  * 如果是比较关键的业务，推荐使用此拒绝策略，这样子**在系统不能承载更大的并发量的时候，能够及时的通过异常发现**。
 * `new ThreadPoolExecutor.CallerRunsPolicy()` // 哪来的去哪里！
-* `new ThreadPoolExecutor.DiscardPolicy()` //队列满了，丢掉任务，不会抛出异常！
-* `new ThreadPoolExecutor.DiscardOldestPolicy()` //队列满了，尝试去和最早的竞争，也不会抛出异常！
+  * **由调用线程**（提交任务的线程）处理该任务
+* `new ThreadPoolExecutor.DiscardPolicy()` // 队列满了，丢掉任务，不会抛出异常！
+  * **丢弃任务**，但是**不抛出异常**。如果线程队列已满，则后续提交的任务都会被丢弃，且是静默丢弃。
+  * 使用此策略，可能会使我们无法发现系统的异常状态。建议是**一些无关紧要的业务采用此策略**。例如，**博客网站统计阅读量**就是采用的这种拒绝策略。
+* `new ThreadPoolExecutor.DiscardOldestPolicy()` // 队列满了，尝试去和最早的竞争，也不会抛出异常！
+  * **丢弃队列最前面的任务**，然后重新提交被拒绝的任务
 
 我们需要经过**调优**的过程来设置**最佳线程参数值**：
 
