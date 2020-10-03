@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>thymeleaf</title>
+    <!-- 给标题上色 -->
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+</head>
+<body>
+    <h1>Learning Spring Boot Thymeleaf</h1>
+
+    <h1>展示单个数据</h1>
+
+    <span th:text="${name}"></span>
+    欢迎：<span th:text="${name}"/>
+    username: <span th:utext="${username}"></span>
+    <input type="text" th:value="${username}">
+
+    <h1>展示对象数据</h1>
+
+    <ul>
+        <li>id:<span th:text="${user.id}"/> </li>
+        <li>name:<span th:text="${user.name}"/> </li>
+        <li>age:<span th:text="${user.age}"/> </li>
+        <li>date:<span th:text="${user.date}"/> </li>
+        <li>date:<span th:text="${#dates.format(user.date, 'yyyy-MM-dd HH:mm')}"></span> </li>
+
+    </ul>
+
+    <h1>有条件的展示数据</h1>
+
+    <span th:if="${user.age} le 27" th:text="${user.name}"></span>
+
+    <h1>展示多个数据</h1>
+
+    <ul th:each="user:${users}">
+        <li th:text="${user.id}"></li>
+        <li th:text="${user.name}"></li>
+        <li th:text="${user.age}"></li>
+        <li th:text="${#dates.format(user.date, 'yyyy-MM-dd')}"></li>
+    </ul>
+
+    <h2>展示多个数据（获取遍历状态）</h2>
+
+    <ul th:each="user,userStat:${users}">
+
+        <!-- 获取遍历次数 count从1开始 index从0开始 -->
+        <li>当前遍历次数:<span th:text="${userStat.count}"/>
+             当前遍历的索引:<span th:text="${userStat.index}"/>
+             当前遍历是否是奇数行:<span th:text="${userStat.odd}"/>
+             当前遍历是否是偶数行:<span th:text="${userStat.even}"/>
+             当前集合的大小:<span th:text="${userStat.size}"/>
+        </li>
+
+        <li><span th:text="${user.id}"/></li>
+        <li><span th:text="${user.name}"/></li>
+        <li><span th:text="${user.age}"/></li>
+        <li><span th:text="${user.date}"/></li>
+
+    </ul>
+
+</body>
+</html>

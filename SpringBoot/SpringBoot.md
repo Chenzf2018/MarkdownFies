@@ -1,676 +1,2247 @@
-# 路线
-javaSE：OOP；MySQL：持久层；HTML+CSS+JS+JQuery+框架：视图层(框架不熟练，CSS进阶难)；JavaWeb：独立开发MVC三层框架的网站(原始)；SSM：框架(简化开发流程，但配置复杂)，打War包，Tomcat运行；Spring再简化：Spring Boot(打Jar包(内嵌Tomcat)，微服务架构)。
-<div align=center><img src=SpringBootImages/学习路线.png width=80%></div>
+# 参考资料
 
-# SpringBoot发展
-&emsp;&emsp;在“遥远”的EJB(Enterprise Java Bean)年代，开发一个EJB需要大量的接口和配置文件，直至EJB2.0的年代，开发一个EJB还需要配置两个文件，其结果就是<font color=red>配置的工作量比开发的工作量还要大</font>。其次<font color=red>EJB是运行在EJB容器中的</font>，而Sun公司定义的JSP和Serviet却是运行在Web容器中的，因此需要<font color=red>使用Web容器去调用EJB容器的服务</font>。
+https://www.bilibili.com/video/BV1RE411c7RN?p=1
 
-这就意味着存在以下的弊端：需要增加调用的配置文件才能让Web容器调用EJB容器；与此同时需要开发两个容器，非常多的配置内容和烦琐的规范导致开发效率十分低下；对于Web容器调用EJB容器的服务这种模式，注定了需要通过网络传递，造成性能不佳；对于测试人员还需要了解许多EJB烦琐的细节，才能进行配置和测试，这样测试也难以进行。
+# 1 引言
 
-&emsp;&emsp;Spring是为了解决企业级应用开发的复杂性而创建，它以强大的<font color=red>控制反转(loC)来管理各类Java资源</font>，从而<u>降低了各种资源的藕合</u>；Spring的<font color=red>面向切面的编程(AOP)通过动态代理技术，允许我们按照约定进行配置编程</font>，进而增强了Bean的功能，它<u>擦除了大量重复的代码</u>。
+Spring Boot是由`Pivotal团队提供的全新框架`，其设计目的是用来`简化Spring应用的初始搭建以及开发过程`。该框架使用了`特定的方式来进行配置`，从而使开发人员`不再需要定义样板化的配置`。
 
-配置方法的不成文共识：<font color=red>对于业务类使用注解</font>，例如，对于MVC开发，``控制器``使用`＠Controller`，``业务层``使用`＠Service`，``持久层``使用`＠Repository`；而<font color=red>对于一些公用的Bean</font>，例如，对于数据库(如Redis)、第三方资源等则<font color=red>使用XML进行配置</font>。
+`SSH(Spring Struts Hibernate)`-->`SSM(Spring stauts2|struts1 mybatis)`-->`SSM(Spring SpringMVC mybatis)`
 
-为了降低Java开发的复杂性，Spring采用了以下4种关键策略来简化开发：
-* 基于POJO的轻量级和最小侵入性编程；
-* <font color=red>通过IOC，依赖注入(DI)和面向接口实现松耦合</font>；
-* <font color=red>基于切面(AOP)和惯例进行声明式编程</font>；
-* 通过切面和模版减少样式代码；
+`Spring Boot(微框架) = Spring MVC(控制器) + Spring core(项目管理)`
 
-&emsp;&emsp;Spring Boot使用“<font color=red>约定优于配置</font>”(项目中存在大量的配置，此外还内置一个习惯性的配置，无须手动进行配置)的理念让项目快速运行起来。使用Spring Boot很容易创建一个独立运行(运行jar，内嵌Servlet容器)、准生产级别的基于Spring框架的项目，使用Spring Boot可以不用或者只需要很少的Spring配置。
+## 1.1 Spring Boot 特点
 
-Spring Boot的核心功能有：
-* 独立运行的Spring项目：Spring Boot可以以`jar`包的形式独立运行，运行一个Spring Boot项目只需通过`java -jar xx.jar`来运行。
-* 内嵌Servlet容器：Spring Boot可选择内嵌`Tomcat、Jetty`或者`Undertow`，这样就无须以`war`包形式部署项目。
-* 提供`starter`简化Maven配置：Spring提供了一系列的`starter pom`来简化Maven的依赖加载。例如，当使用了`spring-boot-starter-web`时，会自动加入依赖包。
-* <font color=red>自动配置</font>Spring：Spring Boot会根据在类路径中的`jar包、类`，<font color=red>为jar包里的类自动配置Bean</font>，这样会极大地减少要使用的配置；若在实际开发中需要自动配置Bean，而Spring Boot没有提供支持，则可以自定义自动配置；<font color=red>针对很多Spring应用程序常见的应用功能，Spring Boot能自动提供相关配置。自动配置消除了传统Spring应用程序里的很多样板配置</font>。
-* <font color=red>起步依赖</font>：告诉Spring Boot需要什么功能，它就能引入需要的库。Spring Boot起步依赖让你能<font color=red>通过库所提供的功能而非名称与版本号来指定构建依赖。</font>
-* 准生产的应用监控：Spring Boot提供基于`http, ssh, telnet`对运行时的项目进行监控。
-* <font color=red>无冗余代码生成和xml配置</font>：Spring Boot不是借助于代码生成来实现的，而是通过条件注解来实现的。不需要任何`xml`配置即可实现Spring的所有配置。
+- `创建独立的Spring应用程序  `
+- `嵌入了Tomcat，无需部署WAR文件`
+- `简化Maven配置`
+- `自动配置Spring，没有XML配置`
 
-# 搭建开发环境
-&emsp;&emsp;使用Spring Boot开发项目需要有<font color=red>两个基础环境和一个开发工具</font>，这两个环境是指<font color=red>Java编译环境和构建工具环境</font>，一个开发工具是指IDE开发工具。Spring Boot 2.0要求Java 8作为最低版本，需要在本机安装JDK1.8并进行环境变量配置，同时需要安装构建工具编译Spring Boot项目，最后准备一个顺手的IDE开发工具即可。
+## 1.2 Spring Boot 约定大于配置
 
-&emsp;&emsp;<font color=red>构建工具是一个把源代码生成可执行应用程序的自动化工具</font>，Java领域中主要有三大构建工具：Ant、Maven和Gradle。
-* Ant(AnotherNeatTool)的核心是由Java编写，采用XML作为构建脚本，这样就允许你在任何环境下运行构建。Ant是Java领域最早的构建工具，不过因为操作复杂，慢慢的已经被淘汰了。
-* Maven，Maven发布于2004年，目的是解决程序员使用Ant所带来的一些问题，它的好处在于可以将项目过程规范化、自动化、高效化以及强大的可扩展性。
-* Gradle，Gradle是一个基于Apache Ant和Apache Maven概念的项目自动化建构工具。它使用一种基于Groovy的特定领域语言来声明项目设置，而不是传统的XML。结合了前两者的优点，在此基础之上做了很多改进，它具有Ant的强大和灵活，又有Maven的生命周期管理且易于使用。
+使用`Maven`项目目录进行构建。
 
-Spring Boot官方支持Maven和Gradle作为项目构建工具。Gradle虽然有更好的理念，但是相比Maven来讲其行业使用率偏低，并且Spring Boot官方默认使用Maven。
+- `Spring Boot项目中必须在src/main/resources中放入application.yml(.properties)核心配置文件，名字必须为:application。`
+- `Spring Boot项目中必须在src/main/java中所有子包之外构建全局入口类：xxApplication，入口类一个Spring Boot项目只能有一个。`
 
-## 构建项目
-&emsp;&emsp;有两种方式来构建Spring Boot项目基础框架，第一种是使用Spring官方提供的构建页面；第二种是使用IntelliJ IDEA中的Spring插件来创建。
+![springboot项目约定](SpringBoot.assets/springboot项目约定.png)
 
-### 使用Spring官方提供页面构建
-* 访问 [http://start.spring.io](http://start.spring.io/)网址。
-* 选择构建工具Maven Project，编程语言选择Java、Spring Boot版本以及一些工程基本信息，具体可参考下图：
-<div align=center><img src=SpringBootImages/网页构建.png></div>
+# 2 Spring Boot 配置
 
-* 单击Generat下载项目压缩包，<font color=red>此处生成的是一个简单的基于Maven的项目</font>。
-* 解压后，使用IDEA导入项目，选择File | New | Model from Existing Source.. | 选择解压后的文件夹 | OK命令，选择 Maven，一路单击 Next 按钮，OK done!
+## 2.1 环境要求
 
-## 使用IDEA构建
-* 选择File | New | Project... 命令，弹出新建项目的对话框。
-* 选择Spring Initializr | Next，也会出现上述类似的配置界面，IDEA帮我们做了集成。
-* 填写相关内容后，单击Next按钮，选择依赖的包再单击Next按钮，最后确定信息无误单击Finish按钮。
+https://docs.spring.io/spring-boot/docs/2.2.10.RELEASE/reference/html/getting-started.html#getting-started
 
-&emsp;&emsp;首先是启动IntelliJ IDEA开发环境，然后选择`Create New Project`，就可以看到一个新的窗口。选择`Spring Initializr`，并且将JDK切换为安装的版本。
-<div align=center><img src=SpringBootImages/创建新工程.png width=80%></div>
+- Spring Boot 2.3.4.RELEASE requires [Java 8](https://www.java.com/) and is compatible up to Java 14 (included). [Spring Framework 5.2.9.RELEASE](https://docs.spring.io/spring/docs/5.2.9.RELEASE/spring-framework-reference/) or above is also required.
 
-`Artifact`的命名规则需要进一步了解：不能出现大写字母！这里项目名为`hello-springboot`。
+- Explicit build support is provided for the build tools: [Maven3.3+](http://maven.apache.org/download.cgi)
+- Spring Boot supports the embedded servlet containers: [Tomcat 9.0—4.0](https://tomcat.apache.org/)
+- [IDEA 2018](https://www.jetbrains.com/)
 
-点击Next，到了可以选择starter(依赖)的窗口。当这些技术的`starter pom`被选中后，与这项技术相关的Spring的Bean将会被自动配置：
-<div align=center><img src=SpringBootImages/项目添加依赖.png width=80%></div>
+## 2.2 使用Maven创建一个项目
 
-接着需要导入Maven工程/设置Maven：
-<div align=center><img src=SpringBootImages/Maven设置.png width=80%></div>
+### 2.2.1 使用Maven创建一个项目
 
-运行`HelloSpringBootApplication`就可以启动Spring Boot工程，而`pom.xml`则配置好了选中的`starter`依赖，这样就能够基于IntelliJ IDEA开发Spring Boot工程了。
+![image-202010011124-Maven创建JavaWeb.png](SpringBoot.assets/image-202010011124-Maven创建JavaWeb.png)
 
-## 项目结构
-&emsp;&emsp;Spring Boot的基础结构共三个文件，具体如下：
-<div align=center><img src=SpringBootImages/SpringBoot项目结构.png></div>
+groupId为sjtu.chenzf；artifactId为hellospringboot；工程名为Demo1（默认为artifactId）；Maven设置为
 
-*	`src/main/java`：程序开发以及主程序入口；
-*	`src/main/resources`：配置文件；
-*	`src/test/java`：测试程序。
+![image-202010011135-Maven设置.png](SpringBoot.assets/image-202010011135-Maven设置.png)
 
-&emsp;&emsp;另外，Spring Boot建议的目录结构如下：
-`com.example.myproject`目录下：
-<div align=left><img src=SpringBootImages/myproject项目结构.png width=40%></div>
+注意：`Maven projects need to be imported`，点击`import Changes`。
 
-*	`Application.java`建议放到根目录下面，是项目的启动类，Spring Boot项目只能有一个main()方法；
-*	`comm`目录建议放置公共的类，如全局的配置文件、工具类等；
-*	`model`目录主要用于实体(Entity)与数据访问层(Repository)；
-*	`repository`层主要是数据库访问层代码；
-*	`service`层主要是业务类代码；
-*	`web`层负责页面访问控制。
+然后**对项目结构进行调整**——添加`java`和`resources`：
 
-`resources`目录下：
-*	`static`目录存放web访问的静态资源，如js、css、图片等；
-*	`templates`目录存放页面模板；
-*	`application.properties`存放项目的配置信息。
+![image-202010011145-调整项目结构.png](SpringBoot.assets/image-202010011145-调整项目结构.png)
 
-`test`目录存放单元测试的代码；`pom.xml`用于配置项目依赖包，以及其他配置。
+- 将`main`文件夹下的`java`作为`Sources Root`
+- 将`main`文件夹下的`resources`作为`Resources Root`
+- 将`test`文件夹下的`java`作为`Test Sources Root`
+- 将`test`文件夹下的`resources`作为`Test Resources Root`
 
-<font color=red>采用默认配置可以省去很多设置</font>，也可以根据公司的规范进行修改，至此一个 Java项目搭建好了！
+### 2.2.2 创建文件夹方式
 
+- 错误方式：[会出现问题](# 3.7.7-开发DAO接口以及mapper)
 
-## 使用自定义配置
-&emsp;&emsp;在没有任何配置下就能用Spring Boot启动Spring MVC项目，这些都是<font color=red>Spring Boot通过Maven依赖找到对应的jar包和嵌入的服务器，然后使用默认自动配置类来创建默认的开发环境</font>。但是有时候，我们需要对这些默认的环境进行修改以适应个性化的要求。
+![image-202010031400-错误创建文件夹方式](SpringBoot.assets/image-202010031400-错误创建文件夹方式.png)
 
-通过约定的配置就可以在很大程度上自定义开发环境，以适应真实需求。这就是Spring Boot的理念，<font color=red>配置尽量简单并且存在约定</font>，屏蔽Spring内部的细节，使得Spring能够开箱后经过简单的配置后即可让开发者使用，以满足快速开发、部署和测试的需要。
+- 正确方式
 
-&emsp;&emsp;可以在结构目录`/src/main/resources`中找到一个属性文件`application.properties`，它是一个默认的配置文件，通过它可以根据自己的需要实现自定义功能。
+![image-202010031409-正确创建文件夹方式](SpringBoot.assets/image-202010031409-正确创建文件夹方式.png)
 
-例如，假设当前`8080`端口已经被占用，我们希望使用`8090`端口启动`Tomcat`，那么只需要在这个文件中添加一行：`server.port=8090`。
-```xml {.line-numbers highlight=1}
-2020-02-16 19:30:27.812  INFO 13440 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8090 (http) with context path ''
-2020-02-16 19:30:27.815  INFO 13440 --- [  restartedMain] c.e.h.HelloSpringbootApplication         : Started HelloSpringbootApplication in 1.632 seconds (JVM running for 2.427)
-2020-02-16 19:31:21.079  INFO 13440 --- [nio-8090-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2020-02-16 19:31:21.080  INFO 13440 --- [nio-8090-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2020-02-16 19:31:21.087  INFO 13440 --- [nio-8090-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 7 ms
+## 2.3 项目中引入依赖
+
+https://docs.spring.io/spring-boot/docs/2.2.10.RELEASE/reference/html/getting-started.html#getting-started
+
+在`pom.xml`中
+
+- 继承springboot的父项目(为与[教程](https://www.bilibili.com/video/BV1RE411c7RN?p=1)一致，第5行使用`2.2.5`)：
+
+```xml
+<!-- Inherit defaults from Spring Boot -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.2.5.RELEASE</version>
+  </parent>
 ```
 
-&emsp;&emsp;Spring Boot的参数配置除了使用`properties`文件之外，还可以使用`yml`文件等。实际上，`yml文件`的配置与`proerties文件`只是简写和缩进区别，差异并不大。
+点击`import Changes`！
 
-## 运行程序
-&emsp;&emsp;在`HelloWorldApplication.java`同级下创建`controller`目录：
-<div align=center><img src=SpringBootImages/controller.png width=50%></div>
+- 引入Spring Boot 的web支持(先将`junit`依赖去除)
 
-添加`HelloWorldController`：
+```xml
+<!-- Add typical dependencies for a web application -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+```
+
+点击`import Changes`：
+
+![image-202010011210-Maven Projects.png](SpringBoot.assets/image-202010011210-Maven Projects.png)
+
+
+
+
+
+## 2.4 建包并编写入口类和控制器
+
+`main/java/sjtu/chenzf/Application.java`
+
 ```java
-package com.example.hello_world.controller;
+package sjtu.chenzf;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@EnableAutoConfiguration  // 通过该注解，开启自动配置
+@RestController
+
+public class Application {
+    public static void main(String[] args) {
+        /**
+         * SpringApplication为Spring的应用类，用来启动SpringBoot应用（部署到对应的web容器中）
+         * 参数1：传入入口类的类对象；参数2为main函数的参数
+         */
+        SpringApplication.run(Application.class, args);
+    }
+
+    @GetMapping("/hello")
+    public String hello(){
+        System.out.println("Hello SpringBoot");
+        return "hello springboot";
+    }
+}
+```
+
+在浏览器中输入`http://localhost:8989/hello`，页面显示`hello springboot`，控制台显示`Hello SpringBoot`。
+
+### 2.4.1 将入口类与控制器解耦合
+
+`main/java/sjtu/chenzf/Application.java`
+
+```java
+package sjtu.chenzf;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@EnableAutoConfiguration  // 通过该注解，开启自动配置
+
+public class Application {
+    public static void main(String[] args) {
+        /**
+         * SpringApplication为Spring的应用类，用来启动SpringBoot应用（部署到对应的web容器中）
+         * 参数1：传入入口类的类对象；参数2为main函数的参数
+         */
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+`main/java/sjtu/chenzf/controller/HelloController.java`
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class HelloWorldController
-{
-    //接口：http://localhost:8080/HelloWorld
-    @RequestMapping("/HelloWorld")
-    // 调用业务，接受前端的参数！
-    public String helloWorld(){ return "Hello World!"; }
+@RequestMapping("/chenzf")  // 为避免路径冲突，再添加一级命名空间
+public class HelloController {
+    @GetMapping("/hello")  // 方法的访问路径
+    public String hello() {
+        System.out.println("Hello Spring Boot !");
+        return "hello springboot";
+    }
 }
 ```
-<div align=center><img src=SpringBootImages/HelloWorld.png width=50%></div>
 
-`pom.xml`中添加的`web`依赖：
-```
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-```
-集成了`Tomcat, DispatcherServlet, xml`等，毋需再去配置！`spring-boot-starter-web`用于实现`Http`接口（该依赖中包含了`Spring MVC`）；使用`Tomcat`作为默认嵌入式容器。
+此时，需通过在浏览器中输入`http://localhost:8989/chenzf/hello`来进行访问，但访问时出现了问题，无法访问控制器！
 
-所有的`SpringBoot`依赖都是使用`spring-boost-starter`作为开头的：`spring-boot-starter-web, spring-boot-starter-test(单元测试)`。
+### 2.4.2 添加ComponentScan
 
-# 全注解下的Spring Ioc
-&emsp;&emsp;Spring最成功的是其提出的理念，而不是技术本身。它所依赖的<font color=red>两个核心理念，一个是控制反转(Inversion of Control, IoC)，另一个是面向切面编程(Aspect Oriented Programming, AOP)</font>。
+在`main/java/sjtu/chenzf/Application.java`中，`@EnableAutoConfiguration`仅能完成开启自动配置——初始化Spring和Spring MVC环境等作用，无法扫描到`controller`包中`HelloController.java`的注解，而解耦前，这些注解都是在一个文件中，所以能够正常工作。
 
-IoC容器是Spring的核心，可以说<font color=red>Spring是一种基于IoC容器编程的框架</font>。因为Spring Boot是基于注解的开发Spring IoC，所以使用全注解的方式讲述Spring IoC技术。<font color=red>IoC是一种通过描述来生成或者获取对象的技术</font>，而这个技术不是Spring甚至不是Java独有的。对于Java初学者更多的时候所熟悉的是使用new关键字来创建对象，而在Spring中则不是，它是<font color=red>通过描述来创建对象</font>。只是<font color=red>Spring Boot并不建议使用XML，而是通过注解的描述生成对象</font>。
+在`Application.java`中添加`@ComponentScan`(第8行)来扫描当前入口类所在包及其子包中相关注解：
 
-一个系统可以生成各种对象，并且这些对象都需要进行管理。还值得一提的是，对象之间并不是孤立的，它们之间还可能<font color=red>存在依赖的关系</font>。例如，一个班级是由多个老师和同学组成的，那么班级就依赖于多个老师和同学了。为此Spring还提供了<font color=red>依赖注入的功能</font>，使得我们能够<font color=red>通过描述来管理各个对象之间的关系。为了描述上述的班级、同学和老师这3个对象关系，我们需要一个容器</font>。
-
-&emsp;&emsp;总结一下就是：Spring使用简单的POJO(Plain Old Java Object, 即无任何限制的普通Java对象)来进行企业级开发。<font color=red>每一个被Spring管理的Java对象都称之为Bean；而Spring提供了一个IoC容器用来初始化对象，解决对象间的依赖管理和对象的使用。控制反转是通过依赖注入实现的。所谓依赖注入指的是容器负责创建对象和维护对象间的依赖关系，而不是通过对象本身负责自己的创建和解决自己的依赖。</font>
-
-## IoC容器介绍
-&emsp;&emsp;<font color=red>在Spring中把每一个需要管理的对象称为Spring Bean(简称Bean)，而Spring管理这些Bean的容器，被我们称为Spring IoC容器(或者简称IoC容器)</font>。IoC容器需要具备两个基本的功能：
-* 通过描述管理Bean，包括发布和获取Bean；
-* 通过描述完成Bean之间的依赖关系。
-
-Spring IoC容器(ApplicationContext)负责创建Bean，并通过容器将功能类Bean注入到需要的Bean中。Spring提供使用xml、注解、Java配置、groovy配置实现Bean的创建和注入。
-
-&emsp;&emsp;Spring IoC容器是一个管理Bean的容器，在Spring的定义中，它要求所有的IoC 容器都需要实现接口`BeanFactory`，它是一个顶级容器接口。在Spring IoC容器中，允许我们通过`getBean`按``类型``或者``名称``获取Bean。并且，默认的情况下，Bean都是<font color=red>以单例存在的</font>，也就是<font color=red>使用`getBean`方法返回的都是同一个对象</font>。
-
-由于`BeanFactory`的功能还不够强大，因此Spring在`BeanFactory`的基础上，还设计了一个更为高级的接口`ApplicationContext`。它是`BeanFactory`的子接口之一，在Spring的体系中BeanFactory和ApplicationContext是最为重要的接口设计，在现实中我们使用的大部分Spring IoC容器是`ApplicationContext`接口的实现类，它们的关系如下图所示：
-<div align=center><img src=SpringBootImages/SpringIoC容器的接口设计.png></div>
-
-&emsp;&emsp;在Spring Boot中，主要是<font color=red>通过注解来装配Bean到Spring IoC容器中</font>，AnnotationConfigApplicationContext是一个基于注解的IoC容器。<font color=red>Spring Boot装配和获取Bean</font>的方法与它如出一辙。
-
-## 依赖注入
-&emsp;&emsp;<font color=red>Spring IoC通过依赖注入(Dependency Injection, DI)来获取Bean，然后再将Bean装配到IoC容器中。控制反转是通过依赖注入实现的。所谓依赖注入指的是容器负责创建对象和维护对象间的依赖关系，而不是通过对象本身负责自己的创建和解决自己的依赖。</font>
-
-&emsp;&emsp;依赖注入的主要目的是为了解耦，体现了一种“组合”的理念。如果希望类具备某项功能的时候，是继承自一个具有此功能的父类好呢？还是组合另外一个具有这个功能的类好呢？答案是不言而喻的，继承一个父类，子类将与父类耦合，组合另外一个类则使耦合度大大降低。
-
-可以通过人类依赖于动物的例子来理解“依赖注入”：人类(Person)可以利用一些动物(Animal)去完成一些事情，比方说狗(Dog)是用来看门的，猫(Cat)是用来抓老鼠的……于是做一些事情就依赖于那些动物。
-
-# AOP
-&emsp;&emsp;Spring的AOP的存在目的是为了<font color=red>解耦</font>。AOP可以让一组类共享相同的行为。在OOP中只能通过继承类和实现接口，来使代码的耦合度增强，且类继承只能为单继承，阻碍更多行为添加到一组类上，AOP弥补了OOP的不足。
-
-&emsp;&emsp;对于约定编程， 首先需要记住的是约定的流程是什么，然后就可以完成对应的任务，却不需要知道底层设计者是怎么将约定的内容织入对应的流程中的。只要按照一定的规则，就可以将代码织入事先约定的流程中。实际上Spring AOP也是一种约定流程的编程，在Spring中可以使用多种方式配置AOP，但Spring Boot采用了注解的方式。
-
-AOP可以<font color=red>减少大量重复的工作</font>。获取数据库事务连接、事务操控和关闭数据库连接的过程，都需要使用大量的try...catch...finally...语句去操作，这显然存在大量重复的工作。因为这里存在着一个默认的流程，所以利用AOP可以替换这些没有必要重复的工作。
-
-&emsp;&emsp;使用Spring AOP可以处理一些无法使用OOP实现的业务逻辑。其次，通过约定，可以将一些业务逻辑织入流程中，并且可以将一些通用的逻辑抽取出来，然后给予默认实现，这样你只需要完成部分的功能就可以了，这样做可以使得开发者的代码更加简短，同时可维护性也得到提高。
-
-# Spring MVC
-&emsp;&emsp;<font color=red>MVC：Model + View + Controller (数据模型＋视图＋控制器)。三层架构：Presentation tier + Application tier + Data tier (展现层＋应用层＋数据访问层)。</font>
-
-那`MVC`和`三层架构`有什么关系呢？
-
-<font color=red>MVC只存在三层架构的展现层(`SSM`：展现层：Spring MVC；应用层：Spring；数据访问层：Mybatis)</font>，`MVC`中`M`是数据模型，是包含数据的对象。在Spring MVC里，有一个专门的类叫`Model`, 用来和`V`之间的数据交互、传值；`V`指的是视图页面，包含`JSP, freeMarker, Velocity, Thymeleaf, Tile`等；`C`是控制器(Spring MVC的注解`@Controller`的类)。
-
-三层架构是整个应用的架构，是由Spring框架负责管理的。一般项目结构中都有Service层、DAO层，这两个反馈在应用层和数据访问层。
-
-# 开发一个简单的Spring Boot项目
-&emsp;&emsp;`Spring MVC`的<font color=red>视图解析器(ViewResolver)</font>的作用主要是<font color=red>定位视图</font>，也就是当控制器只是返回一个逻辑名称的时候，是没有办法直接对应找到视图的，这就需要视图解析器进行解析了。在实际的开发中最常用的视图之一就是JSP，例如，现在控制器中返回一个字符串“index”，那么我们希望它对应的是开发项目的/WEB-INF/jsp/index.jsp文件。
-
-首先我们需要在Maven的`pom.xml`中加入`JSP`和`JSTL`的依赖包：
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-<dependency>
-  <groupId>org.apache.tomcat.embed</groupId>
-  <artifactId>tomcat-embed-jasper</artifactId>
-  <scope>provided</scope>
-</dependency>
-<dependency>
-  <groupId>javax.servlet</groupId>
-  <artifactId>jstl</artifactId>
-  <scope>provided</scope>
-</dependency>
-```
-<font color=red>添加了`spring-boot-starter-web`依赖，会自动添加`Tomcat`和`Spring MVC`的依赖，那么Spring Boot会对`Tomcat`和`Spring MVC`进行自动配置。</font>
-
-为了配置视图解析器(ViewResolver)，将application.properties文件修改为：
-```
-server.port=8090
-spring.mvc.view.prefix=/WEB-INF/jsp/
-spring.mvc.view.suffix=.jsp
-```
-这里的`spring.mvc.view.prefix`和`spring.mvc.view.suffix`是Spring Boot与我们约定的视图前缀和后缀配置，意思是找到文件夹`／WEB-INF/jsp`下，以`.jsp`为后缀的JSP文件。前缀和后缀之间显然缺了一个文件名称，在Spring MVC机制中，<font color=red>这个名称则是由控制器(Controller)给出的</font>，为此新建一个控制器`lndexController`：
 ```java
-package com.example.hellospringboot;
+package sjtu.chenzf;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
+
+@EnableAutoConfiguration  // 通过该注解，开启自动配置
+@ComponentScan  // 用来扫描相关注解，扫描范围为当前入口类所在包及其子包
+
+public class Application {
+    public static void main(String[] args) {
+        /**
+         * SpringApplication为Spring的应用类，用来启动SpringBoot应用（部署到对应的web容器中）
+         * 参数1：传入入口类的类对象；参数2为main函数的参数
+         */
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+### 2.4.3 标准开发方式 @SpringBootApplication
+
+https://docs.spring.io/spring-boot/docs/2.2.10.RELEASE/reference/html/using-spring-boot.html#using-boot-structuring-your-code
+
+> We generally recommend that you `locate your main application class in a root package above other classes`. The [`@SpringBootApplication` annotation](https://docs.spring.io/spring-boot/docs/2.2.10.RELEASE/reference/html/using-spring-boot.html#using-boot-using-springbootapplication-annotation) is often placed on your main class, and it implicitly defines a base “search package” for certain items. For example, if you are writing a JPA application, the package of the `@SpringBootApplication` annotated class is used to search for `@Entity` items. Using a root package also allows component scan to apply only on your project.
+
+```java
+package sjtu.chenzf;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication  // 组合注解：组合了@EnableAutoConfiguration和@ComponentScan
+
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+## 2.5 Tomcat端口占用
+
+```
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+```
+
+在`main/resources`文件下添加`application.yml`。然后在`application.yml`中修改端口号（注意数值8989前的空格）：
+
+```yml
+server:
+  port: 8989
+```
+
+还可以通过`application.yml`指定当前应用的名称：
+
+```xml
+#  数值前要有空格
+server:
+  port: 8989  # 用来指定内嵌服务器端口号
+  servlet:
+    context-path: /HelloSpringBoot  #用来指定当前应用在部署到内嵌容器中的项目名称
+```
+
+此时，需通过在浏览器中输入`http://localhost:8989/HelloSpringBoot/chenzf/hello`来进行访问。
+
+## 2.6 配置文件
+
+在`application.yml`中：
+
+```xml
+#  数值前要有空格
+server:
+  port: 8989  # 用来指定内嵌服务器端口号
+  servlet:
+    context-path: /HelloSpringBoot  #用来指定当前应用在部署到内嵌容器中的项目名称
+```
+
+在`application.properties`中
+
+```xml
+#用来指定内嵌服务器端口号
+server.port=8989
+
+#用来指定当前应用在部署到内嵌容器中的项目名称
+server.servlet.context-path=/HelloSpringBoot
+```
+
+## 2.7 注解与main方法
+
+### 2.7.1 注解
+
+#### 2.7.1.1 @EnableAutoConfiguration
+
+> This `class-level` annotation tells Spring Boot to “guess” how you want to configure Spring, based on the jar dependencies that you have added. Since `spring-boot-starter-web` added `Tomcat` and `Spring MVC`, the auto-configuration assumes that you are developing a `web application` and `sets up Spring` accordingly.
+
+- 功能：开启自动配置
+- 修饰范围：只能用于类
+- 实际作用：根据`pom.xml`文件中的依赖（如`spring-boot-starter-web`），来构建相关环境（`Tomcat`—web容器和`Spring MVC`）
+
+#### 2.7.1.2 @ComponentScan
+
+- 作用：开启注解扫描
+- 修饰范围：只能用于类
+- 扫描范围：当前包及其子包
+
+#### 2.7.1.3 @RestController
+
+> This is known as a *stereotype* annotation. It provides hints for people reading the code and for Spring that the `class plays a specific role`. In this case, our class is a web `@Controller`, so Spring considers it when handling incoming web requests.
+
+- 作用：用来实例化当前对象为一个控制器对象，并将类上所有方法的返回值转为`json`，响应给浏览器
+  - 相当于`@Controller`（**实例化当前类为一个控制器**）与`@ResponseBody`（将当前方法返回值转换为`json`，响应给浏览器）的组合，支持`RESTful`访问方 式，返回结果都是`json`字符串。
+- 修饰范围：只能用于类
+
+#### 2.7.1.4 @RequestMapping
+
+> The `@RequestMapping` annotation provides “routing” information. It tells Spring that any HTTP request with the `/chenzf` path should be mapped to the `hello` method. The `@RestController` annotation tells Spring to render the resulting string directly back to the caller.
+
+- 作用：用来加入访问路径
+- 修饰范围：类（加入命名空间）与方法（指定具体路径）
+- `@GetMapping`限定请求方式只能是`Get`，并指定路径，可以被`RequestMapping`替代，一般只用于修饰方法
+- `@PostMapping`、`@PutMapping`、`@DeleteMapping`类似，也用于限定请求方式
+
+#### 2.7.1.5 @SpringBootApplication
+
+`@SpringBootApplication` 注解**等价于**
+
+- `@SpringBootConfiguration`：标识注解，标识这是一个Spring Boot的配置类
+- `@EnableAutoConfiguration` ：自动与项目中集成的第三方技术进行集成
+- `@ComponentScan`：扫描入口类所在子包以及子包后代包中注解
+
+### 2.7.2 main方法
+
+`SpringApplication.run(Application.class, args);`
+
+> This is a standard method that follows the Java convention for an application entry point. Our main method delegates to Spring Boot’s `SpringApplication` class by calling `run`. `SpringApplication` bootstraps our application, starting Spring, which, in turn, starts the auto-configured Tomcat web server. <u>We need to pass `Application.class` as an argument to the `run` method to tell `SpringApplication` which is the primary Spring component.</u> The `args` array is also passed through to expose any command-line arguments.
+
+- 通过标准Java入口方式，委托给`SpringApplication`，并告知当前Spring Boot主应用类是谁，从而启动Spring Boot中Tomcat容器
+- `args`可以在启动时指定外部参数，来覆盖Spring Boot中一些默认配置
+  - 不修改配置文件，在运行时将端口号临时改为9999：
+
+![image-202010011534-args参数.png](SpringBoot.assets/image-202010011534-args参数.png)
+
+`Tomcat initialized with port(s): 9999 (http)`
+
+## 2.8 创建jar包
+
+### 2.8.1 打包方法
+
+To create an executable jar, we need to add the `spring-boot-maven-plugin` to our `pom.xml`. To do so, insert the following lines just below the `dependencies` section:
+
+```xml
+<build>
+    <finalName>hellospringboot</finalName>
+    	<plugins>
+        	<plugin>
+            	<groupId>org.springframework.boot</groupId>
+            	<artifactId>spring-boot-maven-plugin</artifactId>
+        	</plugin>
+    	</plugins>
+</build>
+```
+
+并将`war`换成`jar`：
+
+```xml
+<groupId>sjtu.chenzf</groupId>
+<artifactId>hellospringboot</artifactId>
+<version>1.0-SNAPSHOT</version>
+<packaging>jar</packaging>
+```
+
+然后使用`Maven Projects`里`Lifecycle`中`package`进行打包：
+
+![image-202010011559-jar包.png](SpringBoot.assets/image-202010011559-jar包.png)
+
+在`target`中可以找到打包完成后的文件：
+
+![image-202010011601-jar包结果.png](SpringBoot.assets/image-202010011601-jar包结果.png)
+
+### 2.8.2 基于jar包运行应用
+
+在Windows环境下使用`terminal`：
+
+```
+D:\MarkdownFiles\SpringBoot\SpringBootDemo\Demo1>cd target
+
+D:\MarkdownFiles\SpringBoot\SpringBootDemo\Demo1\target>java -jar hellospringboot.jar
+```
+
+## 2.9 Starters 启动器
+
+https://docs.spring.io/spring-boot/docs/2.2.10.RELEASE/reference/html/using-spring-boot.html#using-boot-starter
+
+> Starters and Auto-configuration
+>
+> Auto-configuration is designed to work well with “Starters”, but the `two concepts are not directly tied`. You are free to pick and choose jar dependencies outside of the starters. Spring Boot still does its best to auto-configure your application.
+
+Starters are a set of convenient `dependency descriptors（依赖关系描述符）` that you can include in your application. You get a `one-stop shop for all the Spring and related technologies` that you need without having to hunt through sample code and copy-paste loads of dependency descriptors. For example, if you want to get started using Spring and JPA for database access, include the `spring-boot-starter-data-jpa` dependency in your project.
+
+The `starters contain a lot of the dependencies` that you need to get a project up and running quickly and with a consistent, supported set of managed transitive dependencies.
+
+# 3 使用 Spring Boot
+
+## 3.1 Configuration Classes
+
+https://docs.spring.io/spring-boot/docs/2.2.10.RELEASE/reference/html/using-spring-boot.html#using-boot-configuration-classes
+
+Spring Boot favors `Java-based configuration（推荐）`. Although it is possible to use `SpringApplication` with `XML（了解）` sources, we generally recommend that your primary source be a single `@Configuration` class. Usually the class that defines the `main` method is a good candidate as the primary `@Configuration`.
+
+### 3.1.1 Importing Additional Configuration Classes
+
+> You need not put all your `@Configuration` into a single class. The `@Import` annotation can be used to import additional configuration classes. Alternatively, you can use `@ComponentScan` to automatically pick up all Spring components, including `@Configuration` classes.
+
+在`main/java/sjtu/chenzf/entity`中创建`User`类：
+
+```java
+package sjtu.chenzf.entity;
+
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class User {
+    private String id;
+    private String name;
+
+    public User () {}
+
+    public User (String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "User {" + " id= " + id + " name= " + name + " }";
+    }
+}
+```
+
+修改`main/java/sjtu/chenzf/controller`中`HelloController.java`（第12-13行，第18行）：
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import sjtu.chenzf.entity.User;
+
+@RestController
+@RequestMapping("/chenzf")  // 为避免路径冲突，再添加一级命名空间
+public class HelloController {
+    @Autowired
+    private User user;
+
+    @GetMapping("/hello")  // 最好与方法名对应
+    public String hello() {
+        System.out.println("Hello Spring Boot !");
+        System.out.println(user);
+        return "hello springboot";
+    }
+}
+```
+
+控制台输出结果：
+
+```java
+Hello Spring Boot !
+User { id= null name= null }
+```
+
+## 3.2 配置文件拆分
+
+在实际开发过程中生产环境和测试环境有可能是不一样的，因此将`生产中的配置`和`测试中的配置`拆分开，是非常必要的。在Spring Boot 中提供了`配置文件拆分`的方式。
+
+以生产中项名名称不一致为例：
+
+```
+生产中项目名为: SpringBootApplication
+测试中项目名为: HelloSpringBoot
+端口同时为: 8989
+```
+
+可以做如下拆分：
+
+- 主配置文件：`application.properties`用来书写`相同的的配置`
+  - `server.port=8989` # 生产和测试为同一个端口
+- 生产配置文件：`application-prod.properties`
+  - `server.servlet.context-path=/SpringBootApplication`
+
+- 测试配置文件：`application-dev.properties`
+  - `server.servlet.context-path=/HelloSpringBoot`
+
+为了明确运行时，使用生产和测试中哪一个配置文件，在主配置文件`application.properties`中添加`spring.profiles.active=dev(使用测试环境配置)`。
+
+
+
+启动后，在控制台可以看到`The following profiles are active: dev`和`Tomcat started on port(s): 8989 (http) with context path '/HelloSpringBoot'`。
+
+## 3.3 创建自定义对象
+
+### 单个对象
+
+管理简单对象时，可以直接使用注解来创建。
+
+- 使用 `@Repository`、` @Service`、`@Controller`以及`@Component`管理不同的单个简单对象。
+
+比如通过工厂创建自定义User对象(`main/java/sjtu/chenzf/entity`)：`User.java`
+
+```java
+@Component
+@Data
+public class User {
+  private String id;
+  private String name;
+  ......
+}
+```
+
+- 通过工厂创建之后可以`在使用处任意注入该对象`
+
+比如在控制器中创建自定义的单个简单对象(`@Autowired`)：
+
+```java
+@Controller
+@RequestMapping("hello")
+public class HelloController {
+    @Autowired
+    private User user;
+  	......
+}
+```
+
+#### 实例
+
+在`main/java/sjtu/chenzf/service`下创建`UserService`接口：
+
+```java
+package sjtu.chenzf.service;
+
+public interface UserService {
+    void save(String name);
+}
+```
+
+然后在`service`下创建一个实现类`UserServiceImp`：
+
+```java
+package sjtu.chenzf.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImp implements UserService {
+    @Override
+    public void save(String name) {
+        System.out.println("name = " + name);
+    }
+}
+```
+
+接着对控制器进行修改（第19-20行，第26行）：
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import sjtu.chenzf.entity.User;
+import sjtu.chenzf.service.UserService;
+import sjtu.chenzf.service.UserServiceImp;
+
+@RestController
+@RequestMapping("/chenzf")  // 为避免路径冲突，再添加一级命名空间
+
+public class HelloController {
+
+    @Autowired
+    private User user;
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/hello")  // 最好与方法名对应
+    public String hello() {
+        System.out.println("Hello Spring Boot !");
+        System.out.println(user);
+        userService.save("chenzufeng");
+        return "hello springboot";
+    }
+}
+```
+
+启动后，在控制台显示：
+
+```
+Hello Spring Boot !
+User { id= null name= null }
+name = chenzufeng
+```
+
+### 多个对象
+
+在Spring Boot中如果要管理`复杂对象`必须使用`@Configuration + @Bean`注解进行管理
+
+- 复杂对象的创建
+
+```java
+@Configuration(推荐)|@Component(不推荐)
+public class Beans {
+    @Bean
+    public Calendar getCalendar(){
+        return Calendar.getInstance();
+    }
+}
+```
+
+- 使用复杂对象
+
+```java
+@Controller
+@RequestMapping("hello")
+public class HelloController {
+    @Autowired
+    private Calendar calendar;
+    ......
+}
+```
+
+注意：
+
+- `@Configuration`配置注解主要用来生产多个组件交给工厂管理（注册形式）
+- `@Component`用来管理单个组件（包扫描形式）
+
+#### 实例
+
+在`main/java/sjtu/chenzf/configs`下创建`BeanConfigs`类：
+
+```java
+package sjtu.chenzf.configs;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.Calendar;
+
+@Configuration
+public class BeanConfigs {
+
+    /**
+     * 将该方法的返回值交给Spring Boot管理
+     * 在工厂中默认标识：类名首字母小写
+     */
+    @Bean  //(name = "calendar")
+    public Calendar getCalendar() {
+        // 实例化
+        return Calendar.getInstance();
+    }
+}
+```
+
+然后在`main/java/sjtu/chenzf/controller/HelloController.java`中注入使用（第24-25行，第32行）：
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import sjtu.chenzf.entity.User;
+import sjtu.chenzf.service.UserService;
+import sjtu.chenzf.service.UserServiceImp;
+
+import java.util.Calendar;
+
+@RestController
+@RequestMapping("/chenzf")  // 为避免路径冲突，再添加一级命名空间
+
+public class HelloController {
+
+    @Autowired
+    private User user;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private Calendar calendar;
+
+    @GetMapping("/hello")  // 最好与方法名对应
+    public String hello() {
+        System.out.println("Hello Spring Boot !");
+        System.out.println(user);
+        userService.save("chenzufeng");
+        System.out.println(calendar.getTime());
+        return "hello springboot";
+    }
+}
+```
+
+启动后，在控制台显示：
+
+```java
+Hello Spring Boot !
+User { id= null name= null }
+name = chenzufeng
+Thu Oct 01 22:22:51 CST 2020
+```
+
+#### 验证是否以`单例模式`创建
+
+第27-28行，第36-39行：
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import sjtu.chenzf.entity.User;
+import sjtu.chenzf.service.UserService;
+import sjtu.chenzf.service.UserServiceImp;
+
+import java.util.Calendar;
+
+@RestController
+@RequestMapping("/chenzf")  // 为避免路径冲突，再添加一级命名空间
+
+public class HelloController {
+
+    @Autowired
+    private User user;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private Calendar calendar;
+
+    @Autowired
+    private Calendar calendar1;
+
+    @GetMapping("/hello")  // 最好与方法名对应
+    public String hello() {
+        System.out.println("Hello Spring Boot !");
+        System.out.println(user);
+        userService.save("chenzufeng");
+
+        System.out.println(calendar.getTime());
+        System.out.println(calendar);
+        System.out.println(calendar1);
+        System.out.println(calendar == calendar1);
+        
+        return "hello springboot";
+    }
+}
+```
+
+启动后，在控制台显示：
+
+```java
+Thu Oct 01 22:26:46 CST 2020
+java.util.GregorianCalendar[time=1601562406723,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=19,lastRule=null],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=9,WEEK_OF_YEAR=40,WEEK_OF_MONTH=1,DAY_OF_MONTH=1,DAY_OF_YEAR=275,DAY_OF_WEEK=5,DAY_OF_WEEK_IN_MONTH=1,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=26,SECOND=46,MILLISECOND=723,ZONE_OFFSET=28800000,DST_OFFSET=0]
+java.util.GregorianCalendar[time=1601562406723,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=19,lastRule=null],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=9,WEEK_OF_YEAR=40,WEEK_OF_MONTH=1,DAY_OF_MONTH=1,DAY_OF_YEAR=275,DAY_OF_WEEK=5,DAY_OF_WEEK_IN_MONTH=1,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=26,SECOND=46,MILLISECOND=723,ZONE_OFFSET=28800000,DST_OFFSET=0]
+true
+```
+
+#### 将对象构建成多例形式
+
+第17行：
+
+```java
+package sjtu.chenzf.configs;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+
+import java.util.Calendar;
+
+@Configuration
+public class BeanConfigs {
+
+    /**
+     * 将该方法的返回值交给Spring Boot管理
+     * 在工厂中默认标识：类名首字母小写
+     */
+    @Bean  // (name = "calendar")
+    @Scope("prototype")  // 将对象构建成多例。默认是singleton，以单例模式创建
+    public Calendar getCalendar() {
+        // 实例化
+        return Calendar.getInstance();
+    }
+}
+```
+
+启动后，在控制台显示：
+
+```java
+Thu Oct 01 22:31:36 CST 2020
+java.util.GregorianCalendar[time=1601562696083,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=19,lastRule=null],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=9,WEEK_OF_YEAR=40,WEEK_OF_MONTH=1,DAY_OF_MONTH=1,DAY_OF_YEAR=275,DAY_OF_WEEK=5,DAY_OF_WEEK_IN_MONTH=1,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=31,SECOND=36,MILLISECOND=83,ZONE_OFFSET=28800000,DST_OFFSET=0]
+java.util.GregorianCalendar[time=1601562696083,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=19,lastRule=null],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=9,WEEK_OF_YEAR=40,WEEK_OF_MONTH=1,DAY_OF_MONTH=1,DAY_OF_YEAR=275,DAY_OF_WEEK=5,DAY_OF_WEEK_IN_MONTH=1,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=31,SECOND=36,MILLISECOND=83,ZONE_OFFSET=28800000,DST_OFFSET=0]
+false
+```
+
+## 3.4 注入
+
+先完成基本环境的搭建，具体过程参考[2 Spring Boot 配置](# 2-Spring Boot 配置)。
+
+注入：将属性值注入组件中
+
+### 3.4.1 属性注入
+
+在`HelloController.java`中想要得到一个属性`name`，而其可以通过配置文件进行注入：
+
+- `@Value`属性注入（第16-26行，第32-36行）
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/chenzf")
+
+public class HelloController {
+
+    @Value("${name}")
+    private String name;
+
+    @Value("${server.port}")
+    private int port;
+
+    @Value("${stringList}")
+    private List<String> stringList;
+
+    @Value("#{${map}}")
+    private Map<String, String> map;
+
+    @GetMapping("hello")
+    public String hello() {
+        System.out.println("Spring Boot 注入");
+
+        System.out.println("验证注入是否有效：");
+        System.out.println("name = " + name);
+        System.out.println("server.port = " + port);
+        stringList.forEach(item -> System.out.println("item = " + item));
+        map.forEach((key, value) -> System.out.println("key = " + key + "; value = " + value));
+
+        return "学习Spring Boot注入";
+    }
+}
+```
+
+第35行使用了`Lambda`表达式，`IDEA`报错：`Lambda expressions are not supported at language level '7'`。因此需要在`Project Structure`中做以下修改：
+
+![image-202010021127-支持Lambda.png](SpringBoot.assets/image-202010021127-支持Lambda.png)
+
+- 配置文件注入
+
+```xml
+# 向HelloController注入该属性
+name=chenzf
+stringList=chen,zu,feng
+map={'1' : 'chen', '2' : 'zufeng'}
+```
+
+启动后，在控制台显示：
+
+```java
+Spring Boot 注入
+验证注入是否有效：
+name = chenzf
+server.port = 8989
+item = chen
+item = zu
+item = feng
+key = 1; value = chen
+key = 2; value = zufeng
+```
+
+### 3.4.2 对象注入
+
+- 在`main/java/sjtu/chenzf/entity`下编写`User`类
+  - `@ConfigurationProperties(prefix="前缀")`
+
+```java
+package sjtu.chenzf.entity;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = "user")
+
+public class User {
+    private String id;
+    private String name;
+    private Integer age;
+
+    public User () {}
+
+    public User (String id, String name, Integer age) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "User {" + " id= " + id + " name= " + name + " age= " + age + " }";
+    }
+}
+```
+
+- 引入依赖构建自定义注入元数据
+  - `Spring Boot Configuration Annotation Processor not find in classpath`
+  - 可以使得在对象注入时能够进行提示
+
+```xml
+<!-- 构建元数据（非必要） -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+    <optional>true</optional>
+</dependency>
+```
+
+添加后，点击`Import Changes`。
+
+- 编写配置文件
+  - 由于上一步的操作，使得在编写配置文件的时候，会出现提醒
+
+```xml
+user.id=21
+user.name=chenzufeng
+user.age=27
+```
+
+启动后，在控制台显示：
+
+```java
+Spring Boot 注入
+验证注入是否有效：
+属性注入
+name = chenzf
+server.port = 8989
+item = chen
+item = zu
+item = feng
+key = 1; value = chen
+key = 2; value = zufeng
+对象注入
+user = User { id= 21 name= Chenzf age= 27 }
+```
+
+#### 出现问题
+
+注意：此时`name= Chenzf`而非设置的`user.name=chenzufeng`？？？
+
+## 3.5 集成thymeleaf页面模板
+
+[Thymeleaf](https://www.thymeleaf.org/)是一个用于web和独立环境的现代服务器端Java模板引擎。该模板在有网络和无网络的环境下皆可运行，即它可以让美工在浏览器查看页面的静态效果，也可以让程序员在服务器查看带数据的动态页面效果。
+
+### 3.5.1 搭建环境
+
+可在当前`Project`中新建`Module`：在`IDEA`中，`Project`是顶级的结构单元，然后才是`Module`。一个`Project`中可以有多个`Module` 。现在大多数大型项目的结构都是`多Module结构`，主要是按功能划分，有一个主模块，下面有很多的子模块，这些模块之间相互依赖，都处于同一个项目中，彼此之间有着不可分割的业务关系。
+
+一个`Project`是由一个或多个`Module`组成，
+
+- 当为单`Module`项目的时候，这个单独的`Module`实际上就是一个`Project`；
+- 当为多`Module`项目的时候，多个模块处于同一个`Project`之中，此时彼此之间具有互相依赖的关联关系。
+
+### 3.5.2 引入依赖
+
+```xml
+<!--使用thymeleaf-->
+	<dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+```
+
+### 3.5.3 编写配置
+
+在`application.properties`（位于`main.sjtu.chenzf.resources`目录）中输入`spring.thymeleaf.`时，会提示`spring.thymeleaf.prefix=classpath:/templates/`。所以在`main.sjtu.chenzf.resources`下创建目录`templates`。
+
+在`application.properties`中键入以下配置：
+
+```xml
+server.port=8989
+server.servlet.context-path=/thymeleaf_springboot
+
+# 使用模板目录
+spring.thymeleaf.prefix=classpath:/templates/
+# 使用模板后缀
+spring.thymeleaf.suffix=.html
+# 使用模板编码
+spring.thymeleaf.encoding=UTF-8
+# 开始thymeleaf模板
+spring.thymeleaf.enabled=true
+# 使用模板响应类型
+spring.thymeleaf.servlet.content-type=text/html
+```
+
+然后在`main/resources/templates`中创建`index.html`文件：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>thymeleaf</title>
+</head>
+<body>
+<h1>Learning Spring Boot Thymeleaf</h1>
+</body>
+</html>
+```
+
+`templates`下的模板只能通过控制器跳转过来，不能直接访问。
+
+### 3.5.4 编写控制器
+
+在`main/java/sjtu/chenzf/controller`下创建`UserController.java`：
+
+```java
+package sjtu.chenzf.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-public class IndexController
-{
-    @RequestMapping("/index")
-    public String index() { return "index"; }
+@RequestMapping("chenzf")
+
+public class UserController {
+
+    @GetMapping("/findThymeleaf")  // 路径名不能与/hello冲突
+    public String hello() {
+        System.out.println("学习thymeleaf");
+        // 返回逻辑名，去resources/templates中寻找"逻辑名.html"
+        return "index";
+    }
 }
 ```
 
-还需要定义一个映射为`/index`的路径，然后方法返回“index”，这样它就与之前配置的前缀和后缀结合起来找对应的jsp文件。因此开发一个对应的jsp文件，先建一个`/webapp/WEB-INF/jsp/index.jsp`文件(开发视图)：
-```js
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Spring boot 视图解析器</title>
-  </head>
-  <body>
-    <h1>测试视图解析器</h1>
-  </body>
+**先将`application.properties`中配置信息（第4-13行）删除**，在浏览器键入http://localhost:8989/thymeleaf_springboot/chenzf/findThymeleaf，启动后，浏览器显示`Learning Spring Boot Thymeleaf`，控制台输出：`学习thymeleaf`。
+
+### 3.5.5 static与templates目录
+
+`templates`下的模板只能通过控制器跳转过来，不能直接访问。在`main/resources`下创建`static`目录，用于放置静态资源，编写`index.html`：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>thymeleaf</title>
+</head>
+<body>
+<h1>This is a static html</h1>
+</body>
 </html>
 ```
-<div align=center><img src=SpringBootImages/jsp文件路径.png width=70%></div>
 
-这样就完成了一个简单的<font color=red>控制器</font>，并且<font color=red>让视图解析器找到视图的功能</font>。从上面来看<font color=red>定义视图解析器，在Spring Boot中只需要通过配置文件定义视图解析器的前后缀即可，而无须任何代码，这是因为Spring Boot 给了我们自定义配置项，它会读入这些自定义的配置项，为我们生成Spring MVC中的视图解析器</font>。正如它所承诺的尽可能地配置Spring 开发环境，然后再看到即将运行HelloSpringbootApplication.java文件：
-```java {.line-numbers highlight=10}
-package com.example.hellospringboot;
+在浏览器键入http://localhost:8989/thymeleaf_springboot/index.html，启动后，浏览器显示`This is a static html`。
 
+如果想访问`templates`下的模板，而不想通过控制器，则需要在配置文件`application.properties`中进行设置：`spring.resources.static-locations=["classpath:/META-INF/resources/", "classpath:/resources",...]`，文件夹`static`则只存放`css`等。
+
+让`templates`下文件既是模板又是资源：
+
+`spring.resources.static-locations=classpath:/templates/, classpath:/static/`
+
+使用`Maven Projects`下`Lifecycle`中`clean`清除一下缓存，然后在浏览器键入http://localhost:8989/thymeleaf_springboot/index.html，启动后，浏览器显示`Learning Spring Boot Thymeleaf`，控制台无输出。
+
+## 3.6 Thymeleaf语法
+
+`在使用Thymeleaf时，必须在页面中加入如下命名空间:`
+
+```html
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+```
+
+其中，`th`为`别名`！
+
+### 3.6.1 展示单个数据
+
+- 在后端控制器中设置数据：`model.addAttribute("name","张三"); 或 request.setAttribute("name","小黑");`
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpServletRequest;
+
+@Controller
+@RequestMapping("chenzf")
+
+public class UserController {
+
+    @GetMapping("/findThymeleaf")
+    public String findThymeleaf(HttpServletRequest request, Model model) {
+        System.out.println("学习thymeleaf");
+        
+        model.addAttribute("name", "祖峰");
+        model.addAttribute("username", "<a href=''>chenzf</a>");
+        
+        // 返回逻辑名，去resources/templates中寻找"逻辑名.html"
+        return "index";
+    }
+}
+```
+
+- 获取数据：`<span th:text="${name}"></span>`，不允许在`span`内添加内容；或`欢迎：<span th:text="${name}"/>`
+  - `text`直接将值作为文本，而`utext`则可以解析值里的`html`，然后将结果显示在页面中
+
+```html
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>thymeleaf</title>
+</head>
+<body>
+    <h1>Learning Spring Boot Thymeleaf</h1>
+
+    <h1>展示单个数据</h1>
+    <span th:text="${name}"></span>
+    欢迎：<span th:text="${name}"/>
+    username: <span th:utext="${username}"></span>
+    <input type="text" th:value="${username}">
+
+    <h1>展示对象数据</h1>
+    <h1>有条件的展示数据</h1>
+    <h1>展示多个数据</h1>
+
+</body>
+</html>
+```
+
+在浏览器键入`http://localhost:8989/thymeleaf_springboot/chenzf/findThymeleaf`。页面关键部分显示：
+
+<img src="SpringBoot.assets/image-202010021655-thymeleaf展示单个数据.png" alt="image-202010021655-thymeleaf展示单个数据.png" style="zoom:70%;" />
+
+总结：
+
+1. 使用`th:text="${属性名}"`获取对应数据，获取数据时会将对应标签中数据清空，因此最好是空标签
+2. 使用`th:utext="${属性名}"`获取对应的数据，可以将数据中html先解析在渲染到页面
+3. 使用`th:value="${属性名}"`获取数据直接作为表单元素value属性
+
+### 3.6.2 展示对象数据
+
+- 在`main/java/sjtu/chenzf/entity`下创建对象`User`
+
+```java
+package sjtu.chenzf.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.ToString;
+
+import java.util.Date;
+
+@Data
+@AllArgsConstructor
+@ToString
+public class User {
+    private String id;
+    private String name;
+    private Integer age;
+    private Date date;
+}
+```
+
+- 依赖中引入`lombok`
+
+```xml
+<!--使用lombok-->
+   <dependency>
+     <groupId>org.projectlombok</groupId>
+     <artifactId>lombok</artifactId>
+     <version>1.18.12</version>
+     <scope>provided</scope>
+   </dependency>
+```
+
+- 在`UserController`中构造对象
+
+```java
+model.addAttribute("user", new User("1", "chenzufeng", 27, new Date()));
+```
+
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import sjtu.chenzf.entity.User;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
+
+@Controller
+@RequestMapping("chenzf")
+
+public class UserController {
+
+    @GetMapping("/findThymeleaf")
+    public String findThymeleaf(HttpServletRequest request, Model model) {
+        System.out.println("学习thymeleaf");
+
+        model.addAttribute("name", "祖峰");
+        model.addAttribute("username", "<a href=''>chenzf</a>");
+        model.addAttribute("user", new User("1", "chenzufeng", 27, new Date()));
+
+        // 返回逻辑名，去resources/templates中寻找"逻辑名.html"
+        return "index";
+    }
+}
+```
+
+- 在页面中展示对象
+
+```xml
+<h1>展示对象数据</h1>
+
+    <ul>
+        <li>id:<span th:text="${user.id}"/> </li>
+        <li>name:<span th:text="${user.name}"/> </li>
+        <li>age:<span th:text="${user.age}"/> </li>
+        <li>date:<span th:text="${user.date}"/> </li>
+        <li>date:<span th:text="${#dates.format(user.date, 'yyyy-MM-dd HH:mm')}"></span> </li>
+    </ul>
+```
+
+在浏览器键入`http://localhost:8989/thymeleaf_springboot/chenzf/findThymeleaf`。页面关键部分显示：
+
+<img src="SpringBoot.assets/image-202010021718-thymeleaf展示对象数据.png" alt="image-202010021718-thymeleaf展示对象数据" style="zoom:67%;" />
+
+自定义日期显示格式：`<span th:text="${#dates.format(user.date, 'yyyy-MM-dd HH:mm')}"></span>`，显示为`date:2020-10-02 17:21`
+
+### 3.6.3 有条件地展示数据
+
+只有`if`
+
+- 运算符
+
+```
+gt：great than（大于）>
+ge：great equal（大于等于）>=
+eq：equal（等于）==
+lt：less than（小于）<
+le：less equal（小于等于）<=
+ne：not equal（不等于）!=
+```
+
+```java
+model.addAttribute("user", new User("1", "chenzufeng", 27, new Date()));
+```
+
+```xml
+<h1>有条件的展示数据</h1>
+   <span th:if="${user.age} le 27" th:text="${user.name}"></span>
+```
+
+<img src="SpringBoot.assets/image-202010021859-thymeleaf有条件展示数据.png" alt="image-202010021859-thymeleaf有条件展示数据" style="zoom:67%;" />
+
+
+
+### 3.6.4 展示多个数据
+
+- 在`UserController.java`中构建集合
+
+```java
+List<User> users = Arrays.asList(new User("2", "chen", 26, new Date()), new User("3", "zufeng", 25, new Date()));
+model.addAttribute("users", users);
+```
+完整的`UserController.java`文件：
+```java
+package sjtu.chenzf.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import sjtu.chenzf.entity.User;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+@Controller
+@RequestMapping("chenzf")
+
+public class UserController {
+
+    @GetMapping("/findThymeleaf")
+    public String findThymeleaf(HttpServletRequest request, Model model) {
+        System.out.println("学习thymeleaf");
+
+        model.addAttribute("name", "祖峰");
+        model.addAttribute("username", "<a href=''>chenzf</a>");
+        model.addAttribute("user", new User("1", "chenzufeng", 27, new Date()));
+
+        List<User> users = Arrays.asList(new User("2", "chen", 26, new Date()),
+                                                                new User("3", "zufeng", 25, new Date()));
+        model.addAttribute("users", users);
+
+        // 返回逻辑名，去resources/templates中寻找"逻辑名.html"
+        return "index";
+    }
+}
+```
+
+- 直接遍历集合
+
+```xml
+<ul th:each="user:${users}">
+    <li th:text="${user.id}"></li>
+    <li th:text="${user.name}"></li>
+    <li th:text="${user.age}"></li>
+    <li th:text="${#dates.format(user.date, 'yyyy-MM-dd')}"></li>
+</ul>
+```
+
+启动后结果：
+
+<img src="SpringBoot.assets/image-202010021910-展示多个数据.png" alt="image-202010021910-展示多个数据" style="zoom:70%;" />
+
+- 遍历时获取遍历状态
+
+```xml
+<h2>展示多个数据（获取遍历状态）</h2>
+
+    <ul th:each="user,userStat:${users}">
+
+        <!-- 获取遍历次数 count从1开始 index从0开始 -->
+        <li>当前遍历次数:<span th:text="${userStat.count}"/>
+             当前遍历的索引:<span th:text="${userStat.index}"/>
+             当前遍历是否是奇数行:<span th:text="${userStat.odd}"/>
+             当前遍历是否是偶数行:<span th:text="${userStat.even}"/>
+             当前集合的大小:<span th:text="${userStat.size}"/>
+        </li>
+
+        <li><span th:text="${user.id}"/></li>
+        <li><span th:text="${user.name}"/></li>
+        <li><span th:text="${user.age}"/></li>
+        <li><span th:text="${user.date}"/></li>
+
+    </ul>
+```
+
+完整的`index.html`文件：
+
+```xml
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>thymeleaf</title>
+</head>
+<body>
+    <h1>Learning Spring Boot Thymeleaf</h1>
+
+    <h1>展示单个数据</h1>
+
+    <span th:text="${name}"></span>
+    欢迎：<span th:text="${name}"/>
+    username: <span th:utext="${username}"></span>
+    <input type="text" th:value="${username}">
+
+    <h1>展示对象数据</h1>
+
+    <ul>
+        <li>id:<span th:text="${user.id}"/> </li>
+        <li>name:<span th:text="${user.name}"/> </li>
+        <li>age:<span th:text="${user.age}"/> </li>
+        <li>date:<span th:text="${user.date}"/> </li>
+        <li>date:<span th:text="${#dates.format(user.date, 'yyyy-MM-dd HH:mm')}"></span> </li>
+
+    </ul>
+
+    <h1>有条件的展示数据</h1>
+
+    <span th:if="${user.age} le 27" th:text="${user.name}"></span>
+
+    <h1>展示多个数据</h1>
+
+    <ul th:each="user:${users}">
+        <li th:text="${user.id}"></li>
+        <li th:text="${user.name}"></li>
+        <li th:text="${user.age}"></li>
+        <li th:text="${#dates.format(user.date, 'yyyy-MM-dd')}"></li>
+    </ul>
+
+    <h2>展示多个数据（获取遍历状态）</h2>
+
+    <ul th:each="user,userStat:${users}">
+
+        <!-- 获取遍历次数 count从1开始 index从0开始 -->
+        <li>当前遍历次数:<span th:text="${userStat.count}"/>
+             当前遍历的索引:<span th:text="${userStat.index}"/>
+             当前遍历是否是奇数行:<span th:text="${userStat.odd}"/>
+             当前遍历是否是偶数行:<span th:text="${userStat.even}"/>
+             当前集合的大小:<span th:text="${userStat.size}"/>
+        </li>
+
+        <li><span th:text="${user.id}"/></li>
+        <li><span th:text="${user.name}"/></li>
+        <li><span th:text="${user.age}"/></li>
+        <li><span th:text="${user.date}"/></li>
+
+    </ul>
+
+</body>
+</html>
+```
+
+启动后结果：
+
+<img src="SpringBoot.assets/image-202010021931-遍历时获取遍历状态.png" alt="image-202010021931-遍历时获取遍历状态" style="zoom:70%;" />
+
+### 3.6.5 引入静态资源
+
+`thymeleaf模板项目中静态资源默认放在resources路径下static目录中`：
+
+<img src="SpringBoot.assets/image-202010021938-静态资源位置.png" alt="image-202010021938-静态资源位置" style="zoom:80%;" />
+
+- 在`resources/static/css`下创建`index.css`：
+
+```css
+h1 {
+    background: aquamarine;
+}
+```
+
+希望在`resources/templates/index.html`中引入`index.css`。
+
+配置文件中已经指定了静态资源的位置`spring.resources.static-locations=classpath:/templates/, classpath:/static/`
+
+- 在`index.html`页面中添加（第4-5行）：
+
+```html
+<head>
+    <meta charset="UTF-8">
+    <title>thymeleaf</title>
+    <!-- 给标题上色 -->
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+    <!-- 引入js -->
+    <script th:src="@{/js/jquery-min.js}"></script>
+</head>
+```
+
+## 3.7 整合Mybatis开发
+
+[Mybatis](https://mybatis.org/mybatis-3/zh/index.html)是一款`持久层框架`，它支持自定义 SQL、存储过程以及高级映射。MyBatis`免除了几乎所有的 JDBC 代码以及设置参数和获取结果集的工作——简化数据库操作`。MyBatis 可以通过简单的 XML 或注解来配置和映射原始类型、接口和 Java POJO（Plain Old Java Objects，普通老式 Java 对象）为数据库中的记录。
+
+Spring Boot整合Mybatis官方步骤：http://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/。
+
+### 3.7.1 搭建环境
+
+- 配置
+
+```xml
+server.port=8989
+server.servlet.context-path=/mybatis_springboot
+
+spring.thymeleaf.prefix=classpath:/templates
+spring.thymeleaf.suffix=.html
+spring.thymeleaf.encoding=UTF-8
+spring.thymeleaf.cache=false
+spring.thymeleaf.servlet.content-type=text.html
+
+spring.resources.static-locations=classpath:/templates/,classpath:/static/
+```
+
+- 项目结构
+
+<img src="SpringBoot.assets/image-20201002215-mybatis项目结构.png" alt="image-20201002215-mybatis项目结构" style="zoom:80%;" />
+
+- 依赖
+
+```xml
+	<!-- Inherit defaults from Spring Boot -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </parent>
+
+    <dependencies>
+        <!-- Add typical dependencies for a web application -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--使用thymeleaf-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!--使用lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.12</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+```
+
+### 3.7.2 引入依赖
+
+```xml
+<!--引入mybatis-->
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>2.1.1</version>
+</dependency>
+
+<!--连接池依赖-->
+<dependency>
+	<groupId>com.alibaba</groupId>
+	<artifactId>druid</artifactId>
+	<version>1.1.19</version>
+</dependency>
+
+<!--mysql-->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>5.1.38</version>
+</dependency>
+```
+
+说明：由于Spring Boot整合Mybatis版本中默认依赖Mybatis，因此不需要额外引入Mybatis版本，否则会出现冲突。
+
+### 3.7.3 配置设置
+
+```properties
+server.port=8989
+server.servlet.context-path=/mybatis_springboot
+
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+spring.thymeleaf.encoding=UTF-8
+spring.thymeleaf.cache=false
+spring.thymeleaf.servlet.content-type=text/html
+
+spring.resources.static-locations=classpath:/templates/,classpath:/static/
+
+# 指定连接池类型
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+# 指定驱动
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+# 指定url
+spring.datasource.url=jdbc:mysql://127.0.0.1:3306/student?characterEncoding=UTF-8
+# 指定用户名
+spring.datasource.username=root
+# 指定密码
+spring.datasource.password=admin
+```
+
+在`main/resources/sjtu/chenzf`目录下新建`mapper`文件夹来存放`Mybatis`配置文件：
+
+```properties
+# 指定mapper配置文件位置
+mybatis.mapper-locations=classpath:/sjtu/chenzf/mapper/*.xml
+# 指定起别名的类
+mybatis.type-aliases-package=sjtu.chenzf.entity
+```
+
+
+
+### 3.7.4 入口类添加注解扫描`mapper`
+
+第8行用来做`mapper`扫描：
+
+```java
+package sjtu.chenzf;
+
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HelloSpringbootApplication
-{
-    public static void main(String[] args)
-    {SpringApplication.run(HelloSpringbootApplication.class, args);}
-}
-```
-这里的注解`@SpringBootApplication`标志着这是一个<font color=red>Spring Boot入门文件</font>，主要目的是开启自动配置。而`main方法`主要作用是作为项目启动的入口。高亮的代码(第10行)则是<font color=red>以`HelloSpringbootApplication`类作为配置类来运行Spring Boot项目</font>。于是Spring Boot就会根据你在Maven加载的依赖来完成运行了。接下来我们以Java Application的形式运行类`HelloSpringbootApplication`，就可以看到`Tomcat`的运行日志。由于已经把端口修改为了8090，因此打开浏览器后输入[http://localhost:8090](http://localhost:8090)，就可以看到运行的结果：
-<div align=center><img src=SpringBootImages/简单项目运行结果.png width=40%></div>
-
-&emsp;&emsp;至此，Spring Boot的开发环境就搭建完成了！
-
-## 运行原理探究
-&emsp;&emsp;上述项目到底是怎么运行的呢，我们来看`pom.xml`文件，其中，它主要依赖一个父项目：
-```xml
-<parent>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-parent</artifactId>
-  <version>2.2.4.RELEASE</version>
-  <relativePath/> <!-- lookup parent from repository -->
-</parent>
-```
-进入父项目：`D:\WinSoftware\Maven\repository\org\springframework\boot\spring-boot-starter-parent\2.2.4.RELEASE\spring-boot-starter-parent-2.2.4.RELEASE.pom`
-```xml
-<parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-dependencies</artifactId>
-    <version>2.2.4.RELEASE</version>
-    <relativePath>../../spring-boot-dependencies</relativePath>
-</parent>
-```  
-这里才是真正管理SpringBoot应用里面所有依赖版本的地方，SpringBoot的版本控制中心；以后我们导入依赖默认是不需要写版本；但是如果导入的包没有在依赖中管理着就需要手动配置版本了。
-
-### 启动器
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-```
-`springboot-boot-starter`是`SpringBoot`的场景启动器；`spring-boot-starter-web `帮我们导入了web模块正常运行所依赖的组件；
-
-<font color=red>SpringBoot将所有的功能场景都抽取出来，做成一个个的starter(启动器)，只需要在项目中引入这些starter即可，所有相关的依赖都会导入进来，我们要用什么功能就找到对应的场景启动器即可。</font>
-
-### 主程序
-```java
-package com.example.hellospringboot;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication // 标注一个主程序类 ， 说明这是一个Spring Boot应用
-public class HelloSpringbootApplication
-{
-    public static void main(String[] args)
-    {
-        //将SpringBoot应用启动起来
-        SpringApplication.run(HelloSpringbootApplication.class, args);
+@MapperScan("sjtu.chenzf.dao")
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
     }
 }
 ```
 
-### 自动装配原理
-#### `@SpringBootApplication`
-&emsp;&emsp;SpringBoot应用标注在某个类上说明这个类是SpringBoot的主配置类， SpringBoot就应该运行这个类的`main`方法来启动SpringBoot应用；
+### 3.7.5 建表
 
-进入这个注解：可以看到上面还有很多其他注解：
-```java
-@SpringBootConfiguration
-@EnableAutoConfiguration
-@ComponentScan(excludeFilters = {
-  @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
-	@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
-public @interface SpringBootApplication {}
+```mysql
+CREATE TABLE `student`.`information`  (
+  `id` varchar(40) NOT NULL,
+  `name` varchar(80) NULL,
+  `age` int(3) NULL,
+  `date` timestamp NULL,
+  PRIMARY KEY (`id`)
+);
 ```
-##### `@ComponentScan`
-&emsp;&emsp;这个注解在Spring中很重要，它对应XML配置中的元素。<font color=red>`@ComponentScan`的功能就是自动扫描并加载符合条件的组件或者bean，将这个bean定义加载到IOC容器中。</font>
 
-##### `@SpringBootConfiguration`
-&emsp;&emsp;这是SpringBoot的配置类，标注在某个类上，表示这是一个SpringBoot的配置类：
+![image-202010031102-新建表](../SpringBoot/SpringBoot.assets/image-202010031102-新建表.png)
+
+### 3.7.6 创建实体类
+
+在`main/java/sjit/chenzf`下新建`entity`文件夹，然后创建`User`类：
+
 ```java
-// 进入@SpringBootConfiguration这个注释
-@Configuration
-public @interface SpringBootConfiguration {}
+package sjtu.chenzf.entity;
 
-// 进入@Configuration这个注释
-@Component
-public @interface Configuration {}
-```
-`@Configuration`：配置类上来标注这个注解，说明这是一个配置类，配置类即配置文件；我们继续点进去，发现配置类也是容器中的一个组件。`@Component`，这就说明，启动类本身也是Spring中的一个组件而已，负责启动应用！
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-##### `@EnableAutoConfiguration`
-&emsp;&emsp;`@EnableAutoConfiguration`用来<font color=red>开启自动配置功能</font>。以前我们需要自己配置的东西，而现在SpringBoot可以自动帮我们配置；`@EnableAutoConfiguration`告诉SpringBoot开启自动配置功能，这样自动配置才能生效。
-```java
-// 进入@EnableAutoConfiguration注释
-@AutoConfigurationPackage  // 自动配置包
-@Import(AutoConfigurationImportSelector.class)  // 导入哪些组件的选择器
-public @interface EnableAutoConfiguration {}
+import java.util.Date;
 
-// 进入@AutoConfigurationPackage这个注释
-@Import(AutoConfigurationPackages.Registrar.class)
-public @interface AutoConfigurationPackage {}
-```
-Spring底层注解`@import`，给容器中导入一个组件。`Registrar.class`将主配置类(即@SpringBootApplication标注的类)的所在包及包下面所有子包里面的所有组件扫描到Spring容器。
-
-`@Import({AutoConfigurationImportSelector.class})`给容器导入组件；`AutoConfigurationImportSelector`：自动配置导入选择器，那么它会导入哪些组件的选择器呢？点击这个类看源码(`Ctrl + B`)：
-```java
-// 获得候选的配置
-protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes)
-{
-    //这里的getSpringFactoriesLoaderFactoryClass()方法返回的就是我们最开始看的启动自动导入配置文件的注解类；EnableAutoConfiguration
-    List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
-    Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you are using a custom packaging, make sure that file is correct.");
-    return configurations;
+// lombok
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class User {
+    private String id;
+    private String name;
+    private Integer age;
+    private Date date;
 }
 ```
-这个方法又调用了`SpringFactoriesLoader`类的静态方法！进入`SpringFactoriesLoader`类`loadFactoryNames()`方法：
-```java
-public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable ClassLoader classLoader)
-{
-    String factoryTypeName = factoryType.getName();
-    //这里它又调用了 loadSpringFactories 方法
-    return loadSpringFactories(classLoader).getOrDefault(factoryTypeName, Collections.emptyList());
-}
-```  
-继续点击查看`loadSpringFactories`方法：
-```java
-private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader)
-{
-    //获得classLoader，我们返回可以看到这里得到的就是EnableAutoConfiguration标注的类本身
-    MultiValueMap<String, String> result = cache.get(classLoader);
-    if (result != null) {return result;}
-    try
-    {
-      //去获取一个资源 "META-INF/spring.factories"
-      Enumeration<URL> urls = (classLoader != null ?
-        classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
-        ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
-      result = new LinkedMultiValueMap<>();
 
-      //将读取到的资源遍历，封装成为一个Properties
-      while (urls.hasMoreElements())
-      {
-        URL url = urls.nextElement();
-        UrlResource resource = new UrlResource(url);
-        Properties properties = PropertiesLoaderUtils.loadProperties(resource);
+### 3.7.7 开发DAO接口以及`mapper`
 
-        for (Map.Entry<?, ?> entry : properties.entrySet())
-        {
-          String factoryTypeName = ((String) entry.getKey()).trim();
-          for (String factoryImplementationName : StringUtils.commaDelimitedListToStringArray((String) entry.getValue()))
-          {result.add(factoryTypeName, factoryImplementationName.trim());}
-        }
-      }
-      cache.put(classLoader, result);
-      return result;
-    }
-    catch (IOException ex)
-    {
-      throw new IllegalArgumentException("Unable to load factories from location [" + FACTORIES_RESOURCE_LOCATION + "]", ex);
-    }
+在`main/java/sjtu/chenzf`下新建`dao`文件夹，然后创建`UserDAO`接口：
+
+```java
+package sjtu.chenzf.dao;
+
+import sjtu.chenzf.entity.User;
+
+import java.util.List;
+
+public interface UserDAO {
+    void saveUser(User user);
+    List<User> findAllUser();
 }
 ```
-根据源头打开`spring.factories`的配置文件，看到了很多自动配置的文件；这就是自动配置根源所在`D:\WinSoftware\Maven\repository\org\springframework\boot\spring-boot-autoconfigure\2.2.4.RELEASE\spring-boot-autoconfigure-2.2.4.RELEASE.jar\spring.factories`。
 
-所以，自动配置真正实现是从`classpath`中搜寻所有的`META-INF/spring.factories`配置文件 ，并将其中对应的`org.springframework.boot.autoconfigure`包下的配置项，通过反射实例化为对应标注了`@Configuration`的`JavaConfig`形式的IOC容器配置类，然后将这些都汇总成为一个实例并加载到IOC容器中。
+在`main/resources/sjtu/chenzf`下新建`mapper`文件夹，然后创建`UserDAO.xml`：
 
-`SpringBoot`所有自动配置都在启动的时候扫描并加载。`spring.factories`所有的自动配置类都在这里，但不一定生效。只要导入了对应的`starter`，就有对应的启动器，就会自动装配。
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sjtu.chenzf.dao.UserDAO">
 
-#### 小结
-* SpringBoot在启动的时候从类路径下的`META-INF/spring.factories`中获取`EnableAutoConfiguration`指定的值，将这些值作为自动配置类导入容器，自动配置类就生效，帮我们进行自动配置工作。以前我们需要自己配置的东西，自动配置类都帮我们解决了。
-* 整个J2EE的整体解决方案和自动配置都在`springboot-autoconfigure`的jar包中。它将所有需要导入的组件以全类名的方式返回，这些组件就会被添加到容器中；
-* 它会给容器中导入非常多的自动配置类(`xxxAutoConfiguration`), 就是给容器中导入这个场景需要的所有组件，并配置好这些组件；
-* 有了自动配置类，免去了我们手动编写配置注入功能组件等的工作。
+    <!--saveUser-->
+    <!--id和方法名一致，参数使用别名User-->
+    <insert id="saveUser" parameterType="User">
+        INSERT INTO information VALUES (#{id}, #{name}, #{age}, #{date});
+    </insert>
 
+    <!--findAllUser-->
+    <select id="findAllUser" resultType="User   ">
+        SELECT * FROM information;
+    </select>
 
-### `SpringApplication.run`
-&emsp;&emsp;分析该方法主要分两部分，一部分是`SpringApplication`的实例化，二是`run方法`的执行。
+</mapper>
+```
 
-&emsp;&emsp;`SpringApplication`这个类主要做了以下四件事情：
-1. 推断应用的类型是普通的项目还是`Web`项目；
-2. 查找并加载所有可用初始化器，设置到`initializers`属性中；
-3. 找出所有的应用程序监听器，设置到`listeners`属性中；
-4. 推断并设置`main`方法的定义类，找到运行的主类。
+#### 问题：`Invalid bound statement`
 
-#### `run方法`流程分析
-<div align=center><img src=SpringBootImages/run方法.png></div>
+注意：新建`mapper`文件夹时，不能通过`.`的形式：
 
-# ReadList项目
-&emsp;&emsp;先初始化一个项目。从技术角度来看，要用`Spring MVC`来处理Web请求，用`Thymeleaf`来定义Web视图，用`Spring Data JPA`来把阅读列表持久化到嵌入式的`H2`数据库里。用IDEA构建项目时，可以用`Initializr`勾选`Web, Thymeleaf, JPA, H2`这几个复选框。
+![image-202010031400-错误创建文件夹方式](SpringBoot.assets/image-202010031400-错误创建文件夹方式.png)
 
-## 目录结构
-&emsp;&emsp;构建完成后，会得到一个Maven项目结构：
-<div align=center><img src=SpringBootImages/readinglist项目结构.png width=40%></div>
+否则会出现`Invalid bound statement (not found): sjtu.chenzf.dao.UserDAO.findAllUser`
 
-整个项目结构遵循Maven项目的布局，即主要应用程序代码位于`src/main/java`目录里，资源都在`src/main/resources`目录里，测试代码则在`src/test/java`目录里。此刻还没有测试资源，但如果有的话，要放在`src/test/resources`里。
-* `ReadingListApplication.java`：应用程序的启动引导类(bootstrap class)，也是主要的Spring配置类。
-* `application.properties`：用于配置应用程序和Spring Boot的属性。
-* `ReadingListApplicationTests.java`：一个基本的集成测试类。
+正确创建文件夹的方式为：
 
-### 启动引导Spring
-&emsp;&emsp;`ReadingListApplication.java`在Spring Boot应用程序里有两个作用：配置和启动引导。这是主要的Spring配置类。
+![image-202010031409-正确创建文件夹方式](SpringBoot.assets/image-202010031409-正确创建文件夹方式.png)
+
+### 3.7.8 开发业务层service以及实现
+
+在`main/java/sjtu/chenzf`下新建`service`文件夹，然后创建`UserService`接口：
+
 ```java
-package com.example.readinglist;
+package sjtu.chenzf.service;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import sjtu.chenzf.entity.User;
 
-@SpringBootApplication  // 开启组件扫描和自动配置
-public class ReadingListApplication extends WebMvcConfigurerAdapter
-{
-    public static void main(String[] args)
-    {
-        // 负责启动引导应用程序
-        SpringApplication.run(ReadingListApplication.class, args);
+import java.util.List;
+
+public interface UserService {
+    void saveUser(User user);
+    List<User> findAllUser();
+}
+```
+
+接着创建`UserServiceImpl`实现类：
+
+```java
+package sjtu.chenzf.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import sjtu.chenzf.dao.UserDAO;
+import sjtu.chenzf.entity.User;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@Transactional
+
+public class UserServiceImpl implements UserService {
+
+    @Autowired
+    private UserDAO userDAO;
+
+    @Override
+    public void saveUser(User user) {
+        user.setId(UUID.randomUUID().toString());
+        userDAO.saveUser(user);
     }
 
     @Override
-    public void addViewControllers(ViewControllerRegistry registry)
-    {
-        registry.addRedirectViewController("/", "/readingList");
+    public List<User> findAllUser() {
+        return userDAO.findAllUser();
     }
 }
-
-```
-`@SpringBootApplication`开启了Spring的组件扫描和Spring Boot的自动配置功能。实际
-上，`@SpringBootApplication`将三个有用的注解组合在了一起：
-* Spring的`@Configuration`：标明该类使用Spring基于Java的配置。
-* Spring的`@ComponentScan`：启用组件扫描，这样Web控制器类和其他组件才能被自动发现并注册为Spring应用程序上下文里的Bean。一个简单的Spring MVC控制器，使用`@Controller`进行注解，这样组件扫描才能找到它。
-* Spring Boot的`@EnableAutoConfiguration`：这个注解也可以称为`@Abracadabra`，就是这一行配置开启了Spring Boot自动配置的魔力，让你不用再写成篇的配置了。
-
-`ReadingListApplication`还是一个启动引导类。要运行Spring Boot应用程序有几种方式，其中包含传统的`WAR`文件部署。但这里的`main()方法`让你可以在命令行里把该应用程序当作一个可执行`JAR`文件来运行。这里向`SpringApplication.run()`传递了一个`ReadingListApplication`类的引用，还有命令行参数，通过这些东西启动应用程序。
-
-应用程序此时能正常运行，启动一个监听`8080`端口的`Tomcat`服务器。可以用浏览器访问[http://localhost:8080](http://localhost:8080)，但由于还没写控制器类，会看到错误页面。
-
-几乎不需要修改`ReadingListApplication.java`。如果应用程序需要Spring Boot自动配置以外的其他Spring配置，一般来说，最好把它写到一个单独的`@Configuration`标注的类里(组件扫描会发现并使用这些类的)。简单的情况下，可以把自定义配置加入`ReadingListApplication.java`。
-
-### 配置应用程序属性
-&emsp;&emsp;`Initializr`为你生成的`application.properties`文件是一个空文件。实际上，这个文件完全是可选的。但该文件可以很方便地帮你细粒度地调整Spring Boot的自动配置。还可以用它来指定应用程序代码所需的配置项。完全不用告诉Spring Boot为你加载`application.properties`，只要它存在就会被加载，Spring和应用程序代码都能获取其中的属性。
-
-## Spring Boot项目构建过程解析
-&emsp;&emsp;Spring Boot为Gradle和Maven提供了构建插件，以便辅助构建Spring Boot项目。要是选择用Maven来构建应用程序，`Initializr`会替你生成一个`pom.xml`文件，其中使用了Spring Boot的Maven插件。
-
-从`spring-boot-starter-parent`继承版本号：
-```xml
-<parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.2.4.RELEASE</version>
-    <relativePath/> <!-- lookup parent from repository -->
-</parent>
-```
-`<dependencies>...</dependencies>`插入<font color=red>起步依赖</font>；`<build><plugins>...</plugins></build>`插入运用的Spring Boot<font color=red>插件</font>。
-
-构建插件的主要功能是把项目打包成一个可执行的超级`JAR(uber-JAR)`，包括把应用程序的
-所有依赖打入JAR文件内，并为JAR添加一个描述文件，其中的内容能让你用`java -jar`来运行应用程序。
-
-除了构建插件，Maven构建说明中还将`spring-boot-starter-parent`作为上一级，这样就能<font color=red>利用Maven的依赖管理功能，继承很多常用库的依赖版本，在声明依赖时就不用再去指定版本号了。</font>`pom.xml`里的`<dependency>`都没有指定版本。
-
-五个依赖中，除了手工添加的H2之外，其他的`Artifact ID`都有`spring-boot-starter-`前缀。这些都是Spring Boot<font color=red>起步依赖</font>，它们都有助于Spring Boot应用程序的构建。
-
-### 使用起步依赖
-&emsp;&emsp;要理解Spring Boot起步依赖带来的好处，先让我们假设它们尚不存在。如果没用Spring Boot的话，你会向项目里添加哪些依赖呢？要用Spring MVC的话，你需要哪个Spring依赖？你还记得Thymeleaf的Group和Artifact ID吗？你应该用哪个版本的Spring Data JPA呢？它们放在一起兼容吗？
-
-如果没有Spring Boot起步依赖，你就有不少功课要做。而你想要做的只不过是<font color=red>开发一个Spring Web应用程序，使用Thymeleaf视图，通过JPA进行数据持久化</font>。但在开始编写第一行代码之前，你得搞明白，要支持你的计划，需要往构建说明里加入哪些东西。
-
-&emsp;&emsp;<font color=red>Spring Boot通过提供众多起步依赖降低项目依赖的复杂度。起步依赖本质上是一个Maven项目对象模型(Project Object Model，POM)，定义了对其他库的传递依赖，这些东西加在一起即支持某项功能。</font>
-
-很多起步依赖的命名都暗示了它们提供的某种或某类功能。举例来说，你打算把这个阅读列表应用程序做成一个Web应用程序。与其向项目的构建文件里添加一堆单独的库依赖，还不如声明这是一个Web应用程序来得简单。你<font color=red>只要添加Spring Boot的Web起步依赖就好了。</font>我们还想以Thymeleaf为Web视图，用JPA来实现数据持久化，因此在构建文件里还需要Thymeleaf和Spring Data JPA的起步依赖。<font color=red>为了能进行测试，我们还需要能在Spring Boot上下文里运行集成测试的库，因此要添加SpringBoot的test起步依赖，这是一个测试时依赖。</font>统统放在一起，就有了这五个依赖，也就是Initializr在Maven的构建文件里提供的：
-```xml {.line-numbers}
-<artifactId>spring-boot-starter-data-jpa</artifactId>
-<artifactId>spring-boot-starter-thymeleaf</artifactId>
-<artifactId>spring-boot-starter-web</artifactId>
-<artifactId>h2</artifactId>
-<artifactId>spring-boot-starter-test</artifactId>
 ```
 
-我们并不需要指定版本号，起步依赖本身的版本是由正在使用的Spring Boot的版本来决定的，而起步依赖则会决定它们引入的传递依赖的版本。Spring Boot能确保引入的全部依赖都能相互兼容。
+### 3.7.9 不连接模板编写控制器进行测试
 
-大部分情况下，你都无需关心每个Spring Boot起步依赖分别声明了些什么东西。Web起步依赖能让你构建Web应用程序，Thymeleaf起步依赖能让你用Thymeleaf模板，Spring Data JPA起步依赖能让你用Spring Data JPA将数据持久化到数据库里，通常只要知道这些就足够了。
+#### 3.7.9.1 控制器
 
-### 使用自动配置
-&emsp;&emsp;<font color=red>Spring Boot的自动配置是一个运行时(更准确地说，是应用程序启动时)的过程，考虑了众多因素，才决定Spring配置应该用哪个，不该用哪个。</font>举几个例子，下面这些情况都是Spring Boot的自动配置要考虑的。
-* Spring的JdbcTemplate是不是在Classpath里？如果是，并且有DataSource的Bean，则自动配置一个JdbcTemplate的Bean。
-* Thymeleaf是不是在Classpath里？如果是，则配置Thymeleaf的模板解析器、视图解析器以及模板引擎。
-* Spring Security是不是在Classpath里？如果是，则进行一个非常基本的Web安全设置。
+在`main/java/sjtu/chenzf`下新建`controller`文件夹，然后创建`UserController`类：
 
-每当应用程序启动的时候，Spring Boot的自动配置都要做将近200个这样的决定，涵盖安全、集成、持久化、Web开发等诸多方面。所有这些自动配置就是为了尽量不让你自己写配置。
-
-## 开发应用程序功能
-&emsp;&emsp;既然知道Spring Boot会替我们料理这些事情，那么与其浪费时间讨论这些Spring配置，还不如看看如何利用Spring Boot的自动配置，让我们专注于应用程序代码。
-
-### 定义领域模型
- &emsp;&emsp;我们应用程序里的核心领域概念是读者阅读列表上的书。因此我们需要定义一个实体类来表示这个概念(如何定义一本书：表示列表里的书的Book类)：
 ```java
-package com.example.readinglist;
+package sjtu.chenzf.controller;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
-@Entity
-public class Book
-{
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long id;
-    private String reader;
-    private String isbn;
-    private String title;
-    private String author;
-    private String description;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getReader() { return reader; }
-    public void setReader(String reader) { this.reader = reader; }
-    public String getIsbn() { return isbn; }
-    public void setIsbn(String isbn) { this.isbn = isbn; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-}
-```
-`Book`类就是简单的Java对象，其中有些描述书的属性，还有必要的访问方法。`@Entity`注解表明它是一个JPA实体，id属性加了`@Id`和`@GeneratedValue`注解，说明这个字段是实体的唯一标识，并且这个字段的值是自动生成的。
-
-### 定义仓库接口
-&emsp;&emsp;接下来，我们就要定义用于把Book对象持久化到数据库的仓库了。因为用了Spring Data JPA，所以我们要做的就是简单地定义一个接口，扩展一下Spring Data JPA的`JpaRepository`接口：
-```java
-package com.example.readinglist;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import sjtu.chenzf.entity.User;
+import sjtu.chenzf.service.UserService;
 
 import java.util.List;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ReadingListRepository extends JpaRepository<Book, Long>
-{
-    List<Book> findByReader(String reader);
+@RestController
+@RequestMapping("/chenzf")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/findAllUser")
+    public List<User> findAllUser() {
+        return userService.findAllUser();
+    }
+
+    @GetMapping("/saveUser")  // 便于在地址栏操作
+    public void saveUser(User user) {
+        userService.saveUser(user);
+    }
 }
 ```
-通过扩展`JpaRepository`，`ReadingListRepository`直接继承了18个执行常用持久化操作的方法。`JpaRepository`是个泛型接口，有两个参数：仓库操作的领域对象类型，及其`ID`属性的类型。此外，我还增加了一个`findByReader()`方法，可以根据读者的用户名来查找阅读列表。如果你好奇谁来实现这个`ReadingListRepository`及其继承的18个方法，请不用担心，`Spring Data`提供了很神奇的魔法，<font color=red>只需定义仓库接口，在应用程序启动后，该接口在运行时会自动实现</font>。
 
-### 创建Web界面
-&emsp;&emsp;现在，我们定义好了应用程序的领域模型，还有把领域对象持久化到数据库里的仓库接口，剩下的就是创建Web前端了。作为阅读列表应用程序前端的Spring MVC控制器(`ReadingListController`)就能为应用程序处理HTTP请求：
+#### 3.7.9.2 测试方法
+
+- 调用`saveUser`方法
+
+在浏览器地址栏输入：`http://localhost:8989/mybatis_springboot/chenzf/saveUser?name=chenzf&age=27&date=1993/09/27`
+
+- 调用`findAllUser`方法
+
+在浏览器地址栏输入：`http://localhost:8989/mybatis_springboot/chenzf/findAllUser`
+
+页面显示：`[{"id":"764a8b25-7a0c-4b2a-8cc1-24580b4c3878","name":"chenzf","age":27,"date":"1993-09-26T16:00:00.000+0000"}]`
+
+- [可能出现的问题](https://blog.csdn.net/qq_40646143/article/details/90783416)
+
+### 3.7.10 通过thymeleaf模板方式展示数据
+
+#### 3.7.10.1 修改控制器类
+
+使用`@Controller`并添加第21-26行：
+
 ```java
-package com.example.readinglist;
-
-import java.util.List;
+package sjtu.chenzf.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import sjtu.chenzf.entity.User;
+import sjtu.chenzf.service.UserService;
+
+import java.util.List;
 
 @Controller
-@RequestMapping("/readingList")
-public class ReadingListController
-{
-    private static final String reader = "craig";
-    private ReadingListRepository readingListRepository;
+@RequestMapping("/chenzf")
+
+public class UserController {
 
     @Autowired
-    public ReadingListController(ReadingListRepository readingListRepository)
-    {
-        this.readingListRepository = readingListRepository;
+    private UserService userService;
+
+    @GetMapping("/findAllUser")
+    public String findAllUser(Model model) {
+        List<User> users = userService.findAllUser();
+        model.addAttribute("users", users);
+        return "showAllUser";
     }
 
-    @RequestMapping(method=RequestMethod.GET)
-    public String readersBooks(Model model)
-    {
-        List<Book> readingList = readingListRepository.findByReader(reader);
-        if (readingList != null) {
-            model.addAttribute("books", readingList);
-        }
-        return "readingList";
-    }
-
-    @RequestMapping(method=RequestMethod.POST)
-    public String addToReadingList(Book book)
-    {
-        book.setReader(reader);
-        readingListRepository.save(book);
-        return "redirect:/readingList";
+    @GetMapping("/saveUser")  // 便于在地址栏操作
+    public String saveUser(User user) {
+        userService.saveUser(user);
+        // 重定向至findAllUser去查询数据库再渲染到页面
+        return "redirect:/chenzf/findAllUser";
     }
 }
 ```
-`ReadingListController`使用了`@Controller`注解，这样组件扫描会自动将其注册为Spring应用程序上下文里的一个Bean。它还用了`@RequestMapping`注解，将其中所有的处理器方法都映射到了“/”这个URL路径上。
 
-该控制器有两个方法。
-* `readersBooks()`：处理`/{readerList}`上的`HTTP GET`请求，根据路径里指定的读者，从(通过控制器的构造器注入的)仓库获取Book列表。随后将这个列表塞入模型，用的键是`books`，最后返回`readingList`作为呈现模型的视图逻辑名称。
-* `addToReadingList()`：处理`/{readerList}`上的`HTTP POST`请求，将请求正文里的数据绑定到一个Book对象上。该方法把Book对象的`reader`属性设置为读者的姓名，随后通过仓库的`save()`方法保存修改后的Book对象，最后重定向到`/{readerList}`(控制器中的另一个方法会处理该请求)。
+#### 3.7.10.2 在`templates`中添加页面
 
-`readersBooks()`方法最后返回`readingList`作为逻辑视图名，为此必须创建该视图。因为在项目开始之初我就决定要用`Thymeleaf`来定义应用程序的视图，所以接下来就在`src/main/resources/templates`里创建一个名为`readingList.html`的文件；为了美观，`Thymeleaf`模板引用了一个名为`style.css`的样式文件，该文件位于`src/main/resources/static`目录中。
+在`templates`中添加`showAllUser.html`：
 
-### 运行应用程序
-&emsp;&emsp;运行应用程序，此时启动一个监听`8080`端口的`Tomcat`服务器。可以用浏览器访问[http://localhost:8080](http://localhost:8080)，结果如下图所示：
-<div align=center><img src=SpringBootImages/readinglist项目运行结果.png width=70%></div>
+```html
+<!DOCTYPE html>
 
-### 将项目打成jar包
-&emsp;&emsp;将项目打成jar包后，就可以在任何地方运行了：
-<div align=center><img src=SpringBootImages/将项目打成jar包.png></div>
+<!--添加thymeleaf命名空间-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ShowAllUsers</title>
+</head>
+<body>
+    <!--遍历-->
+    <ul th:each="user:${users}">
+        <li><span th:text="${user.id}"/></li>
+        <li><span th:text="${user.name}"/></li>
+        <li><span th:text="${user.age}"/></li>
+        <li><span th:text="${#dates.format(user.date, 'yyyy-MM-dd')}"/></li>
+    </ul>
+</body>
+</html>
+```
+
+此时调用`findAllUser`方法时，会跳转到`showAllUser.html`：
+
+![image-202010031442-运行结果](SpringBoot.assets/image-202010031442-运行结果.png)
+
+在浏览器地址栏输入：`http://localhost:8989/mybatis_springboot/chenzufeng/saveUser?name=chenzf&age=26&date=1992/09/27`
+
+会重定向至`http://localhost:8989/mybatis_springboot/chenzf/findAllUser`去查询数据库再渲染到页面！
+
+# 4 基于thymeleaf与mybatis的员工管理
+
+整个工程项目位于：`D:\MarkdownFiles\SpringBoot\SpringBootDemo\ems_thymeleaf`
+
+## 4.1 使用Spring Initializer搭建环境
+
+1. 点击`New->Project`，选择`Spring Initializer`：
+
+![image-202010031545-SpringInitializer搭建环境](SpringBoot.assets/image-202010031545-SpringInitializer搭建环境.png)
+
+2. 选择依赖：
+
+![image-202010031615-添加依赖](SpringBoot.assets/image-202010031615-添加依赖.png)
+
+3. 增加`mysql`版本号以及添加`druid`依赖：
+
+```xml
+		<dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.38</version>
+            <!--删除<scope>runtime</scope>-->
+        </dependency>
+
+        <!--连接池依赖-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.1.19</version>
+        </dependency>
+```
+
+4. 修改配置文件
+
+```properties
+server.port=8989
+server.servlet.context-path=/ems_thymeleaf
+
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/ems_thymeleaf?characterEncoding=UTF-8
+spring.datasource.username=root
+spring.datasource.password=admin
+
+mybatis.mapper-locations=classpath:/com/example/mapper/*.xml
+mybatis.type-aliases-package=com.example.entity
+
+spring.resources.static-locations=classpath:/templates/,classpath:/static/
+```
+
+5. 修改入口类：添加`@MapperScan("com.example.dao")`
+
+```java
+package com.example;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+@MapperScan("com.example.dao")
+public class EmsThymeleafApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(EmsThymeleafApplication.class, args);
+    }
+
+}
+```
+
+6. 添加目录（要用`/`而不是`.`）
+
+`com/example/mapper`：
+
+<img src="SpringBoot.assets/image-202010031648-项目结构.png" alt="image-202010031648-项目结构" style="zoom:80%;" />
+
+## 4.2 库表设计
+
+### 4.2.1 需求与表结构分析
+
+- 需求分析
+  - 用户
+    - 用户登录
+    - 用户注册：先生成验证码
+  - 员工
+    - CRUD
+- 库表结构分析
+  - `table_user`
+    - `id, username, realname, password, sexual`
+  - `table_employee`
+    - `id, name, salary, age, birthday`
+
+### 4.2.2 新建库表
+
+```mysql
+CREATE DATABASE `ems_thymeleaf` CHARACTER SET 'utf8';
+```
+
+打开数据库，新建查询，创建表：
+
+```mysql
+CREATE TABLE table_user (
+	id VARCHAR ( 40 ) PRIMARY KEY,
+	username VARCHAR ( 40 ),
+	realname VARCHAR ( 40 ),
+	userpassword VARCHAR ( 40 ),
+	sexual VARCHAR ( 8 ) 
+);
+CREATE TABLE table_employee (
+	id VARCHAR ( 40 ) PRIMARY KEY,
+	employeename VARCHAR ( 40 ),
+	salary DOUBLE ( 7, 2 ), 
+	age INT ( 3 ),
+	birthday date 
+);
+```
+
+点击`运行`。
+
+可以将上述代码放置在`main/resources/com/example/sql`下`init.sql`文件中。
+
+## 4.3 将页面引入到项目中
+
+### 4.3.1 直接引用
+
+在`main/resources/templates`下添加5个`html`文件；然后将`css`和`img`文件夹至于`main/resources/static`下。
+
+![image-202010032105-引入页面资源](SpringBoot.assets/image-202010032105-引入页面资源.png)
+
+在浏览器地址栏输入`http://localhost:8989/ems_thymeleaf/regist.html`可以显示：
+
+![image-202010032108-注册页面显示](SpringBoot.assets/image-202010032108-注册页面显示.png)
+
+### 4.3.2 使用thymeleaf方式引用
+
+- 在`login.html`中添加：`<html lang="en" xmlns:th="http://www.thymeleaf.org">`
+- 将`href="css/style.css"`修改为动**态获取的方式**`th:href="@{css/style.css}"`
+  - 可以通过修改配置`spring.resources.static-locations=classpath:/templates/,classpath:/static/`，将`templates`模板变成静态资源，随后可以使用[4.3.1](4.3.1-直接引用)的方式来调用。但如果想使用`thymeleaf`来引用，则必须经过控制器。
+
+## 4.4 编写控制器
+
+- 在`main\java\com\example\controller`下编写`IndexController.java`：
+
+```java
+package com.example.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class IndexController {
+
+    @GetMapping("/index")
+    public String toIndex() {
+        return "/login";
+    }
+}
+```
+
+然后通过`http://localhost:8989/ems_thymeleaf/index`访问：
+
+![image-202010032115-控制器访问](SpringBoot.assets/image-202010032115-控制器访问.png)
+
+点击页面中`Regist`按钮，可以跳转到上图显示的注册页面。
+
+从`login.html`中可以看出(`onclick="location.href='./regist.html'"`)，点击`Regist`时，是直接跳转到`templates/regist.html`文件的，需要**设置成跳转到控制器**：` onclick="location.href='/ems_thymeleaf/toRegistController'"`。
+
+- 在控制器添加：ems_thymeleaf
+
+```java
+@GetMapping("toRegistController")
+    public String toRegistController() {
+        return "regist";
+    }
+```
+
+## 4.5 注册页面的图片验证码
+
+### 4.5.1 编写验证码生成函数
+
+新建`com.example.utils`文件夹，放入`ValidateImageCodeUtils.java`
+
+### 4.5.2 开发控制器`UserController`
+
+```java
+package com.example.controller;
+
+import com.example.utils.ValidateImageCodeUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.imageio.ImageIO;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
+@Controller
+@RequestMapping("/chenzf")
+
+public class UserController {
+
+    @GetMapping("/validateCode")
+    public void getImage(HttpSession session, HttpServletResponse response) throws IOException {
+        // 生成验证码
+        String validateCode = ValidateImageCodeUtils.getSecurityCode();
+        BufferedImage image = ValidateImageCodeUtils.createImage(validateCode);
+        // 存入session作用域
+        session.setAttribute("validateCode", validateCode);
+        // 响应图片
+        ServletOutputStream outputStream = response.getOutputStream();
+        ImageIO.write(image, "png", outputStream);
+    }
+}
+```
+
+在浏览器键入`http://localhost:8989/ems_thymeleaf/chenzf/validateCode`：
+
+![image-202010032153-ValidateCode](SpringBoot.assets/image-202010032153-ValidateCode.png)
+
+刷新页面时会更新！
+
+### 4.5.3 将验证码放置在注册页面上
+
+- 使用`Thymeleaf`
+
+  在`regist.html`页面中加入如下[命名空间](# 3.6-Thymeleaf语法)：
+
+  ```html
+  <html lang="en" xmlns:th="http://www.thymeleaf.org">
+  ```
+
+  其中，`th`为`别名`！
+
+- 修改`regist.html`页面中验证码的路径
+
+  ```html
+  验证码:
+  <!--  <img id="num" src="image" />  -->
+  <img id="num" th:src="@{/chenzf/validateCode}" />
+  ```
+
+  此时在浏览器地址栏输入`http://localhost:8989/ems_thymeleaf/toRegistController`会出现验证码，点击刷新按钮验证码会更新，但点击`换一张`时，则无法刷新！
+
+- 将`regist.html`中`<a href="javascript:;" onclick="document.getElementById('num').src = 'image?'+(new Date()).getTime()">换一张</a>`修改为`src = '/ems_thymeleaf/chenzf/validateCode?'`
+
+![image-202010032253-换一张功能](SpringBoot.assets/image-202010032253-换一张功能.png)
+
+此时`换一张`功能正常！
 
 
-## 小结
-&emsp;&emsp;通过Spring Boot的起步依赖和自动配置，你可以更加快速、便捷地开发Spring应用程序。起步依赖帮助你专注于应用程序需要的功能类型，而非提供该功能的具体库和版本。与此同时，自动配置把你从样板式的配置中解放了出来。这些配置在没有Spring Boot的Spring应用程序里非常常见。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

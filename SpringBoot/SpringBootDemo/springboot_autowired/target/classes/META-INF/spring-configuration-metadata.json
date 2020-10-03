@@ -1,0 +1,27 @@
+{
+  "groups": [
+    {
+      "name": "user",
+      "type": "sjtu.chenzf.entity.User",
+      "sourceType": "sjtu.chenzf.entity.User"
+    }
+  ],
+  "properties": [
+    {
+      "name": "user.age",
+      "type": "java.lang.Integer",
+      "sourceType": "sjtu.chenzf.entity.User"
+    },
+    {
+      "name": "user.id",
+      "type": "java.lang.String",
+      "sourceType": "sjtu.chenzf.entity.User"
+    },
+    {
+      "name": "user.name",
+      "type": "java.lang.String",
+      "sourceType": "sjtu.chenzf.entity.User"
+    }
+  ],
+  "hints": []
+}

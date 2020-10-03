@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+<!--添加thymeleaf命名空间-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ShowAllUsers</title>
+</head>
+<body>
+    <!--遍历-->
+    <ul th:each="user:${users}">
+        <li><span th:text="${user.id}"/></li>
+        <li><span th:text="${user.name}"/></li>
+        <li><span th:text="${user.age}"/></li>
+        <li><span th:text="${#dates.format(user.date, 'yyyy-MM-dd')}"/></li>
+    </ul>
+</body>
+</html>
