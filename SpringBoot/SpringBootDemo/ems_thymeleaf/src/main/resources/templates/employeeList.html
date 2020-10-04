@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 	<head>
-		<title>emplist</title>
+		<title>employeeList</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<link rel="stylesheet" type="text/css" href="css/style.css" />
+		<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
 	</head>
 	<body>
 		<div id="wrap">
@@ -29,6 +29,7 @@
 					<h1>
 						Welcome!
 					</h1>
+
 					<table class="table">
 						<tr class="table_header">
 							<td>
@@ -44,46 +45,40 @@
 								Age
 							</td>
 							<td>
+								Birthday
+							</td>
+							<td>
 								Operation
 							</td>
 						</tr>
-						<tr class="row1">
+
+						<!--对结果进行遍历-->
+						<tr class="row1" th:each="employee:${employees}">
 							<td>
-								1
+								<span th:text="${employee.id}"/>
 							</td>
 							<td>
-								zhangshan
+								<span th:text="${employee.employeename}"/>
 							</td>
 							<td>
-								20000
+								<span th:text="${employee.salary}"/>
 							</td>
 							<td>
-								20
+								<span th:text="${employee.age}"/>
 							</td>
 							<td>
-								<a href="employeeList.html">delete emp</a>&nbsp;<a href="updateEmployee.html">update emp</a>
-							</td>
-						</tr>
-						<tr class="row2">
-							<td>
-								2
+								<span th:text="${#dates.format(employee.birthday, 'yyyy-MM-dd')}"/>
 							</td>
 							<td>
-								lishi
-							</td>
-							<td>
-								20000
-							</td>
-							<td>
-								20
-							</td>
-							<td>
-								<a href="employeeList.html">delete emp</a>&nbsp;<a href="updateEmployee.html">update emp</a>
+								<a th:href="@{/employee/deleteEmployee(id=${employee.id})}">delete</a>&nbsp;
+                                <a th:href="@{/employee/findEmployee(id=${employee.id})}">update</a>
 							</td>
 						</tr>
+
+
 					</table>
 					<p>
-						<input type="button" class="button" value="Add Employee" onclick="location='addEmployee.html'"/>
+						<input type="button" class="button" value="Add Employee" onclick="location.href='/ems_thymeleaf/employee/AddEmployee'"/>
 					</p>
 				</div>
 			</div>

@@ -1939,6 +1939,8 @@ public class UserController {
 
 整个工程项目位于：`D:\MarkdownFiles\SpringBoot\SpringBootDemo\ems_thymeleaf`
 
+该管理系统的用户可以通过注册或登录的方式来查看所有员工信息，并对其进行增、删、改操作！
+
 ## 4.1 使用Spring Initializer搭建环境
 
 1. 点击`New->Project`，选择`Spring Initializer`：
@@ -2033,7 +2035,7 @@ public class EmsThymeleafApplication {
 CREATE DATABASE `ems_thymeleaf` CHARACTER SET 'utf8';
 ```
 
-打开数据库，新建查询，创建表：
+打开数据库，**新建查询**，创建表：
 
 ```mysql
 CREATE TABLE table_user (
@@ -2064,14 +2066,14 @@ CREATE TABLE table_employee (
 
 ![image-202010032105-引入页面资源](SpringBoot.assets/image-202010032105-引入页面资源.png)
 
-在浏览器地址栏输入`http://localhost:8989/ems_thymeleaf/regist.html`可以显示：
+在浏览器地址栏输入http://localhost:8989/ems_thymeleaf/regist.html可以显示：
 
 ![image-202010032108-注册页面显示](SpringBoot.assets/image-202010032108-注册页面显示.png)
 
 ### 4.3.2 使用thymeleaf方式引用
 
 - 在`login.html`中添加：`<html lang="en" xmlns:th="http://www.thymeleaf.org">`
-- 将`href="css/style.css"`修改为动**态获取的方式**`th:href="@{css/style.css}"`
+- 将`href="css/style.css"`修改为**动态获取的方式**`th:href="@{/css/style.css}"`
   - 可以通过修改配置`spring.resources.static-locations=classpath:/templates/,classpath:/static/`，将`templates`模板变成静态资源，随后可以使用[4.3.1](4.3.1-直接引用)的方式来调用。但如果想使用`thymeleaf`来引用，则必须经过控制器。
 
 ## 4.4 编写控制器
@@ -2094,7 +2096,7 @@ public class IndexController {
 }
 ```
 
-然后通过`http://localhost:8989/ems_thymeleaf/index`访问：
+然后通过http://localhost:8989/ems_thymeleaf/index访问：
 
 ![image-202010032115-控制器访问](SpringBoot.assets/image-202010032115-控制器访问.png)
 
@@ -2102,7 +2104,7 @@ public class IndexController {
 
 从`login.html`中可以看出(`onclick="location.href='./regist.html'"`)，点击`Regist`时，是直接跳转到`templates/regist.html`文件的，需要**设置成跳转到控制器**：` onclick="location.href='/ems_thymeleaf/toRegistController'"`。
 
-- 在控制器添加：ems_thymeleaf
+- 在控制器添加：
 
 ```java
 @GetMapping("toRegistController")
@@ -2187,47 +2189,888 @@ public class UserController {
 
 此时`换一张`功能正常！
 
+## 4.6 注册功能
+
+注册功能本质就是将用户的信息保存至数据库中。
+
+### 4.6.1 创建User
+
+在`com.example.entity`下创建`User`类：
+
+```java
+package com.example.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+
+public class User {
+    private String id;
+    private String username;
+    private String realname;
+    private String userpassword;
+    private String sexual;
+}
+```
+
+### 4.6.2 创建UserDAO接口添加保存方法
+
+在`com.example.dao`下创建`UserDAO`接口：
+
+```java
+package com.example.dao;
+
+import com.example.entity.User;
+
+public interface UserDAO {
+    void saveUser(User user);
+}
+```
+
+### 4.6.3 创建mapper配置文件
+
+可以先创建`mapper.xml`模板：
+
+<img src="SpringBoot.assets/image-202010041016-创建mapper模板.png" alt="image-202010041016-创建mapper模板" style="zoom:67%;" />
+
+在`com.example.mapper`（注意文件夹的创建方式为`/`）下创建`UserDAOMapper.xml`：
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dao.UserDAO">
+
+    <!--注册saveUser-->
+    <!--id和方法名一致，参数使用别名User-->
+    <insert id="saveUser" parameterType="User">
+        INSERT INTO table_user VALUES (#{id}, #{username}, #{realname}, #{userpassword}, #{sexual});
+    </insert>
+    
+</mapper>
+```
+
+### 4.6.4 开发业务层service
+
+在`com.example.service`下创建`UserService`接口：
+
+```java
+package com.example.service;
+
+import com.example.entity.User;
+
+public interface UserService {
+    void regist(User user);
+}
+```
+
+然后创建实现类`UserServiceImpl`：
+
+```java
+package com.example.service;
+
+import com.example.dao.UserDAO;
+import com.example.entity.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+@Service
+@Transactional
+public class UserServiceImpl implements UserService {
+
+    @Autowired
+    private UserDAO userDAO;
+
+    @Override
+    public void regist(User user) {
+        user.setId(UUID.randomUUID().toString());
+        userDAO.saveUser(user);
+    }
+}
+
+```
+
+### 4.6.5 向UserController注入对象
+
+第24-36行：
+
+```java
+package com.example.controller;
+
+import com.example.entity.User;
+import com.example.service.UserService;
+import com.example.utils.ValidateImageCodeUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.imageio.ImageIO;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
+@Controller
+@RequestMapping("/chenzf")
+
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * 注册
+     * @param user
+     * @return 跳转至登录页面
+     */
+    @PostMapping("/regist")
+    public String regist(User user) {
+        userService.regist(user);
+        return "redirect:/index";
+    }
+
+
+    /**
+     * 生成验证码
+     * @param session
+     * @param response
+     * @throws IOException
+     */
+    @GetMapping("/validateCode")
+    public void getImage(HttpSession session, HttpServletResponse response) throws IOException {
+        String validateCode = ValidateImageCodeUtils.getSecurityCode();
+        BufferedImage image = ValidateImageCodeUtils.createImage(validateCode);
+        // 存入session作用域
+        session.setAttribute("validateCode", validateCode);
+        // 响应图片
+        ServletOutputStream outputStream = response.getOutputStream();
+        ImageIO.write(image, "png", outputStream);
+    }
+}
+```
+
+### 4.6.6 修改`regist.html`注册部分
+
+将原注册部分（直接跳转至`login.html`）：
+
+```html
+注册
+</h1>
+	<form action="login.html" method="post">
+```
+
+根据`UserController.java`
+
+```java
+@RequestMapping("/chenzf")
+@PostMapping("/regist")
+```
+
+修改为：
+
+```html
+<form th:action="@{/chenzf/regist}" method="post">
+```
+
+其余部分做适当修改：
+
+```html
+用户名:name="username"
+真实姓名:name="realname"
+密码:name="userpassword"
+性别:name="sexual" value="男"  name="sexual" value="女"
+```
+
+### 4.6.7 实现注册界面验证码验证功能
+
+- 修改`regist.html`中`验证码`部分：
+
+将原来的
+
+```html
+<input type="text" class="inputgri" name="number" />
+```
+
+改为
+
+```html
+<input type="text" class="inputgri" name="validateCode" />
+```
+
+- 修改`UserController.java`中`regist`：将`输入的验证码`与`sessionCode`比较
+
+```java
+    /**
+     * 注册
+     * @param user
+     * @return 跳转至登录页面或注册页面
+     */
+    @PostMapping("/regist")
+    public String regist(User user, String validateCode, HttpSession session) {
+        String sessionCode = (String) session.getAttribute("validateCode");
+        if (sessionCode.equalsIgnoreCase(validateCode)) {
+            userService.regist(user);
+            // 跳转至登录页面
+            return "redirect:/index";
+        } else {
+            // 跳转至控制器再跳转到注册页面
+            return "redirect:/toRegistController";
+        }
+    }
+```
+### 4.6.8 登录测试
+
+在浏览器地址栏键入http://localhost:8989/ems_thymeleaf/toRegistController，填写相关信息后，点击`Submit`跳转到**登录页面**（`UserController.java`）：http://localhost:8989/ems_thymeleaf/index。
+
+数据库数据更新：
+
+![image-202010041100-数据库结果更新](SpringBoot.assets/image-202010041100-数据库结果更新.png)
+
+## 4.7 登录功能
+
+### 4.7.1 在UserDAO接口中增加登录方法
+
+第9-10行：
+
+```java
+package com.example.dao;
+
+import com.example.entity.User;
+import org.apache.ibatis.annotations.Param;
+
+public interface UserDAO {
+    void saveUser(User user);
+
+    // 在mybatis中传递多个参数，需要参数绑定
+    User login(@Param("username") String username, @Param("userpassword") String userpassword);
+}
+```
+
+### 4.7.2 修改mapper配置文件
+
+添加数据库登录语句：==第5-9行==
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dao.UserDAO">
+
+    <!--登录 -->
+    <select id="login" resultType="User">
+        SELECT id, username, realname, userpassword, sexual FROM table_user
+        WHERE username = #{username} AND userpassword = #{userpassword};
+    </select>
+
+    <!--注册saveUser-->
+    <!--id和方法名一致，参数使用别名User-->
+    <insert id="saveUser" parameterType="User">
+        INSERT INTO table_user VALUES (#{id}, #{username}, #{realname}, #{userpassword}, #{sexual});
+    </insert>
+
+</mapper>
+```
+
+### 4.7.3 修改业务层
+
+- 在`UserService`接口中添加==第9行==：
+
+```java
+package com.example.service;
+
+import com.example.entity.User;
+
+public interface UserService {
+    
+    void regist(User user);
+    
+    User login(String username, String userpassword);
+}
+```
+
+- 在`UserServiceImpl`类中添加==第18-21行==：
+
+```java
+package com.example.service;
+
+import com.example.dao.UserDAO;
+import com.example.entity.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+@Service
+@Transactional
+public class UserServiceImpl implements UserService {
+
+    @Autowired
+    private UserDAO userDAO;
+    
+    @Override
+    public User login(String username, String userpassword) {
+        return userDAO.login(username, userpassword);
+    }
+
+    @Override
+    public void regist(User user) {
+        user.setId(UUID.randomUUID().toString());
+        userDAO.saveUser(user);
+    }
+}
+```
+
+### 4.7.4 修改控制器
+
+在`UserController.java`中添加：
+
+```java
+    /**
+     * 登录页面
+     * @param username
+     * @param userpassword
+     * @return
+     */
+	@PostMapping("/login")
+    public String login(String username, String userpassword) {
+        User login = userService.login(username, userpassword);
+        if (login != null) {
+            // 跳转到员工列表界面
+            return "redirect:/employee/findAllEmployee";
+        } else {
+            // 跳转到登录页面
+            return "redirect:/index";
+        }
+    }
+```
+
+### 4.7.5 修改`login.html`
+
+将原来的
+
+```html
+<html <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<h1>
+	login
+</h1>
+	<form action="employeeList.html" method="post">
+        
+username:<input type="text" class="inputgri" name="name" />
+        
+password:<input type="password" class="inputgri" name="pwd" />
+```
+
+修改成
+
+```html
+<html <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<h1>
+	login
+</h1>
+	<form th:action="@{/chenzf/login}" method="post">
+
+username:<input type="text" class="inputgri" name="username" />
+        
+password:<input type="password" class="inputgri" name="userpassword" />
+```
+
+###4.7.6 登录测试
+
+登录http://localhost:8989/ems_thymeleaf/index，输入相应的内容，页面跳转到http://localhost:8989/ems_thymeleaf/employee/findAllEmployee。
+
+## 4.8 查询所有员工
+
+### 4.8.1 创建员工实体
+
+在`com/example/entity`下创建`Employee`类：
+
+```java
+package com.example.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import java.util.Date;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+
+public class Employee {
+    private String id;
+    private String employeename;
+    private Double salary;
+    private Integer age;
+    private Date birthday;
+}
+```
+
+### 4.8.2 创建EmployeeDAO
+
+```java
+package com.example.dao;
+
+import com.example.entity.Employee;
+
+import java.util.List;
+
+public interface EmployeeDAO {
+    List<Employee> findAllEmployee();
+}
+```
+
+### 4.8.3 创建EmployeeDAOMapper配置文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dao.EmployeeDAO">
+
+    <!--findAllEmployee-->
+    <select id="findAllEmployee" resultType="Employee">
+        SELECT * FROM table_employee;
+    </select>
+
+</mapper>
+```
+
+### 4.8.4 开发业务层
+
+- 创建`EmployeeService`接口：
+
+```java
+package com.example.service;
+
+import com.example.entity.Employee;
+
+import java.util.List;
+
+public interface EmployeeService {
+    List<Employee> findAllEmployee();
+}
+```
+
+- 创建接口实现类`EmployeeServiceImpl`：
+
+```java
+package com.example.service;
+
+import com.example.dao.EmployeeDAO;
+import com.example.entity.Employee;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@Transactional
+
+public class EmployeeServiceImpl implements EmployeeService {
+
+    @Autowired
+    private EmployeeDAO employeeDAO;
+
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public List<Employee> findAllEmployee() {
+        return employeeDAO.findAllEmployee();
+    }
+}
+```
+
+### 4.8.5 创建控制器
+
+```java
+package com.example.controller;
+
+import com.example.entity.Employee;
+import com.example.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/employee")
+
+public class EmployeeController {
+    
+    @Autowired
+    private EmployeeService employeeService;
+    
+    @GetMapping("/findAllEmployee")
+    public String findAllEmployee(Model model) {
+        List<Employee> employees = employeeService.findAllEmployee();
+        model.addAttribute("employees", employees);
+        return "/employeeList";
+    }
+}
+```
+
+### 4.8.6 修改`employeeList.html`
+
+- 引入命名空间`<html lang="en" xmlns:th="http://www.thymeleaf.org">`
+- 对结果进行遍历`<tr class="row1" th:each="employee:${employees}">`
+- 解析样式`<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />`
+
+点击http://localhost:8989/ems_thymeleaf/employee/findAllEmployee进行访问！
+
+![image-202010041533-员工列表](SpringBoot.assets/image-202010041533-员工列表.png)
+
+## 4.9 添加员工
+
+### 4.9.1 通过`IndexController`控制器访问模板
+
+1. 在`EmployeeList.html`页面中添加`Add Employee`按钮：
+
+```html
+<input type="button" class="button" value="Add Employee" onclick="location.href='/ems_thymeleaf/employee/AddEmployee'"/>
+```
+
+向控制器发起请求，然后由控制器跳转到对应的模板（`thymeleaf`必须通过控制器来访问模板视图）！
+
+2. 在`IndexController.java`添加控制语句：
+
+```java
+@GetMapping("/employee/AddEmployee")
+public String addEmployee() {
+    return "/addEmployee";
+}
+```
+
+在浏览器地址栏键入`http://localhost:8989/ems_thymeleaf/employee/findAllEmployee`，然后点击`Add Employee`按钮，进入添加员工界面
+
+![image-202010041535-添加员工界面](SpringBoot.assets/image-202010041535-添加员工界面.png)
+
+### 4.9.2 将添加的员工信息添加至数据库
+
+1. 修改`EmployeeDAO`，添加`addEmployee`方法
+
+```java
+package com.example.dao;
+
+import com.example.entity.Employee;
+
+import java.util.List;
+
+public interface EmployeeDAO {
+
+    List<Employee> findAllEmployee();
+
+    void addEmployee(Employee employee);
+}
+```
+
+2. 在`EmployeeDAOMapper.xml`中添加`mysql`语句（==第10-13行==）：
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dao.EmployeeDAO">
+
+    <!--findAllEmployee-->
+    <select id="findAllEmployee" resultType="Employee">
+        SELECT * FROM table_employee;
+    </select>
+
+    <!--addEmployee-->
+    <insert id="addEmployee" parameterType="Employee">
+        INSERT INTO table_employee VALUES (#{id}, #{employeename}, #{salary}, #{age}, #{birthday});
+    </insert>
+
+</mapper>
+```
+
+3. 开发业务层
+
+   - 在`EmployeeService.java`添加`void addEmployee(Employee employee);`
+   - 在`EmployeeServiceImpl`实现上述方法
+
+   ```java
+   @Override
+   public void addEmployee(Employee employee) {
+       employee.setId(UUID.randomUUID().toString());
+       employeeDAO.addEmployee(employee);
+   }
+   ```
+
+4. 修改`EmployeeController`
+
+```java
+	/**
+     * 添加员工信息
+     * @param employee
+     * @return
+     */
+    @PostMapping("/addEmployee")
+    public String addEmployee(Employee employee) {
+        employeeService.addEmployee(employee);
+        // 跳转到当前控制器findAllEmployee，由控制器去访问模板
+        return "redirect:/employee/findAllEmployee";
+    }
+```
+
+**注意跳转的路径**！
+
+5. 修改`addEmplyee.html`
+
+将原来的
+
+```html
+<h1>
+	Add Employee Information:
+</h1>
+	<form action="employeeList.html" method="post">
+```
+
+修改为`<form th:action="@{/employee/addEmployee}" method="post">`（`@{/employee/addEmployee}`对应的地址为`/ems_thymeleaf/employee/addEmployee`），并添加缺失的属性：
+
+```html
+name:<input type="text" class="inputgri" name="employeename" />
+
+<tr>
+    <td valign="middle" align="right">
+        birthday:
+    </td>
+    <td valign="middle" align="left">
+        <input type="text" class="inputgri" name="birthday" />
+    </td>
+</tr>
+```
+
+6. 测试功能
+
+在浏览器地址栏键入http://localhost:8989/ems_thymeleaf/employee/AddEmployee，然后点击`Confirm`按钮，进入员工列表界面：
+
+![image-202010041628-添加员工后进入员工列表界面](SpringBoot.assets/image-202010041628-添加员工后进入员工列表界面.png)
+
+## 4.10 修改员工信息
+
+### 4.10.1 删除员工信息
+
+1. 修改`employeeList.html`中`delete employee`所对应的连接
+
+   将原来的
+
+   ```html
+   <td>
+   	<a href="employeeList.html">delete</a>&nbsp;
+   	<a href="updateEmployee.html">update</a>
+   </td>
+   ```
+
+   修改为
+
+   ```html
+   <a th:href="@{/employee/deleteEmployee(id=${employee.id})}">delete</a>&nbsp;
+   ```
+
+   通过浏览器的`检查`功能可以看到，该链接为`href="/ems_thymeleaf/employee/deleteEmployee?id=f2b79150-9ef6-408b-ae63-23149178d476"`
+
+2. 修改`EmployeeDAO`，添加`deleteEmployee`方法：`void deleteEmployee(String id);`
+
+3. 在`EmployeeDAOMapper.xml`中添加`mysql`语句：
+
+   ```mysql
+   <!--deleteEmployee-->
+   <delete id="deleteEmployee" parameterType="String">
+   	DELETE FROM table_employee WHERE id = #{id};
+   </delete>
+   ```
+
+4. 开发业务层
+
+   - 在`EmployeeService.java`添加`void deleteEmployee(String id);`
+   - 在`EmployeeServiceImpl`实现上述方法
+
+   ```java
+   @Override
+   public void deleteEmployee(String id) {
+       employeeDAO.deleteEmployee(id);
+   }
+   ```
+
+5. 修改`EmployeeController`
+
+   ```java
+   /**
+   * 删除员工信息
+   * @param id
+   * @return
+   */
+   @GetMapping("/deleteEmployee")
+   public String deleteEmployee(String id) {
+       employeeService.deleteEmployee(id);
+       // 跳转到当前控制器findAllEmployee，由控制器去访问模板
+       return "redirect:/employee/findAllEmployee";
+   }
+   ```
+
+6. 测试
+
+   测试地址http://localhost:8989/ems_thymeleaf/employee/findAllEmployee，点击`delete`。
+
+### 4.10.2 更新员工信息
+
+1. 先查后改
+
+   - 修改`employeeList.html`中`delete employee`所对应的连接
+     - 将原来的`<a href="updateEmployee.html">update</a>`
+     - 修改为`<a th:href="@{/employee/findEmployee(id=${employee.id})}">update</a>`
+
+   - 检查修改后的链接：运行，页面检查->`href="/ems_thymeleaf/employee/findEmployee?id=35c2d389-e63e-4854-9531-1be752986275"`
+
+2. 修改`EmployeeDAO`，添加`findEmployee`方法（根据`id`先找到对应的员工）：`Employee findEmployee(String id);`
+
+3. 在`EmployeeDAOMapper.xml`中添加`mysql`语句：
+
+   ```mysql
+   <!--findEmployee根据id查询员工-->
+   <select id="findEmployee" parameterType="String" resultType="Employee">
+   	SELECT id, employeename, salary, age, birthday FROM table_employee
+       WHERE id = #{id}
+   </select>
+   ```
+
+4. 开发业务层
+
+   - 在`EmployeeService.java`添加`Employee findEmployee(String id);`
+   - 在`EmployeeServiceImpl`实现上述方法
+
+   ```java
+   @Override
+   @Transactional(propagation = Propagation.SUPPORTS)
+   public Employee findEmployee(String id) {
+       return employeeDAO.findEmployee(id);
+   }
+   ```
+
+5. 修改`EmployeeController`
+
+   ```java
+   /**
+   * 根据id查找员工
+   * @param id
+   * @param model
+   * @return updateEmployee.html
+   */
+   @GetMapping("/findEmployee")
+   public String findEmployee(String id, Model model) {
+       Employee employee = employeeService.findEmployee(id);
+       model.addAttribute("employee", "employee");
+       return "updateEmployee";
+   }
+   ```
+
+6. 修改`updateEmployee.html`
+
+   - 命名空间：`<html lang="en" xmlns:th="http://www.thymeleaf.org">`
+
+   - 修改样式引用：`th:href="@{/css/style.css}"`
+
+   - 修改其余属性
+
+     ```html
+     id:<span th:text="${employee.id}"/>
+     
+     <input type="text" class="inputgri" name="employeename" th:value="${employee.employeename}"/>
+     
+     <input type="text" class="inputgri" name="salary" th:value="${employee.salary}"/>
+     
+     <input type="text" class="inputgri" name="age" th:value="${employee.age}"/>
+     
+     <input type="text" class="inputgri" name="birthday" th:value="${#dates.format(employee.birthday, 'yyyy/MM/dd')}"/>
+     ```
+
+7. 测试
+
+   输入http://localhost:8989/ems_thymeleaf/employee/findAllEmployee，点击`update`按钮：
+
+   ![image-202010041751-update功能](SpringBoot.assets/image-202010041751-update功能.png)
+
+8. 修改`updateEmployee.html`表单
+
+   - 修改提交路径：将`updateEmployee.html`中`<form action="employeeList.html" method="post">`修改为`<form th:action="@{/employee/update}" method="post">`
+   - 对`id`属性进行修改，添加==第2行==
+
+   ```html
+   <span th:text="${employee.id}"/>
+   <input type="hidden" th:value="${employee.id}" name="id">
+   ```
+
+9. 修改`EmployeeDAO`，添加`update`方法：`void update(Employee employee);`
+
+10. 在`EmployeeDAOMapper.xml`中添加`mysql`语句：
+
+    ```mysql
+    <!--update-->
+    <update id="update" parameterType="Employee">
+    	UPDATE table_employee SET employeename = #{employeename}, salary = #{salary}, age = #{age}, birthday = #{birthday}
+        WHERE id = #{id}
+    </update>
+    ```
+
+11. 开发业务层
+
+    - 在`EmployeeService.java`添加`void update(Employee employee);`
+    - 在`EmployeeServiceImpl`实现上述方法
+
+    ```java
+    @Override
+    public void update(Employee employee) {
+        employeeDAO.update(employee);
+    }
+    ```
+
+12. 修改`EmployeeController`
+
+    ```java
+    /**
+    * 更新员工信息
+    * @param employee
+    * @return
+    */
+    @PostMapping("/update")
+    public String update(Employee employee) {
+        employeeService.update(employee);
+        return "redirect:/employee/findAllEmployee";
+    }
+    ```
+
+13. 测试
+
+    - 访问http://localhost:8989/ems_thymeleaf/employee/findAllEmployee
+
+    ![image-202010041812-update功能验证](SpringBoot.assets/image-202010041812-update功能验证.png)
+
+    - 点击`update`，进入链接http://localhost:8989/ems_thymeleaf/employee/findEmployee?id=35c2d389-e63e-4854-9531-1be752986275，修改信息并点击`Confirm`
+
+    ![image-202010041815-update功能验证1](SpringBoot.assets/image-202010041815-update功能验证1.png)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# 5 使用devtools开启热部署
 
 
 

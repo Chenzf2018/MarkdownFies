@@ -11,8 +11,13 @@ public class IndexController {
         return "/login";
     }
 
-    @GetMapping("toRegistController")
+    @GetMapping("/toRegistController")
     public String toRegistController() {
         return "/regist";
+    }
+
+    @GetMapping("/employee/AddEmployee")
+    public String addEmployee() {
+        return "/addEmployee";
     }
 }

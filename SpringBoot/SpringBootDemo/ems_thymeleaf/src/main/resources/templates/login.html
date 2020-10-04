@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html <html lang="en" xmlns:th="http://www.thymeleaf.org">>
+<html <html lang="en" xmlns:th="http://www.thymeleaf.org">
 	<head>
 		<title>login</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<link rel="stylesheet" type="text/css" th:href="@{css/style.css}" />
+		<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
 	</head>
 
 	<body>
@@ -30,7 +30,7 @@
 					<h1>
 						login
 					</h1>
-					<form action="employeeList.html" method="post">
+					<form th:action="@{/chenzf/login}" method="post">
 						<table cellpadding="0" cellspacing="0" border="0"
 							class="form_table">
 							<tr>
@@ -38,7 +38,7 @@
 									username:
 								</td>
 								<td valign="middle" align="left">
-									<input type="text" class="inputgri" name="name" />
+									<input type="text" class="inputgri" name="username" />
 								</td>
 							</tr>
 							<tr>
@@ -46,7 +46,7 @@
 									password:
 								</td>
 								<td valign="middle" align="left">
-									<input type="password" class="inputgri" name="pwd" />
+									<input type="password" class="inputgri" name="userpassword" />
 								</td>
 							</tr>
 						</table>
