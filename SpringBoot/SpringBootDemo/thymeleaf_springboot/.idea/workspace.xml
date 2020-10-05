@@ -2,32 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7293423b-3dfe-4cbb-b632-78901ea48838" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../../../JavaProgram/Java语法之注解.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../../JavaProgram/Java语法之注解.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Spring.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../../SpringBoot.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../SpringBoot.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBoot1.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBoot1/ThymeleafURL.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBoot1/创建项目.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBoot1/热部署.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBoot1/项目依赖.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBoot1/项目参数.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBoot1/项目路径.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/HelloWorld.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/Maven设置.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/SpringBoot项目结构.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/SpringIoC容器的接口设计.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/controller.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/jsp文件路径.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/myproject项目结构.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/readinglist项目结构.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/readinglist项目运行结果.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/run方法.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/创建新工程.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/学习路线.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/将项目打成jar包.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/简单项目运行结果.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/网页构建.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../SpringBootImages/项目添加依赖.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ems_thymeleaf/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ems_thymeleaf/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ems_thymeleaf/src/main/java/com/example/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../ems_thymeleaf/src/main/java/com/example/controller/UserController.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -41,10 +18,11 @@
     <session id="905731129">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="2" />
+          <entry key="project.closed" value="3" />
+          <entry key="project.open.time.2" value="1" />
           <entry key="project.open.time.3" value="1" />
           <entry key="project.open.time.4" value="1" />
-          <entry key="project.opened" value="2" />
+          <entry key="project.opened" value="3" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -86,65 +64,7 @@
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pom.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="506">
-              <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/resources/application.properties">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="66">
-              <caret line="3" selection-start-line="3" selection-end-line="3" selection-end-column="75" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/resources/templates/index.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="44">
-              <caret line="2" selection-start-line="2" selection-end-line="7" selection-end-column="7" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/sjtu/chenzf/entity/User.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="330">
-              <caret line="15" column="21" selection-start-line="15" selection-start-column="21" selection-end-line="15" selection-end-column="21" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/sjtu/chenzf/controller/UserController.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="154">
-              <caret line="7" selection-start-line="7" selection-end-line="7" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/resources/static/css/index.css">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="44">
-              <caret line="2" column="1" selection-start-line="2" selection-start-column="1" selection-end-line="2" selection-end-column="1" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -220,8 +140,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -291,6 +209,8 @@
           <select />
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -359,16 +279,17 @@
       <updated>1601621435606</updated>
       <workItem from="1601621439158" duration="3831000" />
       <workItem from="1601625370015" duration="9602000" />
+      <workItem from="1601864855854" duration="8000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="13433000" />
+    <option name="totallyTimeSpent" value="13441000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-1208" y="-8" width="1216" height="1896" extended-state="6" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25367966" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25800866" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -437,6 +358,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="506">
+          <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/templates/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="44">
+          <caret line="2" selection-start-line="2" selection-end-line="7" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/sjtu/chenzf/entity/User.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="330">
@@ -465,20 +400,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="66">
           <caret line="3" selection-start-line="3" selection-end-line="3" selection-end-column="75" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/templates/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="44">
-          <caret line="2" selection-start-line="2" selection-end-line="7" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="506">
-          <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
         </state>
       </provider>
     </entry>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--InjectDAO组件-->
+    <bean class="injection.InjectDAOImpl" id="injectDAO"></bean>
+
+    <!--InjectService组件-->
+    <bean class="injection.InjectServiceImpl" id="injectService">
+
+        <property name="injectDAO" ref="injectDAO"/>
+
+        <!--SET注入相关语法-->
+        <!--注入String-->
+        <property name="name" value="chenzufeng"/>
+        <!--注入Integer-->
+        <property name="age" value="27"/>
+        <!--注入Date，日期格式为yyyy/MM/dd HH:mm:ss-->
+        <property name="date" value="1993/11/10"/>
+
+        <!--注入数组-->
+        <property name="stringArray">
+            <array>
+                <value>chen</value>
+                <value>zu</value>
+                <value>feng</value>
+            </array>
+        </property>
+
+        <property name="injectDAOS">
+            <array>
+                <ref bean="injectDAO"/>
+                <ref bean="injectDAO"/>
+                <ref bean="injectDAO"/>
+            </array>
+        </property>
+
+        <!--注入集合-->
+        <property name="habbies">
+            <list>
+                <value>看书</value>
+                <value>打球</value>
+            </list>
+        </property>
+
+        <!--key; key-ref-->
+        <property name="maps">
+            <map>
+                <entry key="1" value="chen"/>
+                <entry key="2" value="zufeng"/>
+            </map>
+        </property>
+
+        <!--注入Properties：特殊的map，只能放文本字符串-->
+        <property name="properties">
+            <props>
+                <prop key="driver">com.mysql.jdbc</prop>
+                <prop key="url">jdbc:mysql://localhost:3306/test</prop>
+                <prop key="username">root</prop>
+                <prop key="password">admin</prop>
+            </props>
+        </property>
+
+    </bean>
+
+</beans>

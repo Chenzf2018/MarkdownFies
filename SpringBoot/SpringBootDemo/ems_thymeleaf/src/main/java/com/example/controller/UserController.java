@@ -3,11 +3,15 @@ package com.example.controller;
 import com.example.entity.User;
 import com.example.service.UserService;
 import com.example.utils.ValidateImageCodeUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletOutputStream;
@@ -18,11 +22,30 @@ import java.io.IOException;
 
 @Controller
 @RequestMapping("/chenzf")
+// 在当前类直接声明日志对象
+@Slf4j  // lombok.extern.slf4j
 
 public class UserController {
 
+    // 声明日志对象
+    // private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
     @Autowired
     private UserService userService;
+
+    /**
+     * 测试logback
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/testLogback")
+    public String testLogback(String id) {
+        // System.out.println("测试logback：id = " + id);
+        log.info("INFO信息：id = " + id);
+        log.debug("DEBUG信息：id = " + id);
+        return id;
+    }
 
     /**
      * 登录页面
@@ -76,5 +99,17 @@ public class UserController {
         // 响应图片
         ServletOutputStream outputStream = response.getOutputStream();
         ImageIO.write(image, "png", outputStream);
+    }
+
+    /**
+     * 测试热部署
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/testDevTools")
+    public String testDevTools(String id) {
+        System.out.println("开启热部署：id = " + id);
+        return id;
     }
 }

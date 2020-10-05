@@ -3072,19 +3072,264 @@ name:<input type="text" class="inputgri" name="employeename" />
 
 # 5 使用devtools开启热部署
 
+为了进一步提高开发效率，Spring Boot为我们提供了`全局项目热部署`，日后在开发过程中修改了部分代码以及相关配置文件后，`不需要每次重启使修改生效`，在项目中开启了Spring Boot全局热部署之后只需要在修改之后等待几秒即可使修改生效。
 
+## 5.1 热部署原理
 
+使用热部署后会在`JVM`中产生两个类加载器（默认只有一个）：`ClassLoader1、ClassLoader2`，`devtools`会进行循环地切换两个类加载器来实现热部署。
 
+两个类加载器会对`JVM`产生一定的影响，因此仅在开发时使用热部署！
 
+## 5.2 开启热部署
 
+### 5.2.1 在项目中引入依赖
 
+在`pom.xml`中添加：
 
+```xml
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-devtools</artifactId>
+   <optional>true</optional>
+</dependency>
+```
 
+然后点击`Import Changes`。
 
+### 5.2.2 将`IDEA`设置为支持自动编译
 
+1. **开启自动编译**：`IDEA`是在运行时才编译一次`class`，不会随着修改自动进行编译
 
+![image-202010051000-开启热部署](SpringBoot.assets/image-202010051000-开启热部署.png)
 
+2. 开启允许在允许过程中修改文件——切换`ClassLoader`
 
+快捷键：`Ctrl` + `Alt` + `Shift` + `/`，然后选择`1.Registry`
 
+![image-20201005100838382](SpringBoot.assets/image-20201005100838382.png)
 
+然后勾选`compiler.automake.allow.when.app.running`
+
+![image-20201005100948113](SpringBoot.assets/image-20201005100948113.png)
+
+### 5.2.3 验证热部署是否生效
+
+日志出现`restartedMain`代表已经生效！
+
+在`UserController.java`中添加
+
+```java
+/**
+* 测试热部署
+* @param id
+* @return
+*/
+@ResponseBody
+@GetMapping("/testDevTools")
+public String testDevTools(String id) {
+    System.out.println("开启热部署：id = " + id);
+    return id;
+}
+```
+
+访问地址：http://localhost:8989/ems_thymeleaf/chenzf/testDevTools?id=1
+
+页面显示：`1`；后台显示：`开启热部署：id = 1`
+
+### 5.2.4 对`thymeleaf`开启热部署
+
+在`application.properties`中需要加上`spring.thymeleaf.cache=false`
+
+# 6 logback日志的集成
+
+`Logback`是由[log4j](https://baike.baidu.com/item/log4j/480673)创始人设计的一个`开源日志组件`。目前，`Logback`分为三个模块：`logback-core`，`logback-classic`和`logback-access`。是对`log4j`日志的进一步改进。
+
+## 6.1 日志的概述
+
+### 6.1.1 日志级别
+
+日志级别由低到高:  `日志级别越高输出的日志信息越少`：`DEBUG < INFO < WARN < ERROR < OFF`
+
+### 6.1.2 项目中日志分类
+
+- `rootLogger`：`全局日志`——用来监听项目中**所有的**运行日志，包括引入依赖`jar`中的日志  
+
+```java
+2020-10-05 10:22:52.768  INFO 3216 --- [  restartedMain] com.example.EmsThymeleafApplication      : Starting EmsThymeleafApplication on Chenzf with PID 3216 (D:\MarkdownFiles\SpringBoot\SpringBootDemo\ems_thymeleaf\target\classes started by Chenzf in D:\MarkdownFiles\SpringBoot\SpringBootDemo\ems_thymeleaf)
+2020-10-05 10:22:52.768  INFO 3216 --- [  restartedMain] com.example.EmsThymeleafApplication      : No active profile set, falling back to default profiles: default
+2020-10-05 10:22:53.049  INFO 3216 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8989 (http)
+2020-10-05 10:22:53.049  INFO 3216 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+```
+
+从上述日志信息可以看出，Spring Boot的默认日志是`INFO`
+
+- `logger`：`子日志`——自定义的，用来监听项目中**指定**包中的日志信息
+
+## 6.2 logback日志使用
+
+### 6.2.1 方式一：使用logback配置文件
+
+`logback`的配置文件必须放在**项目根目录**中，且名字必须为`logback.xml`：
+
+在`resources`下新建`logback.xml`
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <!--定义项目中日志输出位置-->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <!--定义项目的日志输出格式-->
+        <!--定义项目的日志输出格式-->
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern> [%p] %d{yyyy-MM-dd HH:mm:ss} %m %n</pattern>
+        </layout>
+    </appender>
+
+    <!--项目中跟日志控制-->
+    <root level="INFO">
+        <appender-ref ref="stdout"/>
+    </root>
+    <!--项目中指定包日志控制-->
+    <logger name="com.baizhi.dao" level="DEBUG"/>
+
+</configuration>
+```
+
+### 6.2.2 方式二：配置文件`application.properties`
+
+```properties
+logging.level.root=DEBUG
+```
+
+控制台输出：`INFO、DEBUG`
+
+```
+2020-10-05 11:02:45.721  INFO 12196 --- [  restartedMain] com.example.EmsThymeleafApplication      : Starting EmsThymeleafApplication on Chenzf with PID 12196 (D:\MarkdownFiles\SpringBoot\SpringBootDemo\ems_thymeleaf\target\classes started by Chenzf in D:\MarkdownFiles\SpringBoot\SpringBootDemo\ems_thymeleaf)
+2020-10-05 11:02:45.722 DEBUG 12196 --- [  restartedMain] com.example.EmsThymeleafApplication      : Running with Spring Boot v2.2.5.RELEASE, Spring v5.2.4.RELEASE
+```
+
+设置显示子日志：
+
+```properties
+logging.level.root=INFO
+logging.level.com.example.dao=DEBUG
+```
+
+点击链接：http://localhost:8989/ems_thymeleaf/employee/findAllEmployee
+
+控制台输出：`DEBUG`——`c.e.dao.EmployeeDAO.findAllEmployee      : ==>  Preparing: SELECT * FROM table_employee; `
+
+```
+2020-10-05 11:06:38.403  INFO 12196 --- [nio-8989-exec-1] com.alibaba.druid.pool.DruidDataSource   : {dataSource-1} inited
+2020-10-05 11:06:38.539 DEBUG 12196 --- [nio-8989-exec-1] c.e.dao.EmployeeDAO.findAllEmployee      : ==>  Preparing: SELECT * FROM table_employee; 
+2020-10-05 11:06:38.554 DEBUG 12196 --- [nio-8989-exec-1] c.e.dao.EmployeeDAO.findAllEmployee      : ==> Parameters: 
+2020-10-05 11:06:38.569 DEBUG 12196 --- [nio-8989-exec-1] c.e.dao.EmployeeDAO.findAllEmployee      : <==      Total: 2
+```
+
+### 6.2.3 具体类中使用日志
+
+在`com.example.controller.UserController`中添加：
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class UserController {
+
+    // 声明日志对象
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * 测试logback
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/testLogback")
+    public String testLogback(String id) {
+        System.out.println("测试logback：id = " + id);
+        logger.info("INFO信息");
+        logger.debug("DEBUG信息");
+        return id;
+    }
+...
+}
+```
+
+输入链接：http://localhost:8989/ems_thymeleaf/chenzf/testLogback?id=1，页面显示：`1`；控制台输出：
+
+```
+测试logback：id = 1
+2020-10-05 11:22:46.375  INFO 12196 --- [nio-8989-exec-2] com.example.controller.UserController    : INFO信息
+```
+
+- 可以**使用日志来代替打印输出**
+  - 在`application.properties`中增加一级日志：
+
+  ```properties
+  logging.level.root=INFO
+  logging.level.com.example.dao=DEBUG
+  logging.level.com.example.controller=DEBUG
+  ```
+
+  - 在`com.example.controller.UserController`中修改：
+
+  ```java
+  /**
+  * 测试logback
+  * @param id
+  * @return
+  */
+  @ResponseBody
+  @GetMapping("/testLogback")
+  public String testLogback(String id) {
+      // System.out.println("测试logback：id = " + id);
+      logger.info("INFO信息：id = " + id);
+      logger.debug("DEBUG信息：id = " + id);
+      return id;
+  }
+  ```
+
+  输入链接：http://localhost:8989/ems_thymeleaf/chenzf/testLogback?id=1，页面显示：`1`；控制台输出：
+
+  ```
+  2020-10-05 11:29:24.723  INFO 12196 --- [nio-8989-exec-1] com.example.controller.UserController    : INFO信息：id = 1
+  2020-10-05 11:29:24.723 DEBUG 12196 --- [nio-8989-exec-1] com.example.controller.UserController    : DEBUG信息：id = 1
+  ```
+
+- 使用`lombok`替代声明日志对象：==第4行，第23-24行==
+
+```java
+@Controller
+@RequestMapping("/chenzf")
+// 在当前类直接声明日志对象
+@Slf4j  // lombok.extern.slf4j
+
+public class UserController {
+
+    // 声明日志对象
+    // private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * 测试logback
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/testLogback")
+    public String testLogback(String id) {
+        // System.out.println("测试logback：id = " + id);
+        log.info("INFO信息：id = " + id);
+        log.debug("DEBUG信息：id = " + id);
+        return id;
+    }
+...
+}
+```
 
