@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--ConstructorInjectionDAO组件-->
+    <!--默认匹配无参构造
+    <bean class="constructorInjection.ConstructorInjectionDAOImpl" id="constructorInjectionDAO"></bean>
+    -->
+    <!--构造注入
+            index: 从0开始，表示调用的构造器中的参数位置
+            name: 参数名称-->
+    <bean class="constructorInjection.ConstructorInjectionDAOImpl" id="constructorInjectionDAO">
+        <constructor-arg index="0" name="inputString" value="chen"/>
+        <constructor-arg index="1" name="age" value="27"/>
+    </bean>
+
+    <!--ConstructorInjectionService组件-->
+    <bean class="constructorInjection.ConstructorInjectionServiceImpl" id="constructorInjectionService"></bean>
+
+</beans>

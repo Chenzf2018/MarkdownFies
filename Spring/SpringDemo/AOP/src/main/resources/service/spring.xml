@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                                           http://www.springframework.org/schema/aop
+                                           http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--管理Service组件-->
+    <bean class="service.EmpServiceImpl" id="empService"></bean>
+
+    <!--注册通知-->
+    <bean class="service.MyBeforeAdvice" id="myBeforeAdvice"></bean>
+
+    <!--组装切面-->
+    <aop:config>
+        <!--配置切入点
+                id: 切入点在工厂中的唯一标识，可根据它找到切入点
+                expression：用来指定切入项目中哪些组件中的指定方法
+                                    execution(返回值 包.类.*(..))，其中*(..)表示任意方法-->
+        <aop:pointcut id="EmpServiceImplAllMethods" expression="execution(* service.EmpServiceImpl.*(..))"/>
+
+        <!--配置切面：将通知与切入点组装在一起
+                      advice-ref：工厂中通知id
+                      pointcut-ref：工厂中切入点的唯一标识-->
+        <aop:advisor advice-ref="myBeforeAdvice" pointcut-ref="EmpServiceImplAllMethods"/>
+    </aop:config>
+
+</beans>

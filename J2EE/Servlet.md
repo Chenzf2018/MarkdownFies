@@ -90,6 +90,7 @@ tomcat启动之后，在默认情况下，不会去out目录找这些class文件
 
 **设置部署：**
 点击Artifact，自动生成j2ee.war。
+
 <div align=center><img src=Pictures\设置部署.jpg></div>
 
 ## 运行并测试

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--1.创建数据源datasource-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/spring_mybatis"/>
+        <property name="username" value="root"/>
+        <property name="password" value="admin"/>
+    </bean>
+
+    <!--2.根据数据源创建sqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+
+        <!--依赖数据源-->
+        <property name="dataSource" ref="dataSource"/>
+
+        <!--注入mapper配置文件
+                private Resource[] mapperLocations;
+                Resource[]=>String[]-->
+        <property name="mapperLocations">
+            <array>
+                <value>classpath:com/chenzf/mapper/UserDAOMapper.xml</value>
+            </array>
+        </property>
+
+    </bean>
+
+    <!--3.根据sqlSessionFactory创建DAO组件类-->
+    <bean id="userDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <!--注入sqlSessionFactory-->
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        <!--注入创建DAO接口类型；注入接口的全限定名：包.接口-->
+        <property name="mapperInterface" value="com.chenzf.dao.UserDAO"/>
+    </bean>
+
+    <!--4.管理Service组件-->
+    <bean id="userService" class="com.chenzf.service.UserServiceImpl">
+        <!--注入DAO-->
+        <property name="userDAO" ref="userDAO"/>
+        <!--注入事务管理器-->
+        <property name="platformTransactionManager" ref="transactionManager"/>
+    </bean>
+
+    <!--5.控制数据源事务管理-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--注入数据源-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+</beans>
