@@ -32,4 +32,24 @@ public class ForwardAndRedirectController {
         System.out.println("测试redirect跳转到index.jsp");
         return "redirect:/index.jsp";
     }
+
+    /**
+     * 测试forward跳转到相同controller类中不同方法
+     * @return forward:/类路径/方法路径
+     */
+    @RequestMapping("/testForwardSameController")
+    public String testForwardSameController() {
+        System.out.println("测试forward跳转到相同controller类中不同方法");
+        return "forward:/ForwardAndRedirectController/testForward";
+    }
+
+    /**
+     * 测试redirect跳转到相同controller类中不同方法
+     * @return redirect:/类路径/方法路径
+     */
+    @RequestMapping("/testRedirectSameController")
+    public String testRedirectSameController() {
+        System.out.println("测试redirect跳转到相同controller类中不同方法");
+        return "redirect:/ForwardAndRedirectController/testRedirect";
+    }
 }

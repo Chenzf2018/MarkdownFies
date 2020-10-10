@@ -25,6 +25,6 @@ public class HelloController {
         System.out.println("HelloController控制器中调用业务方法！");
 
         // 3.处理响应：返回页面逻辑名
-        return "index";
+        return "param";
     }
 }
