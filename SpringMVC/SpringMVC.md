@@ -335,6 +335,8 @@ public class HelloController {
 
    - 启动测试http://localhost:8090/SpringMVC_FirstDemo/ForwardAndRedirectController/testForward
 
+   
+
 2. `redirect`：使用SpringMVC提供的关键字`redirect`。
 
    - 语法：`return "redirect:视图全名"`——`return "redirect:/index.jsp"`
@@ -371,7 +373,7 @@ public class HelloController {
 
    - 使用`redirect`跳转**不会经过视图解析器**，所以要把路径写全！
 
-   - 跳转后地址栏改变
+   - **跳转后地址栏改变**
 
    - 测试
 
@@ -404,6 +406,8 @@ public class HelloController {
 
    - 跳转后地址栏不改变
    - 输入：http://localhost:8090/SpringMVC_FirstDemo/ForwardAndRedirectController/testForwardSameController
+
+   
 
 2. `forward`跳转到不同controller类中方法：与1中方式相同！
 
@@ -702,19 +706,67 @@ public class User {
 
 ### 4.2.3 前台传递参数
 
-1. `Get`方式请求参数传递：
+#### 4.2.3.1 `Get`方式请求参数传递：
 
-   http://localhost:8090/SpringMVC_FirstDemo/ParamController/testObject?name=chenzufeng&age=27&sexual=true&salary=20000&birth=1993/11/10
+http://localhost:8090/SpringMVC_FirstDemo/ParamController/testObject?name=chenzufeng&age=27&sexual=true&salary=20000&birth=1993/11/10
 
-2. 测试结果
+测试结果
 
-   ```
-   ==========测试对象类型的参数接收==========
-   ParamController接收到的对象：User{name='chenzufeng', age=27, salary=20000.0, sexual=true, birth=Wed Nov 10 00:00:00 CST 1993}
-   ParamController接收到的对象的姓名：chenzufeng
-   ```
+```
+==========测试对象类型的参数接收==========
+ParamController接收到的对象：User{name='chenzufeng', age=27, salary=20000.0, sexual=true, birth=Wed Nov 10 00:00:00 CST 1993}
+ParamController接收到的对象的姓名：chenzufeng
+```
 
-   
+
+
+#### 4.2.3.2 表单方式提交参数
+
+```java
+<%--
+  Created by IntelliJ IDEA.
+  User: Chenzf
+  Date: 2020/10/10
+  Time: 19:18
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+
+<h1>测试参数接收</h1>
+<form action="${pageContext.request.contextPath}/ParamController/testObject" method="post">
+    用户名: <input type="text" name="name"/>  <br>
+    年龄:  <input type="text" name="age"/>   <br>
+    性别:  <input type="text" name="sexual">    <br>
+    工资:  <input type="text" name="salary"> <br>
+    生日:  <input type="text" name="birth"> <br>
+    <input type="submit" value="提交"/>
+</form>
+
+</body>
+</html>
+```
+
+
+
+- 测试：http://localhost:8090/SpringMVC_FirstDemo/ParamController/testObject
+
+  提交后，后台输出：
+
+  ```
+  ==========测试对象类型的参数接收==========
+  ParamController接收到的对象：User{name='null', age=null, salary=null, sexual=null, birth=null}
+  ParamController接收到的对象的姓名：null
+  ==========测试对象类型的参数接收==========
+  ParamController接收到的对象：User{name='陈祖峰', age=27, salary=20000.0, sexual=true, birth=Wed Nov 10 00:00:00 CST 1993}
+  ParamController接收到的对象的姓名：陈祖峰
+  ```
+
+  
 
 ### 4.2.4 注意
 
@@ -1242,6 +1294,740 @@ return "redirect:/dataTransfer.jsp?name=" + URLEncoder.encode(name, "UTF-8");  /
    ```
 
    
+
+# 6 SSM整合编程
+
+## 6.1 整合步骤
+
+![image-20201011104702248](SpringMVC.assets/image-20201011104702248.png)
+
+
+
+## 6.2 代码实现
+
+### 6.2.1 创建工程
+
+1. Project Location：`D:\MarkdownFiles\SpringMVC\SpringMVC_Demo\SSM_SpringMVC`
+
+<img src="SpringMVC.assets/image-20201011110033275.png" alt="image-20201011110033275" style="zoom:100%;" />
+
+![image-20201011110137886](SpringMVC.assets/image-20201011110137886.png)
+
+2. 项目结构
+
+
+
+### 6.2.2 引入依赖
+
+#### 6.2.2.1 引入Spring相关jar包
+
+```xml
+   <!--1.Spring核心依赖-->
+	<dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context-support</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jdbc</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aop</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-expression</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aspects</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+	<dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+```
+
+#### 6.2.2.2 引入SpringMVC依赖
+
+```xml
+    <!--2.SpringMVC核心依赖-->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+      <version>4.3.2.RELEASE</version>
+    </dependency>
+```
+
+#### 6.2.2.3 引入Mybatis依赖
+
+```xml
+<!--3.Mybatis依赖-->
+<dependency>
+  <groupId>org.mybatis</groupId>
+  <artifactId>mybatis</artifactId>
+  <version>3.5.4</version>
+</dependency>
+```
+
+#### 6.2.2.4 引入mybatis-spring依赖
+
+```xml
+<!--4.spring-mybatis依赖-->
+<dependency>
+  <groupId>org.mybatis</groupId>
+  <artifactId>mybatis-spring</artifactId>
+  <version>2.0.4</version>
+</dependency>
+```
+
+#### 6.2.2.5 引入mysql依赖
+
+```xml
+<!--5.mysql依赖-->
+<dependency>
+  <groupId>mysql</groupId>
+  <artifactId>mysql-connector-java</artifactId>
+  <version>5.1.40</version>
+</dependency>
+```
+
+#### 6.2.2.6 引入druid依赖
+
+```xml
+<!--6.druid依赖-->
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>druid</artifactId>
+    <version>1.1.19</version>
+</dependency>
+```
+
+#### 6.2.2.7 引入servlet-api依赖
+
+```xml
+<!--7.servlet-api依赖-->
+<dependency>
+    <groupId>javax.servlet</groupId>
+    <artifactId>servlet-api</artifactId>
+    <version>2.5</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+#### 6.2.2.8 引入jstl依赖
+
+```xml
+<!--8.jstl依赖-->
+<dependency>
+    <groupId>jstl</groupId>
+    <artifactId>jstl</artifactId>
+    <version>1.2</version>
+</dependency>
+```
+
+#### 6.2.2.9 引入log4j依赖
+
+```xml
+<!--9.log4j依赖-->
+<dependency>
+    <groupId>org.apache.logging.log4j</groupId>
+    <artifactId>log4j-core</artifactId>
+    <version>2.10.0</version>
+</dependency>
+
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-log4j12</artifactId>
+    <version>1.7.25</version>
+</dependency>
+```
+
+#### 6.2.2.10 引入fastjson依赖
+
+```xml
+<!--10.fastjson依赖-->
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>fastjson</artifactId>
+    <version>1.2.62</version>
+</dependency>
+```
+
+
+
+### 6.2.3 Spring与Mybatis整合
+
+#### 6.2.3.1 新建数据库、表
+
+```mysql
+# 创建数据库
+CREATE DATABASE `spring_mybatis` CHARACTER SET 'utf8';
+
+# 创建表
+CREATE TABLE `table_user` (
+  `id` varchar(40) NOT NULL,
+  `name` varchar(40) DEFAULT NULL,
+  `age` int(3) DEFAULT NULL,
+  `bir` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
+
+
+
+#### 6.2.3.2 创建实体
+
+创建`com.chenzf.entity.User`：
+
+```java
+package com.chenzf.entity;
+
+import java.util.Date;
+
+public class User {
+
+    private String id;
+    private String name;
+    private Integer age;
+    private Date birth;
+
+    public User() { }
+
+    public User(String id, String name, Integer age, Date birth) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.birth = birth;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                ", birth=" + birth +
+                '}';
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public Date getBirth() {
+        return birth;
+    }
+
+    public void setBirth(Date birth) {
+        this.birth = birth;
+    }
+}
+```
+
+
+
+#### 6.2.3.3 DAO
+
+创建`com.chenzf.dao.UserDAO`：
+
+```java
+package com.chenzf.dao;
+
+import com.chenzf.entity.User;
+
+import java.util.List;
+
+public interface UserDAO {
+
+    void saveUser(User user);
+
+    List<User> findAllUser();
+}
+```
+
+
+
+#### 6.2.3.4 mapper配置文件
+
+创建`com/chenzf/mapper/UserDAOMapper.xml`实现`UserDAO`接口：
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chenzf.dao.UserDAO">
+
+    <!--saveUser-->
+    <!--id和方法名一致，参数使用别名User-->
+    <insert id="saveUser" parameterType="User">
+        INSERT INTO table_user VALUES (#{id}, #{name}, #{age}, #{birth});
+    </insert>
+
+    <!--findAllUser-->
+    <select id="findAllUser" resultType="User">
+        SELECT * FROM table_user;
+    </select>
+
+</mapper>
+```
+
+
+
+#### 6.2.3.5 Service接口及其实现
+
+1. `com.chenzf.service.UserService`
+
+   ```java
+   package com.chenzf.service;
+   
+   import com.chenzf.entity.User;
+   
+   import java.util.List;
+   
+   public interface UserService {
+       
+       void saveUser(User user);
+       
+       List<User> findAllUser();
+   }
+   ```
+
+   
+
+2. `com.chenzf.service.UserServiceImpl`
+
+   ```java
+   package com.chenzf.service;
+   
+   import com.chenzf.dao.UserDAO;
+   import com.chenzf.entity.User;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.stereotype.Service;
+   import org.springframework.transaction.annotation.Propagation;
+   import org.springframework.transaction.annotation.Transactional;
+   
+   import java.util.List;
+   import java.util.UUID;
+   
+   /**
+    * Service("userService") 在工厂创建对象userService
+    * Transactional 设置类中所有方法都需要事务
+    * @author Chenzf
+    */
+   
+   @Service("userService")
+   @Transactional
+   
+   public class UserServiceImpl implements UserService {
+   
+       /**
+        * 业务层需要DAO，因此将其注入
+        */
+       @Autowired
+       private UserDAO userDAO;
+   
+       /**
+        * 处理业务
+        * @param user 传入的对象
+        */
+       @Override
+       public void saveUser(User user) {
+           user.setId(UUID.randomUUID().toString());
+           userDAO.saveUser(user);
+       }
+   
+       /**
+        * 查询没必要创建事务，仅需支持即可
+        * @return 遍历的对象
+        */
+       @Override
+       @Transactional(propagation = Propagation.SUPPORTS)
+       public List<User> findAllUser() {
+           return userDAO.findAllUser();
+       }
+   }
+   ```
+
+   
+
+#### 6.2.3.6 编写spring.xml实现Spring与Mybatis整合(重要)
+
+创建`main\resources\spring.xml`：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                            http://www.springframework.org/schema/beans/spring-beans.xsd
+                                            http://www.springframework.org/schema/context
+                                            http://www.springframework.org/schema/context/spring-context.xsd
+                                            http://www.springframework.org/schema/tx
+                                            http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--1.开启注解扫描-->
+    <context:component-scan base-package="com.chenzf"/>
+
+    <!--2.创建数据源datasource-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/spring_mybatis?characterEncoding=UTF-8"/>
+        <property name="username" value="root"/>
+        <property name="password" value="admin"/>
+    </bean>
+
+    <!--3.根据数据源创建sqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--3.1依赖数据源-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--3.2注入mapper配置文件：通用方式-->
+        <property name="mapperLocations" value="classpath:com/chenzf/mapper/*.xml"/>
+        <!--3.3注入别名相关配置：用来给指定包中所有类起别名-->
+        <property name="typeAliasesPackage" value="com.chenzf.entity"/>
+    </bean>
+
+    <!--4.根据sqlSessionFactory创建DAO组件类：一次性创建所有DAO，不需要设置id-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--4.1注入sqlSessionFactory-->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!--4.2扫描DAO接口所在包-->
+        <property name="basePackage" value="com.chenzf.dao"/>
+    </bean>
+
+    <!--5.创建事务管理器（解决连接一致性安全问题）-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--注入数据源-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--6.开启注解式事务生效-->
+    <!--xmlns:tx="http://www.springframework.org/schema/tx"-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+</beans>
+```
+
+
+
+#### 6.2.3.7 测试service方法调用
+
+创建`com.chenzf.test.TestUserService`：
+
+```java
+package com.chenzf.test;
+
+import com.chenzf.service.UserService;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class TestUserService {
+    public static void main(String[] args) {
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+        UserService userService = (UserService) context.getBean("userService");
+        userService.findAllUser().forEach(user -> System.out.println("user: " + user));
+    }
+}
+
+```
+
+
+
+- 设置支持`Lambda`表达式：
+
+  ![image-20201011151319463](SpringMVC.assets/image-20201011151319463.png)
+
+
+
+- 测试结果
+
+  ```
+  user: User{id='100b401f-1421-4cce-9acd-e76feec8228f', name='chenzufeng', age=27, birth=Wed Nov 10 17:25:42 CST 1993}
+  user: User{id='dd53fa81-58c9-47d1-9c26-587b24e70b7f', name='祖峰', age=20, birth=Thu Oct 08 21:53:15 CST 2020}
+  ```
+
+  
+
+### 6.2.4 Spring与SpringMVC整合
+
+#### 6.2.4.1 配置web.xml
+
+```xml
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+  <display-name>Archetype Created Web Application</display-name>
+
+    <!--1.配置工厂配置文件spring.xml-->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:spring.xml</param-value>
+    </context-param>
+
+    <!--2配置Post请求参数中文支持CharacterEncodingFilter-->
+    <filter>
+        <filter-name>charset</filter-name>
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>charset</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!--3.配置工厂监听器ContextLoaderListener-->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <!--4配置SpringMVC核心Servlet—DispatcherServlet—url-pattern-->
+    <servlet>
+        <servlet-name>springmvc</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <!--指定SpringMVC配置文件springmvc.xml位置-->
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:springmvc.xml</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>springmvc</servlet-name>
+        <!--/：拦截所有请求，交给SpringMVC处理-->
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+</web-app>
+
+```
+
+
+
+#### 6.2.4.2 创建springmvc.xml
+
+创建`main\resources\springmvc.xml`
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                            http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!--1.开启注解扫描-->
+    <!--xmlns:context="http://www.springframework.org/schema/context"-->
+    <context:component-scan base-package="com.chenzf.controller"/>
+
+    <!--2.注册处理器映射器和处理器适配器，以及参数类型转换，跳转和响应处理等-->
+    <!--xmlns:mvc="http://www.springframework.org/schema/mvc"-->
+    <mvc:annotation-driven/>
+
+    <!--3.注册视图解析器-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <!--注入前缀和后缀-->
+        <property name="prefix" value="/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    
+</beans>
+```
+
+
+
+#### 6.2.4.3 创建controller
+
+创建`com.chenzf.controller.UserController`
+
+```java
+package com.chenzf.controller;
+
+import com.chenzf.entity.User;
+import com.chenzf.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+
+@Controller
+@RequestMapping("/UserController")
+
+public class UserController {
+
+    /**
+     * findAllUser方法需要调用userService对象
+     */
+    @Autowired
+    private UserService userService;
+
+    @RequestMapping("/findAllUser")
+    public String findAllUser(HttpServletRequest request) {
+        // 1. 收集数据
+        // 2. 调用业务对象
+        List<User> allUser = userService.findAllUser();
+        // 3. 存储数据并跳转显示页面
+        request.setAttribute("users", allUser);
+        return "findAllUser";
+    }
+}
+```
+
+
+
+#### 6.2.4.4 创建findAllUser
+
+创建`main\webapp\findAllUser.jsp`，注意添加`isELIgnored="false"`
+
+```jsp
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%--
+  Created by IntelliJ IDEA.
+  User: Chenzf
+  Date: 2020/10/11
+  Time: 15:55
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>展示所有用户信息</title>
+</head>
+<body>
+
+<h1>展示用户列表</h1>
+<c:forEach items="${requestScope.allUser}" var="user">
+    ${user.id}, ${user.name}, ${user.age}, ${user.birth} <br>
+</c:forEach>
+
+</body>
+</html>
+```
+
+
+
+### 6.2.5 部署测试
+
+![image-20201011160321807](SpringMVC.assets/image-20201011160321807.png)
+
+![image-20201011160359335](SpringMVC.assets/image-20201011160359335.png)
+
+![image-20201011160443678](SpringMVC.assets/image-20201011160443678.png)
+
+
+
+![image-20201011165303657](SpringMVC.assets/image-20201011165303657.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

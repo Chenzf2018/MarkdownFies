@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                            http://www.springframework.org/schema/beans/spring-beans.xsd
+                                            http://www.springframework.org/schema/context
+                                            http://www.springframework.org/schema/context/spring-context.xsd
+                                            http://www.springframework.org/schema/tx
+                                            http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--1.开启注解扫描-->
+    <context:component-scan base-package="com.chenzf"/>
+
+    <!--2.创建数据源datasource-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/spring_mybatis?characterEncoding=UTF-8"/>
+        <property name="username" value="root"/>
+        <property name="password" value="admin"/>
+    </bean>
+
+    <!--3.根据数据源创建sqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--3.1依赖数据源-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--3.2注入mapper配置文件：通用方式-->
+        <property name="mapperLocations" value="classpath:com/chenzf/mapper/*.xml"/>
+        <!--3.3注入别名相关配置：用来给指定包中所有类起别名-->
+        <property name="typeAliasesPackage" value="com.chenzf.entity"/>
+    </bean>
+
+    <!--4.根据sqlSessionFactory创建DAO组件类：一次性创建所有DAO，不需要设置id-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--4.1注入sqlSessionFactory-->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!--4.2扫描DAO接口所在包-->
+        <property name="basePackage" value="com.chenzf.dao"/>
+    </bean>
+
+    <!--5.创建事务管理器（解决连接一致性安全问题）-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--注入数据源-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--6.开启注解式事务生效-->
+    <!--xmlns:tx="http://www.springframework.org/schema/tx"-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+</beans>

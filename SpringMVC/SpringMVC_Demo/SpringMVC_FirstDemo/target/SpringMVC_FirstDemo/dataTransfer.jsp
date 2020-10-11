@@ -37,7 +37,7 @@
 
 <hr color="green">
 
-
+<h2>redirect获取地址栏数据：${param.name}</h2>
 
 <h2>name:${sessionScope.user.name}</h2>
 <h2>age:${sessionScope.user.age}</h2>

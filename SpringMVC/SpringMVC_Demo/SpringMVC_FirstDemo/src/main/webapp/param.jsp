@@ -13,7 +13,7 @@
 <body>
 
 <h1>测试参数接收</h1>
-<form action="${pageContext.request.contextPath}/ParamController/testScatteredType" method="post">
+<form action="${pageContext.request.contextPath}/ParamController/testObject" method="post">
     用户名: <input type="text" name="name"/>  <br>
     年龄:  <input type="text" name="age"/>   <br>
     性别:  <input type="text" name="sexual">    <br>

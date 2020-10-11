@@ -40,7 +40,7 @@ public class ParamController {
         System.out.println("==========测试对象类型的参数接收==========");
         System.out.println("ParamController接收到的对象：" + user);
         System.out.println("ParamController接收到的对象的姓名：" + name);
-        return "index";
+        return "param";
     }
 
     /**
