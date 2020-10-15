@@ -18,5 +18,7 @@
     ${user.id}, ${user.name}, ${user.age}, ${user.birth} <br>
 </c:forEach>
 
+<a href="${pageContext.request.contextPath}/addUser.jsp">添加用户信息</a>
+
 </body>
 </html>

@@ -1975,13 +1975,117 @@ public class UserController {
 
 
 
+### 6.2.6 添加功能
+
+#### 6.2.6.1 修改`findAllUser.jsp`
+
+在`main\webapp\findAllUser.jsp`中添加：
+
+```jsp
+<a href="${pageContext.request.contextPath}/addUser.jsp">添加用户信息</a>
+```
 
 
 
+#### 6.2.6.2 创建addUser.jsp
+
+```jsp
+<%--
+  Created by IntelliJ IDEA.
+  User: Chenzf
+  Date: 2020/10/11
+  Time: 21:13
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>添加用户信息</title>
+</head>
+<body>
+
+<h1>添加用户信息</h1>
+<form action="${pageContext.request.contextPath}/UserController/saveUser" method="post">
+    用户id：<input type="text" name="id"/> <br>
+    用户名：<input type="text" name="name"/> <br>
+    用户年龄：<input type="text" name="age"/> <br>
+    用户生日：<input type="text" name="birth"/> <br>
+    <input type="submit" value="保存用户信息">
+</form>
+
+</body>
+</html>
+```
 
 
 
+#### 6.2.6.3 修改`UserController.java`
 
+添加==第33-46行==
+
+```java
+package com.chenzf.controller;
+
+import com.chenzf.entity.User;
+import com.chenzf.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+
+@Controller
+@RequestMapping("/UserController")
+
+public class UserController {
+
+    /**
+     * findAllUser方法需要调用userService对象
+     */
+    @Autowired
+    private UserService userService;
+
+    @RequestMapping("/findAllUser")
+    public String findAllUser(HttpServletRequest request) {
+        // 1. 收集数据
+        // 2. 调用业务对象
+        List<User> users = userService.findAllUser();
+        // 3. 存储数据并跳转显示页面
+        request.setAttribute("users", users);
+        return "findAllUser";
+    }
+
+    /**
+     * 添加用户
+     * @param user 添加的对象
+     * @return 没有异常则跳转至findAllUser方法
+     */
+    @RequestMapping("/saveUser")
+    public String saveUser(User user) {
+        //2.调用业务方法
+        try {
+            userService.saveUser(user);
+            return "redirect:/UserController/findAllUser";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/addUser.jsp";
+        }
+    }
+}
+```
+
+
+
+#### 6.2.6.4 测试
+
+输入http://localhost:8090/SSM_SpringMVC/UserController/findAllUser，点击`添加用户信息`，跳转至
+
+<img src="SpringMVC.assets/image-20201011213059269.png" alt="image-20201011213059269" style="zoom:67%;" />
+
+最终结果：
+
+<img src="SpringMVC.assets/image-20201011213828809.png" alt="image-20201011213828809" style="zoom:67%;" />
 
 
 
